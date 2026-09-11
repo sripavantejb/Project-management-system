@@ -98,7 +98,7 @@ const FIELD_ALIASES = [
 ]
 
 const SKIP_ROW_RE =
-  /material\s*master|clarity\s*edition|note\s*to\s*user|qty\s*=\s*0|complete interior hardware|brands are reference|approved make list/i
+  /material\s*master|clarity\s*edition|note\s*to\s*user|qty\s*=\s*0|complete interior hardware|brands are reference|approved make list|sub[\s-]?total/i
 
 function normalizeHeader(value) {
   return String(value ?? '')
@@ -167,7 +167,7 @@ function isSectionRow(row, map) {
   if (map.materialName !== undefined && cellText(row, map, 'materialName')) {
     return false
   }
-  return /^[A-Z0-9][A-Z0-9 /&–—-]*$/.test(text) || /joinery|interior|hardware|finishes|electrical/i.test(text)
+  return /^[A-Z0-9][A-Z0-9 /&+–—-]*$/.test(text) || /joinery|interior|hardware|finishes|electrical/i.test(text)
 }
 
 function looksNumericSno(value) {
@@ -207,10 +207,17 @@ function findHeader(grid) {
     if (materialHits >= 3) {
       return { headerRow: r, columnMap: map, kind: 'material' }
     }
+    /**
+     * A serial-number column does NOT make this a material-template header —
+     * that check already happened above and failed. Client quotation sheets
+     * (S.No / Description / Unit / Dimensions / Qty / Rate / Amount) commonly
+     * have both an sno column and a description column; excluding sno here
+     * used to push those sheets into the positional material-template guess,
+     * silently shifting every column (rate → qty, amount → rate, ...).
+     */
     if (
       Object.keys(map).length >= 2 &&
-      (map.description !== undefined || map.qty !== undefined) &&
-      map.sno === undefined
+      (map.description !== undefined || map.qty !== undefined)
     ) {
       return { headerRow: r, columnMap: map, kind: 'general' }
     }
@@ -243,7 +250,14 @@ function lineFromRow(row, columnMap, lastRoom, uid) {
     materialFamily || materialName || grade || thickness || brand || dimensions,
   )
 
-  if (!hasMaterial && !description && !qty && !rate && !amount) {
+  /**
+   * A row with nothing but an amount — no description, no qty, no rate — is
+   * never a real line item (there'd be nothing to show or price). It's a
+   * section-total artifact that repeats the section's own name instead of
+   * saying "SUBTOTAL" (which the text-based skip above already catches), so
+   * this is a second, structural net to keep those numbers out of the total.
+   */
+  if (!hasMaterial && !description && !qty && !rate) {
     return { skip: true, room: roomCell || lastRoom }
   }
 
@@ -271,7 +285,14 @@ function lineFromRow(row, columnMap, lastRoom, uid) {
       unit: matchUnit(unitRaw) || (hasMaterial ? 'sheet' : 'nos'),
       qty: qty || (amount && rate ? amount / rate : 0),
       rate: rate || (amount && qty ? amount / qty : 0),
-      amount: amount || qty * rate,
+      /**
+       * Only derive Amount from Qty × Rate when the sheet has no Amount
+       * column at all. When it does have one and a specific row's cell is
+       * blank, that's the source explicitly leaving the line unpriced (e.g.
+       * a "pending confirmation" section) — silently pricing it here would
+       * add cost the sheet's own author chose to leave out of the total.
+       */
+      amount: columnMap.amount !== undefined ? amount : amount || qty * rate,
       image: '',
     },
   }
