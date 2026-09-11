@@ -15,11 +15,13 @@ import {
   Palette,
   SlidersHorizontal,
   Mail,
+  BookOpen,
 } from 'lucide-react'
 import { api, getTenantSlug, useAuthStore, companyLoginUrl } from '../lib/api'
 import { InviteDetailsModal } from '../components/layout/GlobalChrome'
 import { PageToolbar } from '../components/layout/PageToolbar'
 import { MailAndAlertsSettings } from '../components/settings/MailAndAlertsSettings'
+import { UserGuide } from '../components/settings/UserGuide'
 import { FadeIn } from '../components/motion/FadeIn'
 import { cn } from '../lib/utils'
 import {
@@ -231,7 +233,12 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 pb-10">
+    <div
+      className={cn(
+        'mx-auto w-full space-y-4 pb-10',
+        tab === 'guide' ? 'max-w-5xl' : 'max-w-3xl',
+      )}
+    >
       <FadeIn>
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
@@ -276,12 +283,27 @@ export function SettingsPage() {
             Email & alerts
           </span>
         </button>
+        <button
+          type="button"
+          onClick={() => setTab('guide')}
+          className={cn(
+            'rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition',
+            tab === 'guide' ? PILL_ACTIVE : PILL_IDLE,
+          )}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <BookOpen className="h-3.5 w-3.5" />
+            Guide
+          </span>
+        </button>
       </div>
       </FadeIn>
 
       <FadeIn delay={50}>
       {tab === 'email' ? (
         <MailAndAlertsSettings canEdit={canEditMail} />
+      ) : tab === 'guide' ? (
+        <UserGuide />
       ) : (
         <>
       <AppearanceSettings />
