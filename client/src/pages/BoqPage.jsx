@@ -29,6 +29,7 @@ import { formatInr } from '../lib/format'
 import {
   BOQ_UNITS as UNITS,
   materialMasterAoa,
+  normalizeForDedupe,
   rowsToBoqLines,
   unitLabel,
 } from '../lib/boqImport'
@@ -1319,13 +1320,34 @@ function BoqSheet({
         return
       }
       markDirty()
+      let skipped = 0
       setItems((prev) => {
         const keep = prev.filter(lineHasContent)
-        return keep.length ? [...keep, ...lines] : lines
+        // Re-importing the same (or an overlapping) sheet used to just pile
+        // the new rows on top of whatever was already there, silently
+        // doubling the BOQ. Skip any row whose description already exists
+        // in this sheet — only genuinely new rows get added.
+        const existingKeys = new Set(
+          keep.map((l) => normalizeForDedupe(l.description)),
+        )
+        const toAdd = []
+        for (const line of lines) {
+          const key = normalizeForDedupe(line.description)
+          if (key && existingKeys.has(key)) {
+            skipped += 1
+            continue
+          }
+          if (key) existingKeys.add(key)
+          toAdd.push(line)
+        }
+        return keep.length ? [...keep, ...toAdd] : toAdd
       })
-      toast(`Imported ${lines.length} rows into the material master`, {
-        type: 'success',
-      })
+      toast(
+        skipped
+          ? `Imported ${lines.length - skipped} new rows · skipped ${skipped} already in this sheet`
+          : `Imported ${lines.length} rows into the material master`,
+        { type: 'success' },
+      )
     } catch (e) {
       toast(e.message || 'Could not read that Excel file', { type: 'error' })
     } finally {

@@ -130,6 +130,14 @@ export function matchHeader(value) {
   return best
 }
 
+/** Collapses a description to a stable key for duplicate detection on import. */
+export function normalizeForDedupe(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 export function toNumber(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0
   const cleaned = String(value ?? '').replace(/[^0-9.-]/g, '')
@@ -313,11 +321,22 @@ export function rowsToBoqLines(grid, opts = {}) {
 
   const lines = []
   let lastRoom = defaultRoom
+  let lastDescription = ''
   const start = headerRow + 1
 
   for (let r = start; r < grid.length; r += 1) {
     const row = grid[r] || []
     if (!filledCells(row).length) continue
+
+    /**
+     * The trailing "Notes:" block (terms, GST/handling %, sub/grand totals)
+     * is not part of the line-item table — everything from here to the end
+     * of the sheet gets ignored. Without this, numbers like the handling
+     * charge or the pre-GST total get misread as a Rate on a fake row.
+     */
+    const firstCell = normalizeHeader(filledCells(row)[0])
+    if (firstCell === 'notes') break
+
     if (isTitleOrNoteRow(row) && !cellText(row, columnMap, 'materialName')) continue
 
     if (isSectionRow(row, columnMap)) {
@@ -351,6 +370,20 @@ export function rowsToBoqLines(grid, opts = {}) {
       if (parsed.room) lastRoom = parsed.room
       continue
     }
+
+    /**
+     * A merged "Dimensions" header (No's / W / H-L) produces continuation
+     * rows with no real description — just a leftover measurement number in
+     * whichever sub-column lines up with a mapped field. Rather than a line
+     * item named "6", carry the previous row's description forward: it's
+     * almost always another dimension set for the same item.
+     */
+    if (/^\d+(\.\d+)?$/.test(parsed.line.description.trim())) {
+      if (lastDescription) parsed.line.description = lastDescription
+    } else {
+      lastDescription = parsed.line.description
+    }
+
     lastRoom = parsed.line.room
     lines.push(parsed.line)
   }
