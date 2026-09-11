@@ -735,6 +735,18 @@ router.patch(
     if (req.body.status === 'sent') quotation.sentAt = new Date()
     if (req.body.status === 'viewed') quotation.viewedAt = new Date()
     if (req.body.status === 'approved') {
+      // Same rule as file/drawing approvals: if a routing rule pinned an
+      // approver, only that person (or a company admin) may actually
+      // approve — the boq permission alone isn't enough once someone is
+      // specifically assigned.
+      if (quotation.approver) {
+        const isApprover = String(quotation.approver) === String(req.user._id)
+        const isAdmin =
+          req.user?.isPlatformAdmin || isCompanyAdminRole(req.user?.role)
+        if (!isApprover && !isAdmin) {
+          throw new AppError('Only the assigned approver can approve this BOQ', 403)
+        }
+      }
       quotation.approvedAt = new Date()
       if (quotation.projectId) {
         const project = await Project.findById(quotation.projectId)
