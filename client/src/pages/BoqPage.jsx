@@ -749,6 +749,13 @@ function BoqSheet({
   const navigate = useNavigate()
   const tableRef = useRef(null)
   const excelInputRef = useRef(null)
+  /**
+   * True while `items` is nothing but the auto-loaded starter template that
+   * silently fills a brand-new sheet (see the boqType effect below) — the
+   * user hasn't chosen or entered any of it. The first Excel import on such
+   * a sheet should replace that scaffold outright, not merge with it.
+   */
+  const autoSeededRef = useRef(false)
   const galleryInputRef = useRef(null)
   const rowImageInputRef = useRef(null)
   const rowImageTarget = useRef(null)
@@ -985,6 +992,10 @@ function BoqSheet({
 
   const markDirty = () => {
     if (!locked) setDirty(true)
+    // Any real edit means the sheet is no longer "just the auto-seeded
+    // template" — loadInteriorCatalog's silent path re-asserts this flag
+    // itself right after calling markDirty, so that path is unaffected.
+    autoSeededRef.current = false
   }
 
   const updateItem = (idx, key, value) => {
@@ -1130,6 +1141,7 @@ function BoqSheet({
       if (!lines.length) return
       setItems(lines)
       if (!quotation?._id) markDirty()
+      autoSeededRef.current = Boolean(silent)
       if (!silent) {
         toast(`Loaded ${lines.length} ${BOQ_TYPE_META[type]?.label} quotation lines`, {
           type: 'success',
@@ -1319,10 +1331,19 @@ function BoqSheet({
         toast('No material rows found in that sheet', { type: 'error' })
         return
       }
+      // Capture this before markDirty() runs — markDirty() itself clears
+      // autoSeededRef.current (any real edit means the sheet is no longer
+      // "just the seed"), so reading it after would always see false.
+      const replacingSeed = autoSeededRef.current
       markDirty()
+      autoSeededRef.current = false
       let skipped = 0
       setItems((prev) => {
-        const keep = prev.filter(lineHasContent)
+        // A sheet that still holds nothing but its silently auto-loaded
+        // starter template hasn't really been "started" yet — the user's
+        // file is the real content, so it replaces the scaffold outright
+        // instead of sitting alongside it.
+        const keep = replacingSeed ? [] : prev.filter(lineHasContent)
         // Re-importing the same (or an overlapping) sheet used to just pile
         // the new rows on top of whatever was already there, silently
         // doubling the BOQ. Skip any row whose description already exists
@@ -1343,9 +1364,11 @@ function BoqSheet({
         return keep.length ? [...keep, ...toAdd] : toAdd
       })
       toast(
-        skipped
-          ? `Imported ${lines.length - skipped} new rows · skipped ${skipped} already in this sheet`
-          : `Imported ${lines.length} rows into the material master`,
+        replacingSeed
+          ? `Replaced the starter template with ${lines.length} rows from your file`
+          : skipped
+            ? `Imported ${lines.length - skipped} new rows · skipped ${skipped} already in this sheet`
+            : `Imported ${lines.length} rows into the material master`,
         { type: 'success' },
       )
     } catch (e) {
