@@ -227,6 +227,67 @@ function refreshAccessToken() {
   return refreshInFlight
 }
 
+// Vercel's serverless functions cap a request body at ~4.5MB — a platform
+// limit no server config can raise. Rather than add a non-Mongo storage
+// service, anything still over CHUNK_THRESHOLD after compression gets sliced
+// into CHUNK_SIZE pieces and reassembled server-side in MongoDB (see
+// POST /media/chunk[/finish] and middleware/chunkedUpload.js).
+const CHUNK_THRESHOLD = 4 * 1024 * 1024
+const CHUNK_SIZE = 3 * 1024 * 1024
+
+function makeUploadId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+async function uploadFileInChunks(file) {
+  const uploadId = makeUploadId()
+  const total = Math.ceil(file.size / CHUNK_SIZE) || 1
+
+  for (let i = 0; i < total; i++) {
+    const slice = file.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE)
+    const fd = new FormData()
+    fd.append('chunk', slice, file.name)
+    fd.append('uploadId', uploadId)
+    fd.append('index', String(i))
+    // Sequential on purpose: chunks are a few MB each, and the server has to
+    // see all `total` of them before it will reassemble anything.
+    // eslint-disable-next-line no-await-in-loop
+    await api('/media/chunk', { method: 'POST', body: fd })
+  }
+
+  const { pendingId } = await api('/media/chunk/finish', {
+    method: 'POST',
+    body: JSON.stringify({ uploadId, filename: file.name, mimeType: file.type, total }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+  return pendingId
+}
+
+/**
+ * Swap any FormData file bigger than CHUNK_THRESHOLD for a `<field>PendingId`
+ * once it's been chunk-uploaded, so every existing upload call site (they all
+ * go through `api()`) gets large-file support with no changes of its own.
+ */
+async function uploadOversizedFields(formData) {
+  const entries = [...formData.entries()]
+  const hasOversized = entries.some(
+    ([, value]) => value instanceof File && value.size > CHUNK_THRESHOLD,
+  )
+  if (!hasOversized) return formData
+
+  const next = new FormData()
+  for (const [key, value] of entries) {
+    if (value instanceof File && value.size > CHUNK_THRESHOLD) {
+      const pendingId = await uploadFileInChunks(value)
+      next.append(`${key}PendingId`, pendingId)
+    } else {
+      next.append(key, value)
+    }
+  }
+  return next
+}
+
 export async function api(path, options = {}) {
   const { accessToken, refreshToken } = useAuthStore.getState()
   const isFormData =
@@ -245,7 +306,10 @@ export async function api(path, options = {}) {
   // Shrink images once, here, so every upload in the app benefits without each
   // call site remembering to. Non-image parts are passed through untouched, and
   // a failed compression falls back to the original file.
-  const body = isFormData ? await compressFormDataUploads(options.body) : options.body
+  let body = isFormData ? await compressFormDataUploads(options.body) : options.body
+  // Whatever's still too big for one request (videos, large PDFs, etc.) goes
+  // through chunked upload instead of failing outright.
+  if (isFormData) body = await uploadOversizedFields(body)
   const requestInit = { ...options, body, headers }
 
   let res = await fetch(`${API_URL}${path}`, requestInit)

@@ -5,6 +5,7 @@ import { tenantFilter, withTenant, assertTenantDoc } from '../middleware/tenant.
 import { requirePermission } from '../lib/permissions.js'
 import { scopeProjects } from '../lib/projectScope.js'
 import { upload } from '../middleware/upload.js'
+import { withChunkedUpload } from '../middleware/chunkedUpload.js'
 import { storeFileBuffer } from '../lib/mediaStore.js'
 import { VendorInvoice } from '../models/VendorInvoice.js'
 import { Vendor, PurchaseOrder, Payment } from '../models/ProcurementFinance.js'
@@ -201,7 +202,7 @@ router.post(
   '/billing/invoices',
   requireAuth,
   requirePermission('finance'),
-  upload.single('file'),
+  ...withChunkedUpload('file', upload.single('file')),
   asyncHandler(async (req, res) => {
     const {
       invoiceNumber,
@@ -292,7 +293,7 @@ router.patch(
   '/billing/invoices/:id',
   requireAuth,
   requirePermission('finance'),
-  upload.single('file'),
+  ...withChunkedUpload('file', upload.single('file')),
   asyncHandler(async (req, res) => {
     const invoice = await VendorInvoice.findById(req.params.id)
     assertTenantDoc(invoice, req, 'Invoice')

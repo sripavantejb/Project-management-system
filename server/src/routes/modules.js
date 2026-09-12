@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler, AppError } from '../middleware/errorHandler.js'
 import { tenantFilter, withTenant, assertTenantDoc, isCompanyAdminRole } from '../middleware/tenant.js'
 import { upload } from '../middleware/upload.js'
+import { withChunkedUpload } from '../middleware/chunkedUpload.js'
 import { storeFileBuffer } from '../lib/mediaStore.js'
 import {
   assertProjectAccess,
@@ -859,7 +860,7 @@ router.post(
   '/quotations/upload-image',
   requireAuth,
   requirePermission('boq'),
-  upload.single('file'),
+  ...withChunkedUpload('file', upload.single('file')),
   asyncHandler(async (req, res) => {
     if (!req.file) throw new AppError('Image file is required', 400)
     if (!String(req.file.mimetype || '').startsWith('image/')) {
@@ -905,7 +906,7 @@ router.post(
   '/files',
   requireAuth,
   requirePermission('files.manage'),
-  upload.single('file'),
+  ...withChunkedUpload('file', upload.single('file')),
   asyncHandler(async (req, res) => {
     const projectId = req.body.projectId
     const folder = req.body.folder || 'concepts'
