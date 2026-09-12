@@ -348,7 +348,10 @@ router.get(
       approvalStatus: 'pending',
     })
     if (mineOnly || !isAdmin) {
-      taskFilter.approver = userId
+      // A task can end up pending with no approver (its rule's role has
+      // nobody active in it) — surface those too rather than letting them
+      // sit invisible to everyone but an admin's "All pending" view.
+      taskFilter.$or = [{ approver: userId }, { approver: null }]
     }
     const tasks = await Task.find(taskFilter)
       .populate('approver', 'name avatar role')

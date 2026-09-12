@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { FileText, Image as ImageIcon, Film, File } from 'lucide-react'
 import { assetUrl } from '../../lib/api'
 import { cn } from '../../lib/utils'
@@ -22,6 +23,10 @@ export function FileThumbnail({
   const Icon = pickIcon(mime, name)
   const isImage = mime?.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(name || '')
   const resolved = assetUrl(url)
+  // Files uploaded before the GridFS migration (or otherwise missing from
+  // storage) 404 forever — fall back to the type icon instead of a
+  // permanently broken image.
+  const [broken, setBroken] = useState(false)
 
   return (
     <button
@@ -33,8 +38,13 @@ export function FileThumbnail({
       )}
     >
       <div className="relative aspect-[4/3] bg-surface-raised">
-        {isImage && resolved ? (
-          <img src={resolved} alt={name} className="h-full w-full object-cover" />
+        {isImage && resolved && !broken ? (
+          <img
+            src={resolved}
+            alt={name}
+            onError={() => setBroken(true)}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-secondary">
             <Icon className="h-8 w-8" />

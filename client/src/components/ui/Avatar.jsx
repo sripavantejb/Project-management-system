@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { assetUrl } from '../../lib/api'
 import { cn } from '../../lib/utils'
 
@@ -30,13 +31,18 @@ export function Avatar({
   // SPA and API are on different origins. assetUrl leaves absolute URLs alone,
   // so passing an already-resolved src is harmless.
   const resolved = assetUrl(src)
+  // Old records can point at files that no longer exist (e.g. legacy
+  // pre-GridFS `/uploads/...` links) — fall back to initials instead of
+  // leaving a permanently broken image icon on screen.
+  const [broken, setBroken] = useState(false)
 
   return (
     <div className={cn('relative inline-flex shrink-0', className)}>
-      {resolved ? (
+      {resolved && !broken ? (
         <img
           src={resolved}
           alt={name}
+          onError={() => setBroken(true)}
           className={cn(
             'rounded-full object-cover ring-2 ring-canvas',
             sizeMap[size],

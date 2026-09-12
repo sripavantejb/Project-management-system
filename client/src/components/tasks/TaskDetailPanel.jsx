@@ -19,6 +19,7 @@ import {
   Users,
   Play,
   Square,
+  UserCheck,
 } from 'lucide-react'
 import { api, useAuthStore } from '../../lib/api'
 import { Avatar, toast } from '../ui'
@@ -594,6 +595,18 @@ export function TaskDetailPanel({
                   </span>
                 )}
               </AttrRow>
+
+              {!isCreate && task?.createdBy && (
+                <AttrRow label="Assigned by" icon={UserCheck}>
+                  <div className="flex items-center gap-1.5 text-[13px] text-primary">
+                    <Avatar name={task.createdBy?.name} size="xs" />
+                    <span>
+                      {task.createdBy?.name || 'Unknown'}
+                      {task.createdBy?._id === task.assignee?._id ? ' (self-assigned)' : ''}
+                    </span>
+                  </div>
+                </AttrRow>
+              )}
 
               <AttrRow label="Dates" icon={Calendar}>
                 <div className="flex min-w-0 items-center gap-1.5 text-[13px]">
