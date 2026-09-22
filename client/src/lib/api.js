@@ -352,7 +352,18 @@ export async function api(path, options = {}) {
   // TenantLockScreen's own recheck (a call to a gated route) is allowed to
   // clear it — see components/TenantLockScreen.jsx.
   if (!res.ok && data.code === 'TENANT_BLOCKED') {
-    useAuthStore.getState().setTenantBlocked({ message: data.message })
+    const { tenant, setTenant, setTenantBlocked } = useAuthStore.getState()
+    setTenantBlocked({ message: data.message })
+    // Also stamp the persisted tenant, not just the runtime flag. Without
+    // this, RequireAuth's synchronous reload check (tenantLooksBlocked)
+    // would keep reading whatever status was cached from the last
+    // successful login — "active" — and briefly render the real app again
+    // on every reload until a request happened to fail. Once we've heard
+    // 403 TENANT_BLOCKED for real, every future reload should open
+    // straight to the lock screen, no exceptions.
+    if (tenant && tenant.status !== 'cancelled') {
+      setTenant({ ...tenant, status: 'cancelled', cancelledAt: new Date().toISOString() })
+    }
   }
 
   if (!res.ok) {

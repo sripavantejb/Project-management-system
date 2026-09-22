@@ -6,9 +6,26 @@ import { PlatformShell } from '../layout/PlatformShell'
 import { AnimatedPage } from '../motion/AnimatedPage'
 import { TenantLockScreen } from '../TenantLockScreen'
 
+/**
+ * True if the last tenant we know about (persisted from login/refresh) was
+ * itself already blocked. Mirrors the server's tenantIsAccessible check.
+ *
+ * tenantBlocked (the other half of this gate) only exists after some gated
+ * request has actually failed — which takes a request. On a hard reload
+ * that hasn't happened yet, so without this a cancelled workspace would
+ * flash the real app (AppShell, real data) for the split second before the
+ * first request comes back 403. Checking the cached tenant synchronously
+ * closes that: the lock screen is the very first paint, never a fallback.
+ */
+function tenantLooksBlocked(tenant) {
+  if (!tenant) return false
+  return tenant.status === 'suspended' || tenant.status === 'cancelled' || !!tenant.cancelledAt
+}
+
 export function RequireAuth({ roles }) {
   const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
+  const tenant = useAuthStore((s) => s.tenant)
   const tenantBlocked = useAuthStore((s) => s.tenantBlocked)
   const location = useLocation()
 
@@ -18,8 +35,8 @@ export function RequireAuth({ roles }) {
 
   // Platform admins manage every company's subscription from here, so their
   // own session must never get walled off by one company's block.
-  if (tenantBlocked && !user.isPlatformAdmin) {
-    return <TenantLockScreen message={tenantBlocked.message} />
+  if (!user.isPlatformAdmin && (tenantBlocked || tenantLooksBlocked(tenant))) {
+    return <TenantLockScreen message={tenantBlocked?.message} />
   }
 
   if (roles && !roles.includes(user.role) && !user.isPlatformAdmin) {

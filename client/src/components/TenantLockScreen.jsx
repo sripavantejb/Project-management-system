@@ -27,14 +27,27 @@ export function TenantLockScreen({ message }) {
   // while still genuinely blocked. That used to cause exactly that: the
   // screen flashing back to the app and immediately re-locking.
   const setTenantBlocked = useAuthStore((s) => s.setTenantBlocked)
+  const tenant = useAuthStore((s) => s.tenant)
+  const setTenant = useAuthStore((s) => s.setTenant)
   useEffect(() => {
     const id = setInterval(() => {
       api('/home')
-        .then(() => setTenantBlocked(null))
+        .then(() => {
+          setTenantBlocked(null)
+          // A gated call just succeeded, which is only possible if the
+          // tenant is accessible again — but RequireAuth's synchronous
+          // check (tenantLooksBlocked) reads the *persisted* tenant, not
+          // this runtime flag. Without updating it too, a later hard
+          // reload would read the stale cancelled/suspended status back
+          // out of storage and lock a workspace that's actually fine.
+          if (tenant && (tenant.status === 'cancelled' || tenant.status === 'suspended' || tenant.cancelledAt)) {
+            setTenant({ ...tenant, status: 'active', cancelledAt: null })
+          }
+        })
         .catch(() => {})
     }, RECHECK_INTERVAL_MS)
     return () => clearInterval(id)
-  }, [setTenantBlocked])
+  }, [setTenantBlocked, setTenant, tenant])
 
   return (
     <div
