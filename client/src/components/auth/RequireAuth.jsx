@@ -4,14 +4,22 @@ import { capabilitiesForUser, homePathForUser } from '../../lib/roles'
 import { AppShell } from '../layout/AppShell'
 import { PlatformShell } from '../layout/PlatformShell'
 import { AnimatedPage } from '../motion/AnimatedPage'
+import { TenantLockScreen } from '../TenantLockScreen'
 
 export function RequireAuth({ roles }) {
   const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
+  const tenantBlocked = useAuthStore((s) => s.tenantBlocked)
   const location = useLocation()
 
   if (!user || !accessToken) {
     return <Navigate to="/login" replace state={{ from: location }} />
+  }
+
+  // Platform admins manage every company's subscription from here, so their
+  // own session must never get walled off by one company's block.
+  if (tenantBlocked && !user.isPlatformAdmin) {
+    return <TenantLockScreen message={tenantBlocked.message} />
   }
 
   if (roles && !roles.includes(user.role) && !user.isPlatformAdmin) {

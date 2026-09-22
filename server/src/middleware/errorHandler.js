@@ -1,7 +1,8 @@
 export class AppError extends Error {
-  constructor(message, statusCode = 400) {
+  constructor(message, statusCode = 400, code) {
     super(message)
     this.statusCode = statusCode
+    this.code = code
     this.isOperational = true
   }
 }
@@ -66,6 +67,7 @@ export function errorHandler(err, _req, res, _next) {
   res.status(status).json({
     success: false,
     message,
+    ...(err.code && { code: err.code }),
     ...(!isProduction && { stack: err.stack }),
   })
 }

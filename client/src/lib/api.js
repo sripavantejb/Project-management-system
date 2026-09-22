@@ -117,6 +117,11 @@ export const useAuthStore = create(
       accessToken: null,
       refreshToken: null,
       tenant: null,
+      // Set the moment any request comes back 403 TENANT_BLOCKED (workspace
+      // suspended/cancelled), cleared the moment any request succeeds again —
+      // a transient runtime signal, not saved state, so it never persists.
+      tenantBlocked: null,
+      setTenantBlocked: (payload) => set({ tenantBlocked: payload }),
       setAuth: ({ user, accessToken, refreshToken, tenant }) => {
         if (tenant?.slug) {
           try {
@@ -155,11 +160,21 @@ export const useAuthStore = create(
           accessToken: null,
           refreshToken: null,
           tenant: null,
+          tenantBlocked: null,
         })
       },
       getAccessToken: () => get().accessToken,
     }),
-    { name: 'cubic-auth' },
+    {
+      name: 'cubic-auth',
+      // tenantBlocked is a live signal from the last request, not durable
+      // state — persisting it would show a stale lock screen (or hide a real
+      // one) until the next request happens to disagree with it.
+      partialize: (state) => {
+        const { tenantBlocked, ...rest } = state
+        return rest
+      },
+    },
   ),
 )
 
@@ -323,6 +338,19 @@ export async function api(path, options = {}) {
   }
 
   const data = await res.json().catch(() => ({}))
+
+  // The workspace was suspended/cancelled — every request now 403s with this
+  // code (server: middleware/tenant.js). Flip the lock screen on immediately
+  // rather than let it surface as a confusing one-off error on whatever the
+  // user happened to be doing.
+  if (!res.ok && data.code === 'TENANT_BLOCKED') {
+    useAuthStore.getState().setTenantBlocked({ message: data.message })
+  } else if (res.ok && useAuthStore.getState().tenantBlocked) {
+    // Any successful call after that means access was restored — self-heal
+    // without requiring a manual sign-out/sign-in.
+    useAuthStore.getState().setTenantBlocked(null)
+  }
+
   if (!res.ok) {
     const err = new Error(data.message || 'Request failed')
     err.status = res.status

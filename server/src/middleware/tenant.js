@@ -79,7 +79,7 @@ export async function resolveTenant(req, _res, next) {
       return next(new AppError(`Workspace "${slug}" not found`, 404))
     }
     if (!tenantIsAccessible(tenant)) {
-      return next(new AppError(tenantBlockMessage(tenant), 403))
+      return next(new AppError(tenantBlockMessage(tenant), 403, 'TENANT_BLOCKED'))
     }
 
     req.tenant = tenant

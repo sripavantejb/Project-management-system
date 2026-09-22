@@ -109,7 +109,7 @@ export function CompanyControlPanel({ tenant, expanded, onToggle }) {
     mutationFn: () =>
       api(`/platform/tenants/${tenant._id}/cancel-subscription`, { method: 'POST' }),
     onSuccess: () => {
-      toast('Subscription cancelled — company blocked from signing in', { type: 'success' })
+      toast('Subscription cancelled — the whole workspace is now locked', { type: 'success' })
       invalidate()
     },
     onError: (e) => toast(e.message, { type: 'error' }),
@@ -513,7 +513,7 @@ export function CompanyControlPanel({ tenant, expanded, onToggle }) {
                     onClick={() => {
                       if (
                         window.confirm(
-                          `Cancel subscription for ${tenant.name}? They will be blocked from signing in.`,
+                          `Cancel subscription for ${tenant.name}? Their whole workspace locks immediately — including anyone currently signed in — behind a screen telling them to contact you.`,
                         )
                       ) {
                         cancelSubscription.mutate()
