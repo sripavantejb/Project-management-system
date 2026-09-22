@@ -13,7 +13,9 @@ import {
   RequirePlatformAuth,
   RoleGate,
   CapabilityGate,
+  tenantLooksBlocked,
 } from './components/auth/RequireAuth'
+import { TenantLockScreen } from './components/TenantLockScreen'
 import {
   LoginPage,
   RegisterPage,
@@ -84,7 +86,16 @@ const queryClient = new QueryClient({
 function OnboardingRoute() {
   const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
+  const tenant = useAuthStore((s) => s.tenant)
+  const tenantBlocked = useAuthStore((s) => s.tenantBlocked)
   if (!user || !accessToken) return <Navigate to="/login" replace />
+  // This route sits outside RequireAuth (a brand-new user has nowhere else
+  // to go until onboarding is done), so it needs its own copy of the same
+  // check — otherwise a workspace cancelled mid-onboarding just... doesn't
+  // lock, since nothing here was ever asking.
+  if (!user.isPlatformAdmin && (tenantBlocked || tenantLooksBlocked(tenant))) {
+    return <TenantLockScreen message={tenantBlocked?.message} />
+  }
   return <OnboardingPage />
 }
 

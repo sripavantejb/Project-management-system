@@ -2,8 +2,16 @@ import { useEffect } from 'react'
 import { Lock, LogOut, Mail } from 'lucide-react'
 import { api, useAuthStore } from '../lib/api'
 
-/** How often to quietly check whether the block has been lifted. */
-const RECHECK_INTERVAL_MS = 15_000
+/**
+ * How often to quietly check whether the block has been lifted.
+ *
+ * Short on purpose: this is the entire "no action needed" promise made on
+ * screen, and a 15s gap between checks (the original value) read as broken
+ * — reactivating felt like it "wasn't starting" because nothing changed for
+ * up to 15 real seconds. A few seconds of polling one lightweight endpoint
+ * is a trivial cost next to that.
+ */
+const RECHECK_INTERVAL_MS = 4_000
 
 /**
  * The payment wall. Renders in place of the entire app — RequireAuth reaches
@@ -27,12 +35,13 @@ export function TenantLockScreen({ message }) {
   // while still genuinely blocked. That used to cause exactly that: the
   // screen flashing back to the app and immediately re-locking.
   const setTenantBlocked = useAuthStore((s) => s.setTenantBlocked)
-  const tenant = useAuthStore((s) => s.tenant)
   const setTenant = useAuthStore((s) => s.setTenant)
   useEffect(() => {
-    const id = setInterval(() => {
+    let cancelled = false
+    const recheck = () => {
       api('/home')
         .then(() => {
+          if (cancelled) return
           setTenantBlocked(null)
           // A gated call just succeeded, which is only possible if the
           // tenant is accessible again — but RequireAuth's synchronous
@@ -40,14 +49,28 @@ export function TenantLockScreen({ message }) {
           // this runtime flag. Without updating it too, a later hard
           // reload would read the stale cancelled/suspended status back
           // out of storage and lock a workspace that's actually fine.
-          if (tenant && (tenant.status === 'cancelled' || tenant.status === 'suspended' || tenant.cancelledAt)) {
-            setTenant({ ...tenant, status: 'active', cancelledAt: null })
+          const t = useAuthStore.getState().tenant
+          if (t && (t.status === 'cancelled' || t.status === 'suspended' || t.cancelledAt)) {
+            setTenant({ ...t, status: 'active', cancelledAt: null })
           }
         })
         .catch(() => {})
-    }, RECHECK_INTERVAL_MS)
-    return () => clearInterval(id)
-  }, [setTenantBlocked, setTenant, tenant])
+    }
+    // Check the instant this screen mounts too, not just on the next tick —
+    // if the block was already lifted before the user even landed here
+    // (e.g. they reloaded after reactivation), there's no reason to make
+    // them wait out a full interval to find that out.
+    recheck()
+    const id = setInterval(recheck, RECHECK_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+    // Deliberately empty deps: recheck() always reads the current tenant via
+    // useAuthStore.getState() rather than a closed-over value, so this timer
+    // never needs to be torn down and rebuilt just because tenant changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div

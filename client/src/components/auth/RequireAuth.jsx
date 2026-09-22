@@ -17,7 +17,7 @@ import { TenantLockScreen } from '../TenantLockScreen'
  * first request comes back 403. Checking the cached tenant synchronously
  * closes that: the lock screen is the very first paint, never a fallback.
  */
-function tenantLooksBlocked(tenant) {
+export function tenantLooksBlocked(tenant) {
   if (!tenant) return false
   return tenant.status === 'suspended' || tenant.status === 'cancelled' || !!tenant.cancelledAt
 }
