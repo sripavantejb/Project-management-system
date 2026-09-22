@@ -54,7 +54,7 @@ export function TenantLockScreen({ message }) {
         </h1>
         <p className="mt-2 text-[14px] leading-relaxed text-secondary">
           {message ||
-            'Access to this workspace has been paused by the platform owner.'}
+            'Your trial version has been completed, so workspace access has been stopped. Contact Editco to reactivate.'}
         </p>
 
         <div className="mt-6 flex items-start gap-2.5 rounded-[8px] border border-border bg-surface-raised px-4 py-3">

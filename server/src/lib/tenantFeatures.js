@@ -87,7 +87,7 @@ export function tenantIsAccessible(tenant) {
 
 export function tenantBlockMessage(tenant) {
   if (tenant?.status === 'cancelled' || tenant?.cancelledAt) {
-    return 'This workspace subscription has been cancelled. Contact Editco to reactivate.'
+    return 'Your trial version has been completed, so workspace access has been stopped. Contact Editco to reactivate.'
   }
   if (tenant?.status === 'suspended') {
     return 'This workspace is suspended. Contact Editco support.'
