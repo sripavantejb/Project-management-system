@@ -78,9 +78,6 @@ export async function resolveTenant(req, _res, next) {
     if (!tenant) {
       return next(new AppError(`Workspace "${slug}" not found`, 404))
     }
-    if (!tenantIsAccessible(tenant)) {
-      return next(new AppError(tenantBlockMessage(tenant), 403, 'TENANT_BLOCKED'))
-    }
 
     req.tenant = tenant
     req.tenantId = tenant._id
@@ -88,6 +85,26 @@ export async function resolveTenant(req, _res, next) {
   } catch (err) {
     next(err)
   }
+}
+
+/**
+ * Rejects the request once `req.tenant` (set by `resolveTenant`) is known to
+ * be blocked — suspended, cancelled, or otherwise inaccessible.
+ *
+ * Deliberately a separate middleware rather than folded into `resolveTenant`:
+ * platform-admin routes, and the platform-admin branch of `/auth/login`,
+ * still need `req.tenant` resolved (to know which company a request is
+ * about) without being gated by that company's subscription state — a
+ * platform admin managing companies must never get locked out by the very
+ * company they're managing. Callers that DO need the gate (every ordinary
+ * app route) apply this after `resolveTenant`; the ones that don't
+ * (platform routes, and `/auth/login`'s own explicit check) skip it.
+ */
+export function enforceTenantAccessible(req, _res, next) {
+  if (!tenantIsAccessible(req.tenant)) {
+    return next(new AppError(tenantBlockMessage(req.tenant), 403, 'TENANT_BLOCKED'))
+  }
+  next()
 }
 
 async function backfillTenantId(Model, tenantId) {

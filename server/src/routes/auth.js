@@ -16,7 +16,11 @@ import {
   countCompanyAdmins,
   withTenant,
 } from '../middleware/tenant.js'
-import { normalizeTenantFeatures } from '../lib/tenantFeatures.js'
+import {
+  normalizeTenantFeatures,
+  tenantIsAccessible,
+  tenantBlockMessage,
+} from '../lib/tenantFeatures.js'
 import { defaultPermissionsForRole } from '../lib/permissions.js'
 
 const BUILTIN_INVITE_ROLES = [
@@ -152,6 +156,13 @@ router.post(
     if (!ok) throw new AppError('Invalid email or password', 401)
 
     if (!user.isActive) throw new AppError('Account is deactivated', 403)
+
+    // A blocked company still isn't allowed to sign in — but a platform
+    // admin logging in with this same endpoint must never be judged by
+    // whichever company's slug happened to be on the request.
+    if (!user.isPlatformAdmin && !tenantIsAccessible(req.tenant)) {
+      throw new AppError(tenantBlockMessage(req.tenant), 403, 'TENANT_BLOCKED')
+    }
 
     const accessToken = signAccessToken(user)
     const refreshToken = signRefreshToken(user)

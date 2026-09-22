@@ -7,7 +7,7 @@ import dotenv from 'dotenv'
 import './models/index.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { UPLOADS_DIR } from './middleware/upload.js'
-import { resolveTenant } from './middleware/tenant.js'
+import { resolveTenant, enforceTenantAccessible } from './middleware/tenant.js'
 import authRoutes from './routes/auth.js'
 import platformRoutes from './routes/platform.js'
 import homeRoutes from './routes/home.js'
@@ -140,8 +140,13 @@ export function createApp({ enableSockets = true } = {}) {
 
   app.use('/api', resolveTenant)
 
+  // Auth (login needs its own, narrower check — see auth.js) and platform
+  // admin (never scoped to one company's subscription) run before the gate;
+  // every ordinary app route runs after it.
   app.use('/api/auth', authRoutes)
   app.use('/api/platform', platformRoutes)
+  app.use('/api', enforceTenantAccessible)
+
   app.use('/api', homeRoutes)
   app.use('/api/projects', projectRoutes)
   app.use('/api/tasks', taskRoutes)
