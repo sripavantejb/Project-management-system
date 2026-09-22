@@ -21,17 +21,20 @@ const RECHECK_INTERVAL_MS = 15_000
 export function TenantLockScreen({ message }) {
   const logout = useAuthStore((s) => s.logout)
 
-  // Nothing else on this screen makes a request, so nothing would otherwise
-  // ever discover the block was lifted. api()'s success path already clears
-  // tenantBlocked (see lib/api.js) — this just gives it something to
-  // succeed against, so "returns automatically" is actually true rather than
-  // silently requiring a manual reload.
+  // The only thing allowed to clear the block — a deliberate call to a
+  // gated route, so a coincidental success elsewhere (media/GridFS, anything
+  // mounted ahead of the tenant gate) can never flip the lock screen off
+  // while still genuinely blocked. That used to cause exactly that: the
+  // screen flashing back to the app and immediately re-locking.
+  const setTenantBlocked = useAuthStore((s) => s.setTenantBlocked)
   useEffect(() => {
     const id = setInterval(() => {
-      api('/home').catch(() => {})
+      api('/home')
+        .then(() => setTenantBlocked(null))
+        .catch(() => {})
     }, RECHECK_INTERVAL_MS)
     return () => clearInterval(id)
-  }, [])
+  }, [setTenantBlocked])
 
   return (
     <div
@@ -39,18 +42,11 @@ export function TenantLockScreen({ message }) {
       style={{ fontFamily: 'var(--font-landing)' }}
     >
       <div className="w-full max-w-md rounded-[12px] border border-border bg-surface p-8 shadow-[0_8px_24px_rgba(0,0,0,0.08)] md:p-10">
-        <div className="mb-8 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-[6px] bg-[#3ecf8e] text-[14px] font-bold text-[#171717]">
-            E
+        <div className="mb-5 flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#171717]/[0.06]">
+            <Lock className="h-[16px] w-[16px] text-primary" strokeWidth={2} />
           </span>
-          <div>
-            <p className="text-[16px] font-semibold text-primary">Editco Platform</p>
-            <p className="text-[12px] text-secondary">Workspace access</p>
-          </div>
-        </div>
-
-        <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-full bg-[#171717]/[0.06]">
-          <Lock className="h-[18px] w-[18px] text-primary" strokeWidth={2} />
+          <p className="text-[15px] font-semibold text-primary">Editco Platform</p>
         </div>
 
         <h1 className="text-[22px] font-bold tracking-tight text-primary">

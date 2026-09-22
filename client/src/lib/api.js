@@ -343,12 +343,16 @@ export async function api(path, options = {}) {
   // code (server: middleware/tenant.js). Flip the lock screen on immediately
   // rather than let it surface as a confusing one-off error on whatever the
   // user happened to be doing.
+  //
+  // Deliberately NOT cleared here on an unrelated success: a handful of
+  // routes (media/GridFS, anything mounted ahead of the tenant gate) always
+  // succeed regardless of tenant status, so "any successful call clears the
+  // block" was flip-flopping the lock screen on and off every time one of
+  // those slipped through alongside a still-blocked call. Only
+  // TenantLockScreen's own recheck (a call to a gated route) is allowed to
+  // clear it — see components/TenantLockScreen.jsx.
   if (!res.ok && data.code === 'TENANT_BLOCKED') {
     useAuthStore.getState().setTenantBlocked({ message: data.message })
-  } else if (res.ok && useAuthStore.getState().tenantBlocked) {
-    // Any successful call after that means access was restored — self-heal
-    // without requiring a manual sign-out/sign-in.
-    useAuthStore.getState().setTenantBlocked(null)
   }
 
   if (!res.ok) {
