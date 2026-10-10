@@ -14,7 +14,6 @@ import { useColors } from '../../theme/useColors'
 import { authApi } from '../../api/auth'
 import { useAuthStore } from '../../store/authStore'
 import { isApiError } from '../../api/client'
-import { TENANT_SLUG } from '../../constants/env'
 import type { AuthStackParamList } from '../../navigation/types'
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>
@@ -34,7 +33,9 @@ export function LoginScreen({ navigation }: Props) {
   const compact = windowHeight < 780
   const styles = useMemo(() => createStyles(colors, compact), [colors, compact])
 
-  const [workspace, setWorkspace] = useState(TENANT_SLUG)
+  const lastWorkspace = useAuthStore((s) => s.lastWorkspace) || ''
+  const [workspace, setWorkspace] = useState<string | null>(null)
+  const workspaceValue = workspace ?? lastWorkspace
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -45,7 +46,7 @@ export function LoginScreen({ navigation }: Props) {
       authApi.login({
         email: email.trim().toLowerCase(),
         password,
-        workspace: workspace.trim().toLowerCase(),
+        workspace: workspaceValue.trim().toLowerCase(),
       }),
     onSuccess: (data) => {
       setAuth({
@@ -62,7 +63,7 @@ export function LoginScreen({ navigation }: Props) {
 
   const onSubmit = () => {
     const next: Record<string, string> = {}
-    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/i.test(workspace.trim())) next.workspace = 'Enter your company workspace'
+    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/i.test(workspaceValue.trim())) next.workspace = 'Enter the company workspace from your login'
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) next.email = 'Enter a valid work email'
     if (!password) next.password = 'Enter your password'
     setErrors(next)
@@ -106,10 +107,10 @@ export function LoginScreen({ navigation }: Props) {
               ) : null}
               <Input
                 label="Workspace"
-                placeholder="your-company"
+                placeholder="cubicassociates"
                 autoCapitalize="none"
                 autoCorrect={false}
-                value={workspace}
+                value={workspaceValue}
                 onChangeText={setWorkspace}
                 error={errors.workspace}
                 returnKeyType="next"

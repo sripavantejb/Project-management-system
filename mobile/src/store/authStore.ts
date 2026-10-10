@@ -30,6 +30,8 @@ interface AuthState {
   tenant: Tenant | null
   accessToken: string | null
   refreshToken: string | null
+  /** Last company workspace typed at login. Kept after logout so the next sign-in can use another company. */
+  lastWorkspace: string
   hasHydrated: boolean
   setAuth: (payload: { user: User; accessToken: string; refreshToken: string; tenant?: Tenant }) => void
   setUser: (user: User) => void
@@ -46,13 +48,22 @@ export const useAuthStore = create<AuthState>()(
       tenant: null,
       accessToken: null,
       refreshToken: null,
+      lastWorkspace: '',
       hasHydrated: false,
       setAuth: ({ user, accessToken, refreshToken, tenant }) =>
-        set({ user, accessToken, refreshToken, ...(tenant ? { tenant } : {}) }),
+        set({
+          user,
+          accessToken,
+          refreshToken,
+          ...(tenant
+            ? { tenant, lastWorkspace: tenant.slug || '' }
+            : {}),
+        }),
       setUser: (user) => set({ user }),
-      setTenant: (tenant) => set({ tenant }),
+      setTenant: (tenant) => set({ tenant, lastWorkspace: tenant.slug || '' }),
       setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
-      logout: () => set({ user: null, tenant: null, accessToken: null, refreshToken: null }),
+      logout: () =>
+        set({ user: null, tenant: null, accessToken: null, refreshToken: null }),
       setHasHydrated: (v) => set({ hasHydrated: v }),
     }),
     {

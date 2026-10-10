@@ -34,7 +34,11 @@ function resolveApiOrigin(): string {
 
 export const API_ORIGIN = resolveApiOrigin()
 export const API_URL = `${API_ORIGIN}/api`
-export const TENANT_SLUG = (process.env.EXPO_PUBLIC_TENANT_SLUG || 'cubic').toLowerCase()
+/**
+ * Used only when no workspace was typed and nobody is signed in.
+ * Login itself sends the company name from the screen, same as the website.
+ */
+export const TENANT_SLUG = (process.env.EXPO_PUBLIC_TENANT_SLUG || '').trim().toLowerCase()
 
 /** Resolve a stored `/uploads/...` path to a full URL against the API host. */
 export function assetUrl(url?: string | null): string {

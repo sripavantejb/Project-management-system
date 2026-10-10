@@ -1,18 +1,50 @@
-import axios, { AxiosError, AxiosHeaders } from 'axios'
+import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL, TENANT_SLUG } from '../constants/env'
 import { getAuthState } from '../store/authStore'
 import type { ApiError } from '../types/models'
 
+type TenantRequest = InternalAxiosRequestConfig & { tenantSlug?: string }
+
+function headerSlug(headers: InternalAxiosRequestConfig['headers']): string {
+  if (!headers) return ''
+  const raw =
+    typeof (headers as AxiosHeaders).get === 'function'
+      ? (headers as AxiosHeaders).get('X-Tenant-Slug')
+      : (headers as Record<string, unknown>)['X-Tenant-Slug']
+  return String(Array.isArray(raw) ? raw[0] : raw || '')
+    .trim()
+    .toLowerCase()
+}
+
+/**
+ * Which company this call belongs to.
+ * The workspace typed on the login screen wins, so a company created in
+ * platform admin can sign in the same way as on the website. After that,
+ * every call uses the company that actually signed in. The build-time slug
+ * is only a fallback when nothing else is known.
+ */
+export function resolveTenantSlug(explicit?: string | null): string {
+  const typed = String(explicit || '').trim().toLowerCase()
+  if (typed) return typed
+  const signedIn = String(getAuthState().tenant?.slug || '').trim().toLowerCase()
+  if (signedIn) return signedIn
+  const remembered = String(getAuthState().lastWorkspace || '').trim().toLowerCase()
+  if (remembered) return remembered
+  return TENANT_SLUG
+}
+
 export const http = axios.create({
   baseURL: API_URL,
   timeout: 20000,
-  headers: { 'X-Tenant-Slug': TENANT_SLUG },
 })
 
 http.interceptors.request.use((config) => {
+  const request = config as TenantRequest
+  config.headers = config.headers ?? new AxiosHeaders()
+  const explicit = request.tenantSlug || headerSlug(config.headers)
+  config.headers.set('X-Tenant-Slug', resolveTenantSlug(explicit))
   const { accessToken } = getAuthState()
   if (accessToken) {
-    config.headers = config.headers ?? new AxiosHeaders()
     config.headers.set('Authorization', `Bearer ${accessToken}`)
   }
   return config
@@ -37,7 +69,7 @@ async function refreshAccessToken(): Promise<string | null> {
       const res = await axios.post(
         `${API_URL}/auth/refresh`,
         { refreshToken },
-        { headers: { 'X-Tenant-Slug': TENANT_SLUG } },
+        { headers: { 'X-Tenant-Slug': resolveTenantSlug() } },
       )
       const { accessToken, refreshToken: newRefresh } = res.data
       setTokens(accessToken, newRefresh)

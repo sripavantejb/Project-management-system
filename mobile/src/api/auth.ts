@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from 'axios'
 import { http } from './client'
 import type { Tenant, User } from '../types/models'
 
@@ -17,10 +18,15 @@ export interface AuthResponse {
 }
 
 export const authApi = {
-  login: ({ workspace, ...body }: LoginPayload) =>
-    http
-      .post<AuthResponse>('/auth/login', body, workspace ? { headers: { 'X-Tenant-Slug': workspace } } : undefined)
-      .then((r) => r.data),
+  login: ({ workspace, ...body }: LoginPayload) => {
+    const slug = workspace?.trim().toLowerCase()
+    return http
+      .post<AuthResponse>('/auth/login', body, {
+        headers: slug ? { 'X-Tenant-Slug': slug } : undefined,
+        tenantSlug: slug,
+      } as AxiosRequestConfig & { tenantSlug?: string })
+      .then((r) => r.data)
+  },
 
   me: () => http.get<{ success: true; user: User; tenant: Tenant | null }>('/auth/me').then((r) => r.data),
 
