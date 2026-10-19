@@ -75,7 +75,7 @@ export function PlatformShell({ children }) {
             label="Editco Platform"
           >
             <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-[#3ecf8e] text-[13px] font-bold text-[#171717]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-[var(--accent)] text-[13px] font-bold text-[#171717]">
                 E
               </span>
               <div className={cn(collapsed && 'sr-only')}>
@@ -180,7 +180,7 @@ export function PlatformShell({ children }) {
                   collapsed ? 'justify-center px-0' : 'px-3',
                 )}
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#3ecf8e] text-[11px] font-bold text-[#171717]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[11px] font-bold text-[#171717]">
                   {initials}
                 </span>
                 <div className={cn('min-w-0', collapsed && 'sr-only')}>

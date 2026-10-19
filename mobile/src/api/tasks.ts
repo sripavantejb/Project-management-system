@@ -6,9 +6,14 @@ export interface CreateTaskPayload {
   description?: string
   projectId?: string
   isPersonal?: boolean
+  status?: Task['status']
   priority?: Task['priority']
   dueDate?: string | null
+  startDate?: string | null
   assignee?: string
+  timeEstimate?: number | null
+  tags?: string[]
+  checklist?: { text: string; done: boolean }[]
 }
 
 export const tasksApi = {

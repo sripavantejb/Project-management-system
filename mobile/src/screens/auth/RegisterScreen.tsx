@@ -13,7 +13,7 @@ export function RegisterScreen({ navigation }: Props) {
   return (
     <AuthLayout
       title="Invite only"
-      subtitle="Cubic workspaces are created by your company admin or Editco platform team."
+      subtitle="Clyro workspaces are created by your company admin or Editco platform team."
       footer={
         <>
           <Button title="Back to sign in" onPress={() => navigation.navigate('Login')} fullWidth />

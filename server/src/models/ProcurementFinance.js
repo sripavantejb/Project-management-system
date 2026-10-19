@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { approvalProgressFields } from './Approval.js'
 
 const vendorSchema = new mongoose.Schema(
   {
@@ -84,6 +85,7 @@ const purchaseOrderSchema = new mongoose.Schema(
     approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     approvalRule: { type: mongoose.Schema.Types.ObjectId, ref: 'ApprovalRule', default: null },
     approvedAt: { type: Date, default: null },
+    ...approvalProgressFields,
   },
   { timestamps: true },
 )
@@ -189,6 +191,12 @@ const expenseSchema = new mongoose.Schema(
     /* Who it was routed to; `approvedBy` records who actually actioned it. */
     approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     approvalRule: { type: mongoose.Schema.Types.ObjectId, ref: 'ApprovalRule', default: null },
+    approvalStatus: {
+      type: String,
+      enum: ['none', 'pending', 'approved', 'rejected'],
+      default: 'none',
+    },
+    ...approvalProgressFields,
   },
   { timestamps: true },
 )

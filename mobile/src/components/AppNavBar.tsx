@@ -32,8 +32,8 @@ import { isDarkColor } from '../utils/color'
 import { glyphs, type Glyph } from '../icons'
 import { Icon } from './Icon'
 
-/** Matches HomeScreen deep-green hero */
-export const NAV_HERO_BG = '#004838'
+/** Home chrome sits on the ivory canvas — same surface as the operations dashboard. */
+export const NAV_HERO_BG = '#faf9f7'
 const HERO_WELL = 'rgba(255,255,255,0.14)'
 const HERO_PILL = 'rgba(255,255,255,0.16)'
 
@@ -84,10 +84,11 @@ export function AppNavBar({
    * `shellBg` is an animated interpolation, so contrast follows `heroActive`
    * — the same flag that decides which end of that animation we're at.
    */
-  const resolvedBg = onHero ? NAV_HERO_BG : (background ?? colors.canvas)
+  const resolvedBg = background ?? colors.canvas
   const onDark = isDarkColor(resolvedBg)
   const styles = useMemo(() => createStyles(colors, shadows, onDark), [colors, shadows, onDark])
   const user = useAuthStore((s) => s.user)
+  const tenant = useAuthStore((s) => s.tenant)
   const caps = capabilitiesForUser(user)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -105,16 +106,7 @@ export function AppNavBar({
     return () => scrollY.removeListener(id)
   }, [variant, scrollY, coverRange])
 
-  const shellBg =
-    variant === 'hero' && scrollY
-      ? scrollY.interpolate({
-          inputRange: [0, Math.max(coverRange * 0.55, 80), Math.max(coverRange, 140)],
-          outputRange: [NAV_HERO_BG, NAV_HERO_BG, colors.canvas],
-          extrapolate: 'clamp',
-        })
-      : onHero
-        ? NAV_HERO_BG
-        : (background ?? colors.canvas)
+  const shellBg = background ?? colors.canvas
 
   const home = useQuery({
     queryKey: ['home'],
@@ -430,6 +422,54 @@ export function AppNavBar({
           { paddingTop: Math.max(insets.top, spacing.sm), backgroundColor: shellBg },
         ]}
       >
+        {onHero ? (
+          <View style={styles.bar}>
+            <CircleAction
+              icon="menu-outline"
+              label="Open menu"
+              onPress={openDrawer}
+              onDark={false}
+              iconColor={colors.textPrimary}
+              colors={colors}
+              shadows={shadows}
+            />
+            <Pressable
+              onPress={openDrawer}
+              accessibilityRole="button"
+              accessibilityLabel="Open studio menu"
+              style={({ pressed }) => [styles.brandRow, pressed && { opacity: 0.85 }]}
+            >
+              <View style={styles.mark}>
+                <Text style={styles.markLetter}>C</Text>
+              </View>
+              <View style={styles.brandCopy}>
+                <Text style={styles.studioKicker}>STUDIO</Text>
+                <Text style={styles.studioName} numberOfLines={1}>
+                  {tenant?.name || 'Clyro'}
+                </Text>
+              </View>
+            </Pressable>
+            <View style={styles.actions}>
+              <CircleAction
+                icon="notifications-outline"
+                label="Notifications"
+                onPress={() => goMore('Notifications')}
+                onDark={false}
+                iconColor={colors.textPrimary}
+                colors={colors}
+                shadows={shadows}
+              />
+              <Pressable
+                onPress={openProfile}
+                accessibilityRole="button"
+                accessibilityLabel="Profile"
+                style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+              >
+                <Avatar name={user?.name} uri={user?.avatar} size={36} />
+              </Pressable>
+            </View>
+          </View>
+        ) : (
         <View style={styles.bar}>
           <Pressable
             onPress={openProfile}
@@ -453,7 +493,7 @@ export function AppNavBar({
             </Text>
           </Pressable>
 
-          {!onHero ? <ActiveTimerChip /> : null}
+          <ActiveTimerChip />
 
           <View style={styles.actions}>
             {caps.reports || caps.portfolio ? (
@@ -467,11 +507,6 @@ export function AppNavBar({
                 shadows={shadows}
               />
             ) : null}
-            {/*
-              * Replaces the old Billing/Notifications action. Both of those
-              * destinations live in the drawer this opens, so nothing became
-              * unreachable — the slot now leads to all of them instead of one.
-              */}
             <CircleAction
               icon="menu-outline"
               label="Open sidebar"
@@ -483,6 +518,7 @@ export function AppNavBar({
             />
           </View>
         </View>
+        )}
       </Animated.View>
 
       <Modal
@@ -618,6 +654,38 @@ function createStyles(c: AppColors, shadows: ReturnType<typeof useShadows>, onHe
       gap: spacing.sm,
       paddingHorizontal: spacing.lg,
       minHeight: 48,
+    },
+    brandRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      minWidth: 0,
+    },
+    brandCopy: { flex: 1, minWidth: 0 },
+    mark: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: '#1e2022',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    markLetter: {
+      color: '#ffffff',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    studioKicker: {
+      ...typography.micro,
+      color: c.textMuted,
+      letterSpacing: 1.2,
+      fontSize: 10,
+    },
+    studioName: {
+      ...typography.captionStrong,
+      color: c.textPrimary,
+      marginTop: 1,
     },
     avatarWrap: {
       borderRadius: 22,

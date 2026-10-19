@@ -239,7 +239,7 @@ function LogoMark({ size = 'md' }) {
   const box = size === 'sm' ? 'h-7 w-7 text-[11px]' : 'h-8 w-8 text-[12px]'
   return (
     <span
-      className={`flex ${box} items-center justify-center rounded-[6px] bg-[#3ecf8e] font-bold text-[#171717] shadow-[0_1px_3px_rgba(0,0,0,0.06)]`}
+      className={`flex ${box} items-center justify-center rounded-[6px] bg-[var(--accent)] font-bold text-[#171717] shadow-[0_1px_3px_rgba(0,0,0,0.06)]`}
     >
       E
     </span>
@@ -541,8 +541,8 @@ export function LoginPage() {
         <div className="pointer-events-auto mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-2xl border border-[#dfdfdf] bg-[rgba(255,255,255,0.82)] px-3 py-2.5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-2xl sm:gap-4 sm:px-5 sm:py-3">
           <a href="#top" className="flex items-center gap-2.5">
             <LogoMark />
-            <span className="text-[16px] font-bold tracking-tight text-[#171717]">
-              EPM
+            <span className="text-[16px] font-medium tracking-tight text-[#1e2022]">
+              Clyro
             </span>
           </a>
           <nav className="hidden items-center gap-5 text-[13px] font-medium text-[#707070] md:flex lg:gap-7">
@@ -550,7 +550,7 @@ export function LoginPage() {
               <a
                 key={item.href}
                 href={item.href}
-                className="transition-colors hover:text-[#3ecf8e]"
+                className="transition-colors hover:text-[var(--accent)]"
               >
                 {item.label}
               </a>
@@ -558,7 +558,7 @@ export function LoginPage() {
           </nav>
           <a
             href="#enter"
-            className="rounded-full bg-[#3ecf8e] px-4 py-2 text-[12px] font-semibold text-[#171717] shadow-[0_6px_16px_rgba(37,99,235,0.28)] transition hover:bg-[#24b47e] sm:px-5 sm:text-[13px]"
+            className="rounded-full bg-[var(--accent)] px-4 py-2 text-[12px] font-semibold text-[#171717] shadow-[0_6px_16px_rgba(37,99,235,0.28)] transition hover:bg-[var(--accent-hover)] sm:px-5 sm:text-[13px]"
           >
             Contact Us
           </a>
@@ -575,31 +575,31 @@ export function LoginPage() {
 
         <div className="relative z-10 mx-auto max-w-5xl px-4 text-center md:px-6">
           <div className="lp-hero-copy mx-auto max-w-3xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d1fae5] bg-[#ecfdf5] px-3.5 py-1.5 text-[12px] font-semibold text-[#24b47e]">
-              <Sparkles className="h-3.5 w-3.5" />
-              EPM · Editco Project Management
+            <span className="inline-flex items-center gap-1.5 rounded-[4px] border border-[#e5dfd7] bg-[#faf9f7] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#68645e]">
+              Studio operations
             </span>
-            <h1 className="mt-5 text-[clamp(2.35rem,6vw,3.85rem)] font-bold leading-[1.08] tracking-[-0.035em] text-[#171717]">
-              Simplify Task Management
+            <h1 className="mt-5 text-[clamp(2.35rem,6vw,3.85rem)] font-medium leading-[1.08] tracking-[-0.03em] text-[#1e2022]">
+              Clyro
               <br />
-              <span className="text-[#3ecf8e]">Boost Productivity.</span>
+              <span className="text-[0.55em] font-normal tracking-[0.08em] text-[#68645e]">
+                Interior architecture OS
+              </span>
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-[#707070] md:text-[16px]">
-              EPM is the interior project OS — tasks, boards, Gantt, BOQ, site,
-              and channels in one private workspace built for studios that ship
-              spaces.
+            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-[#68645e] md:text-[16px]">
+              Enquiries, drawings, quotations, materials, site, and billing for
+              the studio — one workspace from first brief to handover.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <a
                 href="#enter"
-                className="inline-flex items-center gap-2 rounded-full bg-[#3ecf8e] px-7 py-3.5 text-[14px] font-semibold text-[#171717] shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:bg-[#24b47e]"
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-7 py-3.5 text-[14px] font-semibold text-[#171717] shadow-[0_12px_28px_rgba(37,99,235,0.3)] transition hover:bg-[var(--accent-hover)]"
               >
                 Get Started Free
                 <ArrowRight className="h-4 w-4" />
               </a>
               <a
                 href="#features"
-                className="rounded-full border border-[#c7c7c7] bg-[rgba(255,255,255,0.9)] px-7 py-3.5 text-[14px] font-semibold text-[#171717] shadow-[0_6px_18px_rgba(15,23,42,0.06)] backdrop-blur transition hover:border-[#4ade80] hover:text-[#24b47e]"
+                className="rounded-full border border-[#c7c7c7] bg-[rgba(255,255,255,0.9)] px-7 py-3.5 text-[14px] font-semibold text-[#171717] shadow-[0_6px_18px_rgba(15,23,42,0.06)] backdrop-blur transition hover:border-[#4ade80] hover:text-[var(--accent-hover)]"
               >
                 Book a Demo
               </a>
@@ -853,7 +853,7 @@ export function LoginPage() {
                 <ul className="mt-6 flex-1 space-y-2.5">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-[13px]">
-                      <Check className={`mt-0.5 h-4 w-4 shrink-0 ${plan.featured ? 'text-[#3ecf8e]' : 'text-accent'}`} />
+                      <Check className={`mt-0.5 h-4 w-4 shrink-0 ${plan.featured ? 'text-[var(--accent)]' : 'text-accent'}`} />
                       <span className={plan.featured ? 'text-[#dfdfdf]' : 'text-[#212121]'}>{f}</span>
                     </li>
                   ))}
@@ -881,7 +881,7 @@ export function LoginPage() {
             <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-accent/15" />
             <div className="pointer-events-none absolute -bottom-16 -left-8 h-48 w-48 rounded-full bg-white/5" />
             <div className="relative z-10">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#3ecf8e]">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--accent)]">
                 Enter
               </p>
               <h2 className="mt-3 text-[clamp(1.5rem,3vw,2.1rem)] font-medium leading-tight tracking-tight">
@@ -911,7 +911,7 @@ export function LoginPage() {
                 onClick={() => setPortal('staff')}
                 className={`flex-1 rounded-[6px] py-2 text-[12px] font-medium transition ${
                   portal === 'staff'
-                    ? 'bg-accent text-[#171717]'
+                    ? 'bg-[#1e2022] text-white'
                     : 'text-[#707070] hover:text-[#171717]'
                 }`}
               >
@@ -922,7 +922,7 @@ export function LoginPage() {
                 onClick={() => setPortal('admin')}
                 className={`flex-1 rounded-[6px] py-2 text-[12px] font-medium transition ${
                   portal === 'admin'
-                    ? 'bg-accent text-[#171717]'
+                    ? 'bg-[#1e2022] text-white'
                     : 'text-[#707070] hover:text-[#171717]'
                 }`}
               >
@@ -962,9 +962,9 @@ export function LoginPage() {
               type="submit"
               loading={loading}
               size="lg"
-              className="w-full !rounded-[6px] !bg-accent !text-[#171717] hover:!bg-accent-hover"
+              className="w-full !rounded-[4px] !bg-[#1e2022] !text-white hover:!bg-[#33373b]"
             >
-              Sign in
+              Enter studio
             </Button>
           </form>
         </div>

@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useParams, Link, useNavigate, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   LayoutDashboard,
   LayoutList,
   Share2,
-  ChevronRight,
   FileImage,
   Camera,
   Send,
@@ -19,12 +18,7 @@ import {
 import { api, useAuthStore } from '../../lib/api'
 import { Button, Modal, Skeleton, toast } from '../../components/ui'
 import { cn } from '../../lib/utils'
-import {
-  PILL_ACTIVE,
-  PILL_IDLE,
-  PILL_TRACK,
-} from '../../components/layout/PageToolbar'
-import { stageLabel } from '../../lib/format'
+import { formatInr, stageLabel } from '../../lib/format'
 import { whatsappLink } from '../../lib/phone'
 import { clientProjectEmailDraft } from '../../lib/composeEmail'
 import { openComposeEmail } from '../../store/composeEmailStore'
@@ -132,33 +126,41 @@ export function ProjectWorkspace() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[var(--bg-canvas)] print:h-auto print:overflow-visible">
-      <header className="shrink-0 border-b border-border/80 bg-surface/90 backdrop-blur-md print:hidden">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-5">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1 text-[11px] text-secondary">
-              <Link to="/projects" className="hover:text-primary">
-                All projects
-              </Link>
-              <ChevronRight className="h-3 w-3 shrink-0 opacity-50" />
-              <span className="truncate">{project.name}</span>
+    <div className="flex h-full min-h-0 flex-col bg-[#faf9f7] print:h-auto print:overflow-visible">
+      <header className="shrink-0 bg-[#faf9f7] print:hidden">
+        <div className="px-4 pt-4 sm:px-6">
+          <div className="rounded-xl bg-[#f4f3f1] p-4 sm:p-5">
+            <div className="mb-1 flex items-center justify-between gap-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#7a573b]">
+                {project.code || 'Project'}
+              </span>
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase',
+                  project.isDelayed || project.status === 'delayed'
+                    ? 'bg-[#ffdad6] text-[#93000a]'
+                    : 'bg-[#bceed3] text-[#002114]',
+                )}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                {project.isDelayed || project.status === 'delayed'
+                  ? 'Delayed'
+                  : project.status === 'on_hold'
+                    ? 'On hold'
+                    : 'On track'}
+              </span>
             </div>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <h1 className="truncate text-[20px] font-semibold tracking-tight text-primary">
-                {project.name}
-              </h1>
-              <p className="truncate text-[12px] text-secondary">
-                {project.clientName}
-                {project.location ? ` · ${project.location}` : ''}
-                {' · '}
-                <span className="font-medium text-primary">
-                  {stageLabel(project.currentStage)}
-                </span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1.5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="truncate text-[28px] font-medium leading-tight tracking-[-0.02em] text-[#1a1c1b]">
+                  {project.name}
+                </h1>
+                <p className="mt-1 text-[13px] text-[#44474a]">
+                  Client: {project.clientName}
+                  {project.location ? ` · ${project.location}` : ''}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
             {canManageProject && (
               <button
                 type="button"
@@ -218,32 +220,52 @@ export function ProjectWorkspace() {
               type="button"
               title="Compose and send email to the client"
               onClick={() => openComposeEmail(clientProjectEmailDraft(project))}
-              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#3ecf8e] px-3 text-[12px] font-semibold text-[#171717] shadow-sm transition hover:bg-[#24b47e]"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[var(--accent)] px-3 text-[12px] font-semibold text-[#171717] shadow-sm transition hover:bg-[var(--accent-hover)]"
             >
               <Mail className="h-3.5 w-3.5" />
               Email
             </button>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-[#efeeec] p-3">
+                <span className="block text-[11px] font-semibold uppercase tracking-[0.06em] text-[#44474a]">
+                  Allocated budget
+                </span>
+                <span className="mt-1 block text-[20px] font-medium tabular-nums text-[#1a1c1b]">
+                  {formatInr(project.budget || 0)}
+                </span>
+              </div>
+              <div className="rounded-lg bg-[#efeeec] p-3">
+                <span className="block text-[11px] font-semibold uppercase tracking-[0.06em] text-[#44474a]">
+                  Project stage
+                </span>
+                <span className="mt-1 block text-[16px] font-semibold text-[#7a573b]">
+                  {stageLabel(project.currentStage)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <nav className="px-4 pb-3 sm:px-5">
-          <div className={cn(PILL_TRACK, 'max-w-full overflow-x-auto')}>
-            {visibleTabs.map((tab) => (
-              <NavLink
-                key={tab.to}
-                to={tab.to}
-                className={({ isActive }) =>
-                  cn(
-                    'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition',
-                    isActive ? PILL_ACTIVE : PILL_IDLE,
-                  )
-                }
-              >
-                <tab.icon className="h-3.5 w-3.5" strokeWidth={2} />
-                {tab.label}
-              </NavLink>
-            ))}
-          </div>
+        <nav className="mt-3 flex gap-2 overflow-x-auto px-4 pb-3 sm:px-6">
+          {visibleTabs.map((tab) => (
+            <NavLink
+              key={tab.to}
+              to={tab.to}
+              className={({ isActive }) =>
+                cn(
+                  'flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition',
+                  isActive
+                    ? 'bg-[#1e2022] text-white'
+                    : 'bg-[#efeeec] text-[#44474a] hover:bg-[#e3e2e0]',
+                )
+              }
+            >
+              <tab.icon className="h-3.5 w-3.5" strokeWidth={2} />
+              {tab.label}
+            </NavLink>
+          ))}
         </nav>
       </header>
 

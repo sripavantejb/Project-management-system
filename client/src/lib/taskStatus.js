@@ -24,8 +24,8 @@ export const TASK_STATUSES = [
     nextHint: 'Send for check',
     progress: 40,
     dot: '#3b82f6',
-    bg: '#ecfdf5',
-    text: '#24b47e',
+    bg: 'var(--nav-active-bg)',
+    text: 'var(--accent-hover)',
   },
   {
     value: 'review',
@@ -46,7 +46,7 @@ export const TASK_STATUSES = [
     nextHint: 'Reopen task',
     progress: 100,
     dot: '#10b981',
-    bg: '#ecfdf5',
+    bg: 'var(--nav-active-bg)',
     text: '#047857',
   },
 ]

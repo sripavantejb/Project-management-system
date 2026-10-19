@@ -115,7 +115,7 @@ export function CreateVendorPaymentScreen({ route, navigation }: Props) {
       }
     >
       <VendorPicker label="Vendor" value={vendor} onChange={setVendor} />
-      {!params.projectId ? <ProjectPicker label="Project (optional)" value={projectId} onChange={setProjectId} /> : null}
+      <ProjectPicker label="Project (optional)" value={projectId} onChange={setProjectId} />
 
       <Text style={styles.label}>Purchase order</Text>
       {vendorPos.length === 0 ? (

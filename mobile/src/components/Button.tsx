@@ -88,11 +88,11 @@ function createThemed(c: AppColors) {
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: radius.full,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  md: { height: 52, paddingHorizontal: spacing.lg },
+  md: { height: 44, paddingHorizontal: spacing.lg },
   sm: { height: 40, paddingHorizontal: spacing.md },
   content: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   label: {

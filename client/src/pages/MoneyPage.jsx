@@ -66,9 +66,9 @@ function formatWhen(value) {
 
 function MetricCard({ icon: Icon, label, value, hint, tone = 'blue', onClick }) {
   const tones = {
-    blue: 'bg-[#ecfdf5] text-[#3ecf8e]',
+    blue: 'bg-[var(--nav-active-bg)] text-[var(--accent)]',
     slate: 'bg-surface-raised text-secondary',
-    green: 'bg-[#ecfdf5] text-[#059669]',
+    green: 'bg-[var(--nav-active-bg)] text-[#059669]',
     red: 'bg-[#fef2f2] text-[#dc2626]',
     amber: 'bg-[#fffbeb] text-[#d97706]',
   }
@@ -516,7 +516,7 @@ export function FinancePage() {
                     render: (v, row) => (
                       <Link
                         to={`/projects/${row.id}/overview`}
-                        className="inline-flex items-center gap-1 font-semibold text-primary hover:text-[#3ecf8e]"
+                        className="inline-flex items-center gap-1 font-semibold text-primary hover:text-[var(--accent)]"
                       >
                         {v} <ArrowUpRight className="h-3 w-3" />
                       </Link>
@@ -796,7 +796,7 @@ function ApprovalsPanel({ loading, expenses, reviewing, onReview }) {
                     type="button"
                     disabled={reviewing}
                     onClick={() => onReview(ex._id, 'approved')}
-                    className="inline-flex h-8 items-center gap-1 rounded-lg bg-[#3ecf8e] px-2.5 text-[11px] font-semibold text-white hover:bg-[#24b47e] disabled:opacity-50"
+                    className="inline-flex h-8 items-center gap-1 rounded-lg bg-[var(--accent)] px-2.5 text-[11px] font-semibold text-white hover:bg-[var(--accent-hover)] disabled:opacity-50"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Approve
@@ -960,7 +960,7 @@ function ExpenseRow({ expense: ex, actions }) {
             href={assetUrl(ex.receiptUrl)}
             target="_blank"
             rel="noreferrer"
-            className="text-[11px] font-semibold text-[#3ecf8e] hover:underline"
+            className="text-[11px] font-semibold text-[var(--accent)] hover:underline"
           >
             View receipt
           </a>

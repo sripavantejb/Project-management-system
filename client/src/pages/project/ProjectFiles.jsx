@@ -287,7 +287,7 @@ export function ProjectFiles() {
         className={cn(
           'min-h-[280px] rounded-2xl border border-dashed bg-surface p-4 shadow-sm transition',
           dragging
-            ? 'border-[#3ecf8e] bg-[#ecfdf5]'
+            ? 'border-[var(--accent)] bg-[var(--nav-active-bg)]'
             : 'border-border',
         )}
       >
@@ -394,7 +394,7 @@ export function ProjectFiles() {
                         <button
                           type="submit"
                           disabled={renameFile.isPending}
-                          className="rounded-lg bg-[#3ecf8e] px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
+                          className="rounded-lg bg-[var(--accent)] px-2.5 py-1 text-[11px] font-semibold text-white disabled:opacity-50"
                         >
                           Save
                         </button>
@@ -480,7 +480,7 @@ export function ProjectFiles() {
       </div>
 
       {dragging && (
-        <p className="text-center text-[12px] font-medium text-[#3ecf8e]">
+        <p className="text-center text-[12px] font-medium text-[var(--accent)]">
           Drop to upload into {folderLabel}
         </p>
       )}

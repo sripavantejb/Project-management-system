@@ -64,7 +64,7 @@ export function PlatformSubscriptionsPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Link to="/platform/companies" className="text-[12px] font-medium text-[#3ecf8e] hover:underline">
+                    <Link to="/platform/companies" className="text-[12px] font-medium text-[var(--accent)] hover:underline">
                       Manage
                     </Link>
                     {status === 'cancelled' || t.cancelledAt ? (
@@ -96,7 +96,7 @@ export function PlatformSubscriptionsPage() {
             </div>
           ))}
         </div>
-        <Link to="/platform/features" className="text-sm font-medium text-[#3ecf8e] hover:underline">
+        <Link to="/platform/features" className="text-sm font-medium text-[var(--accent)] hover:underline">
           Configure feature bundles per plan →
         </Link>
       </Card>

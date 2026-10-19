@@ -573,7 +573,7 @@ export function PlannerPage() {
               target="_blank"
               rel="noreferrer"
               className={cn(
-                'absolute inset-x-1 z-[4] overflow-hidden rounded-md border border-[#3ecf8e]/50 bg-[#3b82f6]/80 px-1.5 py-1 text-[11px] font-medium text-white',
+                'absolute inset-x-1 z-[4] overflow-hidden rounded-md border border-[var(--accent)]/50 bg-[#3b82f6]/80 px-1.5 py-1 text-[11px] font-medium text-white',
                 fullWidth && 'inset-x-2 px-2.5 py-1.5 text-[12px]',
               )}
               style={{ top, height }}

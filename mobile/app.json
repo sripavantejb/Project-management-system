@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Cubic",
+    "name": "Clyro",
     "slug": "editco-media",
     "scheme": "cubic",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "studio.cubic.mobile",
-      "versionCode": 6,
+      "versionCode": 7,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#004838",
@@ -55,10 +55,10 @@
         }
       ]
     ],
-    "owner": "editcomedias-team",
+    "owner": "harshapolin",
     "extra": {
       "eas": {
-        "projectId": "96edd0dd-a1c2-4b9c-9573-f49c882d19ad"
+        "projectId": "ead86b32-f131-4b7e-94f5-364d30a8be23"
       }
     }
   }

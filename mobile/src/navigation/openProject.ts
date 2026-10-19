@@ -67,20 +67,44 @@ export function landingTabParams(target: MobileHomeTarget) {
   return stackWithRoot(root, target.screen, target.params)
 }
 
+const TAB_NAMES = new Set(['Home', 'Projects', 'Inbox', 'More'])
+const STACK_ROOTS = new Set([...Object.values(TAB_ROOT_SCREEN), ...NESTED_STACK_ROOTS])
+
+function findTabNavigator(navigation: NavigationProp<ParamListBase>) {
+  let current: NavigationProp<ParamListBase> | undefined = navigation
+  for (let i = 0; i < 6 && current; i += 1) {
+    const names = current.getState?.()?.routeNames as string[] | undefined
+    if (names?.includes('Home') && names?.includes('More')) return current
+    current = current.getParent?.() as NavigationProp<ParamListBase> | undefined
+  }
+  return undefined
+}
+
 /**
- * Universal back: pop stack, then parent, then navigate to the nearest tab/stack root.
+ * Universal back: one step to the screen you opened this from.
+ * A remembered tab (opened from Home, Projects, or Chat) returns there
+ * instead of dumping you on the More menu that sits under those screens.
  */
 export function smartGoBack(
   navigation: NavigationProp<ParamListBase>,
   route?: RouteProp<ParamListBase, string>,
 ) {
-  const returnTo = (route?.params as { returnTo?: string } | undefined)?.returnTo
-  if (returnTo === 'home') {
-    if (navigation.canGoBack()) navigation.goBack()
-    const tab = navigation.getParent()
-    if (tab) tab.navigate('Home' as never)
-    else navigation.navigate('Home' as never)
-    return
+  const raw = (route?.params as { returnTo?: string } | undefined)?.returnTo
+  const returnTab = raw === 'home' ? 'Home' : raw && TAB_NAMES.has(raw) ? raw : undefined
+
+  if (returnTab && returnTab !== 'More') {
+    const state = navigation.getState()
+    const index = state?.index ?? 0
+    const previous = state?.routes?.[index - 1]
+    if (navigation.canGoBack() && previous && !STACK_ROOTS.has(previous.name)) {
+      navigation.goBack()
+      return
+    }
+    const tab = findTabNavigator(navigation)
+    if (tab) {
+      tab.navigate(returnTab as never)
+      return
+    }
   }
 
   if (navigation.canGoBack()) {

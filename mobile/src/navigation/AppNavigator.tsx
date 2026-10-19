@@ -60,7 +60,7 @@ export function AppNavigator() {
         // 'front' overlays the tabs rather than pushing them, so opening the
         // drawer never reflows the screen underneath.
         drawerType: 'front',
-        drawerPosition: 'right',
+        drawerPosition: 'left',
         overlayColor: 'rgba(15, 15, 15, 0.45)',
         drawerStyle: {
           width: drawerWidth,

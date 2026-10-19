@@ -1,5 +1,13 @@
 import { ApprovalRule, ApprovalType, BUILTIN_APPROVAL_TYPES } from '../models/Approval.js'
 import { User } from '../models/User.js'
+import { AppError } from '../middleware/errorHandler.js'
+
+/** Steps on a rule, falling back to the original single approver. */
+export function stepsOf(rule) {
+  if (Array.isArray(rule?.steps) && rule.steps.length) return rule.steps
+  if (!rule?.approverRole && !rule?.approverUser) return []
+  return [{ approverRole: rule.approverRole, approverUser: rule.approverUser || null }]
+}
 
 /** Does this rule's band contain `value`? Upper bound is exclusive. */
 export function ruleMatches(rule, value) {
@@ -136,10 +144,114 @@ export async function resolveApproval(tenantId, entityType, amount) {
   }).lean()
 
   const rule = pickRule(rules, amount)
-  if (!rule) return { rule: null, approver: null }
+  if (!rule) return { rule: null, approver: null, chain: [] }
 
-  const approver = await resolveApproverUser(tenantId, rule)
-  return { rule, approver }
+  const chain = []
+  for (const step of stepsOf(rule)) {
+    const approver = await resolveApproverUser(tenantId, step)
+    chain.push({
+      approverRole: step.approverRole || '',
+      approver,
+      status: 'waiting',
+      note: '',
+    })
+  }
+  if (chain[0]) chain[0].status = 'pending'
+  return { rule, approver: chain[0]?.approver || null, chain }
+}
+
+/** Fields to copy onto a new record when a rule matches. */
+export function approvalStamp(resolved, actorId) {
+  if (!resolved?.rule) {
+    return { approvalStatus: 'none', approver: null, approvalRule: null, approvalStep: 0, approvalChain: [], approvalHistory: [] }
+  }
+  return {
+    approvalStatus: 'pending',
+    approver: resolved.approver,
+    approvalRule: resolved.rule._id,
+    approvalStep: 0,
+    approvalChain: resolved.chain,
+    approvalHistory: [
+      { action: 'requested', actor: actorId, at: new Date(), note: '', step: 0 },
+    ],
+  }
+}
+
+/**
+ * Approve or reject the current step on a record.
+ * Mutates the document. Caller saves it.
+ */
+export function decideApproval(doc, { user, isAdmin, decision, note }) {
+  if (!doc || doc.approvalStatus !== 'pending') {
+    throw new AppError('This is not waiting for approval', 400)
+  }
+  const chain = Array.isArray(doc.approvalChain) ? doc.approvalChain : []
+  const stepIndex = Number(doc.approvalStep) || 0
+  const current = chain[stepIndex]
+  const currentId = current?.approver || doc.approver
+  const allowed = isAdmin || (currentId && String(currentId) === String(user._id))
+  if (!allowed) throw new AppError('Only the assigned approver can decide this', 403)
+
+  const cleanNote = String(note || '').trim()
+  if (decision === 'rejected' && !cleanNote) {
+    throw new AppError('A reason is required to reject', 400)
+  }
+  if (!['approved', 'rejected'].includes(decision)) {
+    throw new AppError('decision must be approved or rejected', 400)
+  }
+
+  if (!Array.isArray(doc.approvalHistory)) doc.approvalHistory = []
+
+  if (decision === 'rejected') {
+    if (current) {
+      current.status = 'rejected'
+      current.decidedBy = user._id
+      current.decidedAt = new Date()
+      current.note = cleanNote
+    }
+    doc.approvalStatus = 'rejected'
+    doc.approvalHistory.push({
+      action: 'rejected',
+      actor: user._id,
+      at: new Date(),
+      note: cleanNote,
+      step: stepIndex,
+    })
+    return { finished: true, nextApprover: null, stepIndex }
+  }
+
+  if (current) {
+    current.status = 'approved'
+    current.decidedBy = user._id
+    current.decidedAt = new Date()
+    current.note = cleanNote
+  }
+  doc.approvalHistory.push({
+    action: 'approved',
+    actor: user._id,
+    at: new Date(),
+    note: cleanNote,
+    step: stepIndex,
+  })
+
+  const next = chain[stepIndex + 1]
+  if (next) {
+    next.status = 'pending'
+    doc.approvalStep = stepIndex + 1
+    doc.approver = next.approver
+    doc.markModified?.('approvalChain')
+    return { finished: false, nextApprover: next.approver, stepIndex: stepIndex + 1 }
+  }
+
+  doc.approvalStatus = 'approved'
+  return { finished: true, nextApprover: null, stepIndex }
+}
+
+export function stepSummary(doc) {
+  const chain = Array.isArray(doc?.approvalChain) ? doc.approvalChain : []
+  const step = Number(doc?.approvalStep) || 0
+  if (!chain.length) return { step: 0, total: doc?.approver ? 1 : 0, role: '' }
+  return { step, total: chain.length, role: chain[step]?.approverRole || '' }
 }
 
 /**

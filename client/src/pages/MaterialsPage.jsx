@@ -299,11 +299,11 @@ export function MaterialsPage() {
       <div className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-[20px] font-semibold tracking-tight text-primary">
-              Materials
+            <h1 className="text-[28px] font-medium tracking-[-0.02em] text-primary">
+              Materials pipeline
             </h1>
-            <p className="mt-0.5 text-[12.5px] text-secondary">
-              Buy → receive → store → pay — pick a stage below.
+            <p className="mt-0.5 text-[13px] text-secondary">
+              Requests, vendor quotes, purchase orders, goods received, and bills.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -857,7 +857,7 @@ function VendorsPanel({
                         : 'Compose email — add vendor email if needed'
                     }
                     onClick={() => openComposeEmail(vendorHelloEmailDraft(v))}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-[10px] bg-accent px-2.5 text-[11.5px] font-semibold text-[#171717] transition hover:bg-[#24b47e]"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-[10px] bg-accent px-2.5 text-[11.5px] font-semibold text-[#171717] transition hover:bg-[var(--accent-hover)]"
                   >
                     <Mail className="h-3.5 w-3.5" />
                     Email
@@ -1009,7 +1009,7 @@ function PoDetail({ po, onAdvance, advancing }) {
 }
 
 const AVATAR_TINTS = [
-  'from-[#3ecf8e] to-[#24b47e]',
+  'from-[var(--accent)] to-[var(--accent-hover)]',
   'from-[#64748b] to-[#475569]',
   'from-[#0ea5e9] to-[#0284c7]',
   'from-[#f59e0b] to-[#d97706]',
@@ -1455,7 +1455,7 @@ function VendorCompareModal({ open, onClose, vendors, purchaseOrders }) {
                         onClick={() =>
                           openComposeEmail(vendorHelloEmailDraft(v))
                         }
-                        className="inline-flex h-8 items-center gap-1.5 rounded-[10px] bg-accent px-2.5 text-[11.5px] font-semibold text-[#171717] transition hover:bg-[#24b47e]"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-[10px] bg-accent px-2.5 text-[11.5px] font-semibold text-[#171717] transition hover:bg-[var(--accent-hover)]"
                       >
                         <Mail className="h-3.5 w-3.5" />
                         Email
@@ -1486,8 +1486,8 @@ function AllRfqsPanel({ rfqs, loading }) {
   const RFQ_STATUS = {
     draft: { label: 'Draft', cls: 'bg-[#f4f7fb] text-[#5b6b80]' },
     sent: { label: 'Awaiting quotes', cls: 'bg-[#fff8ed] text-[#a2620f]' },
-    comparing: { label: 'Comparing', cls: 'bg-[#eef4ff] text-[#24b47e]' },
-    awarded: { label: 'Awarded', cls: 'bg-[#ecfdf5] text-[#0b7a52]' },
+    comparing: { label: 'Comparing', cls: 'bg-[#eef4ff] text-[var(--accent-hover)]' },
+    awarded: { label: 'Awarded', cls: 'bg-[var(--nav-active-bg)] text-[#0b7a52]' },
     cancelled: { label: 'Cancelled', cls: 'bg-[#fdf2f2] text-[#b42318]' },
   }
 

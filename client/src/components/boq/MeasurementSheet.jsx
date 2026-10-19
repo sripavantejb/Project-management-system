@@ -102,7 +102,7 @@ function SpacePopover({ spaces, selected, onApply, onClose }) {
                 className={cn(
                   'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
                   on
-                    ? 'border-[#3ecf8e] bg-[#3ecf8e] text-white'
+                    ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
                     : 'border-[#d7e0ec] bg-surface',
                 )}
               >
@@ -137,7 +137,7 @@ function SpacePopover({ spaces, selected, onApply, onClose }) {
           type="button"
           disabled={!picked.size}
           onClick={() => onApply([...picked])}
-          className="ml-auto h-7 rounded-lg bg-[#3ecf8e] px-3 text-[11.5px] font-semibold text-white transition hover:bg-[#24b47e] disabled:opacity-50"
+          className="ml-auto h-7 rounded-lg bg-[var(--accent)] px-3 text-[11.5px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
         >
           Apply
         </button>
@@ -288,7 +288,7 @@ export function MeasurementSheet({
             disabled={locked}
             onClick={onPushToBoq}
             title="Copy every item total into the BOQ quantities"
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#3ecf8e] px-3 text-[12px] font-semibold text-white transition hover:bg-[#24b47e] disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 text-[12px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
           >
             Apply to BOQ
           </button>
@@ -391,7 +391,7 @@ export function MeasurementSheet({
                           type="button"
                           onClick={() => addRow(idx)}
                           title={`Add a measurement to ${it.name}`}
-                          className="rounded-md p-1 text-[#9aa7ba] transition hover:bg-[#eef2f7] hover:text-[#3ecf8e]"
+                          className="rounded-md p-1 text-[#9aa7ba] transition hover:bg-[#eef2f7] hover:text-[var(--accent)]"
                         >
                           <Plus className="h-3.5 w-3.5" />
                         </button>

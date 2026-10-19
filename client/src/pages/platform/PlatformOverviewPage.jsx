@@ -59,7 +59,7 @@ export function PlatformOverviewPage() {
               </li>
             ))}
           </ul>
-          <Link to="/platform/subscriptions" className="text-sm font-medium text-[#3ecf8e] hover:underline">
+          <Link to="/platform/subscriptions" className="text-sm font-medium text-[var(--accent)] hover:underline">
             Manage subscriptions →
           </Link>
         </Card>
@@ -78,7 +78,7 @@ export function PlatformOverviewPage() {
               </li>
             ))}
           </ul>
-          <Link to="/platform/features" className="text-sm font-medium text-[#3ecf8e] hover:underline">
+          <Link to="/platform/features" className="text-sm font-medium text-[var(--accent)] hover:underline">
             Feature plans →
           </Link>
         </Card>
@@ -98,7 +98,7 @@ export function PlatformOverviewPage() {
                   <StatusChip status={t.status} />
                   <Link
                     to="/platform/companies"
-                    className="text-[#3ecf8e] hover:underline"
+                    className="text-[var(--accent)] hover:underline"
                   >
                     Open
                   </Link>
@@ -114,23 +114,23 @@ export function PlatformOverviewPage() {
         <div className="grid gap-3 sm:grid-cols-3">
           <Link
             to="/platform/companies"
-            className="flex items-center gap-3 rounded-xl border border-border bg-surface-raised p-4 hover:border-[#3ecf8e]/30 hover:bg-[#ecfdf5]"
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface-raised p-4 hover:border-[var(--accent)]/30 hover:bg-[var(--nav-active-bg)]"
           >
-            <Building2 className="h-5 w-5 text-[#3ecf8e]" />
+            <Building2 className="h-5 w-5 text-[var(--accent)]" />
             <span className="text-sm font-medium text-primary">Manage companies</span>
           </Link>
           <Link
             to="/platform/users"
-            className="flex items-center gap-3 rounded-xl border border-border bg-surface-raised p-4 hover:border-[#3ecf8e]/30 hover:bg-[#ecfdf5]"
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface-raised p-4 hover:border-[var(--accent)]/30 hover:bg-[var(--nav-active-bg)]"
           >
-            <Users className="h-5 w-5 text-[#3ecf8e]" />
+            <Users className="h-5 w-5 text-[var(--accent)]" />
             <span className="text-sm font-medium text-primary">Browse all users</span>
           </Link>
           <Link
             to="/platform/features"
-            className="flex items-center gap-3 rounded-xl border border-border bg-surface-raised p-4 hover:border-[#3ecf8e]/30 hover:bg-[#ecfdf5]"
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface-raised p-4 hover:border-[var(--accent)]/30 hover:bg-[var(--nav-active-bg)]"
           >
-            <FolderKanban className="h-5 w-5 text-[#3ecf8e]" />
+            <FolderKanban className="h-5 w-5 text-[var(--accent)]" />
             <span className="text-sm font-medium text-primary">Configure feature plans</span>
           </Link>
         </div>

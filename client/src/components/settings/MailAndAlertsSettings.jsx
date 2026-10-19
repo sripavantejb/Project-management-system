@@ -216,7 +216,7 @@ export function MailAndAlertsSettings({ canEdit }) {
               checked={smtp.enabled}
               disabled={!edit}
               onChange={(e) => updateSmtp({ enabled: e.target.checked })}
-              className="h-4 w-4 accent-[#3ecf8e]"
+              className="h-4 w-4 accent-[var(--accent)]"
             />
             Enabled
           </label>
@@ -275,7 +275,7 @@ export function MailAndAlertsSettings({ canEdit }) {
               checked={smtp.secure}
               disabled={!edit}
               onChange={(e) => updateSmtp({ secure: e.target.checked })}
-              className="h-4 w-4 accent-[#3ecf8e]"
+              className="h-4 w-4 accent-[var(--accent)]"
             />
             Use SSL (port 465). Leave off for Gmail TLS on 587.
           </label>
@@ -430,7 +430,7 @@ function Toggle({ label, checked, disabled, onChange }) {
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-3.5 w-3.5 accent-[#3ecf8e]"
+        className="h-3.5 w-3.5 accent-[var(--accent)]"
       />
       {label}
     </label>

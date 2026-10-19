@@ -14,7 +14,7 @@ import { notifyUser, notifyTaskAssignment, notifyTaskMoved, actorSummary } from 
 import { hasPermission } from '../lib/permissions.js'
 import { assertProjectAccess } from '../lib/projectScope.js'
 import { scoreTaskCompletion } from '../lib/impactEngine.js'
-import { resolveApproval } from '../lib/approvals.js'
+import { resolveApproval, approvalStamp } from '../lib/approvals.js'
 
 function taskLink(task) {
   const projectId = task.projectId?._id || task.projectId
@@ -573,17 +573,23 @@ router.post(
     // Only tasks explicitly flagged as needing sign-off get routed; everything
     // else stays out of the approvals queue.
     if (payload.requiresApproval) {
-      const { rule, approver } = await resolveApproval(req.tenantId, 'task', 0)
-      if (rule) {
-        payload.approvalStatus = 'pending'
-        payload.approver = approver
-        payload.approvalRule = rule._id
-      }
+      const resolved = await resolveApproval(req.tenantId, 'task', 0)
+      if (resolved.rule) Object.assign(payload, approvalStamp(resolved, req.user._id))
     }
 
     const task = await Task.create(withTenant(req, payload))
     await task.populate('assignee', 'name avatar')
     if (task.approver) await task.populate('approver', 'name email avatar role')
+    if (task.approver && task.approvalStatus === 'pending') {
+      await notifyUser(req, {
+        userId: task.approver._id || task.approver,
+        type: 'approval_requested',
+        title: 'Task needs approval',
+        body: `${req.user.name} needs a sign-off on “${task.title}” before it can be completed`,
+        link: '/approvals?tab=inbox',
+        projectId: task.projectId?._id || task.projectId,
+      })
+    }
     if (task.projectId) await task.populate('projectId', 'name')
 
     await ActivityLog.create(
@@ -643,6 +649,15 @@ router.patch(
           403,
         )
       }
+    }
+    if (
+      req.body.status === 'done' &&
+      task.requiresApproval &&
+      task.approvalStatus &&
+      task.approvalStatus !== 'none' &&
+      task.approvalStatus !== 'approved'
+    ) {
+      throw new AppError('This task needs approval before it can be completed', 409)
     }
     const diffs = await buildFieldDiffs(task, req.body, req.user.name)
 

@@ -417,7 +417,7 @@ export function AppShell({ children }) {
                     )}
                   />
                 ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-accent text-[13px] font-bold text-[#171717]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-[#1e2022] text-[13px] font-medium text-white">
                     {brandLabel.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -434,7 +434,7 @@ export function AppShell({ children }) {
               }}
               title="New project"
               className={cn(
-                'mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-[8px] bg-accent text-[13px] font-semibold text-[#171717] hover:bg-accent-hover',
+                'mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-[4px] bg-[#1e2022] text-[13px] font-semibold text-white hover:bg-[#33373b]',
                 collapsed && 'px-0',
               )}
             >

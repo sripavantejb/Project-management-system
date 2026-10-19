@@ -16,7 +16,7 @@ import {
   Store,
 } from 'lucide-react'
 import { api } from '../lib/api'
-import { formatInr, stageLabel } from '../lib/format'
+import { formatInr, formatInrCompact, stageLabel } from '../lib/format'
 import {
   PageToolbar,
   ToolbarLink,
@@ -171,11 +171,12 @@ export function CompanyAdminDashboard() {
           tone="emerald"
           label="Active leads"
           value={kpis?.activeLeads ?? 0}
-          foot={`Pipeline ${formatInr(kpis?.pipelineValue || 0)}${
+          foot={`Pipeline ${formatInrCompact(kpis?.pipelineValue || 0)}${
             range !== 'all' && kpis?.leadsInRange != null
               ? ` · ${kpis.leadsInRange} in period`
               : ''
           }`}
+          footTitle={`Pipeline ${formatInr(kpis?.pipelineValue || 0)}`}
         />
         <StatCard
           to="/boq"
@@ -195,7 +196,10 @@ export function CompanyAdminDashboard() {
           tone="emerald"
           label="Budget utilization"
           value={utilization}
-          foot={`${formatInr(kpis?.totalSpent || 0)} of ${formatInr(
+          foot={`${formatInrCompact(kpis?.totalSpent || 0)} of ${formatInrCompact(
+            kpis?.totalBudget || 0,
+          )}`}
+          footTitle={`${formatInr(kpis?.totalSpent || 0)} of ${formatInr(
             kpis?.totalBudget || 0,
           )}`}
         />
@@ -301,28 +305,33 @@ export function CompanyAdminDashboard() {
           }
         >
           <div className="flex h-full min-h-0 flex-col">
-            <div className="mb-4 grid shrink-0 grid-cols-2 gap-3 xl:grid-cols-5">
+            <div className="mb-4 grid min-w-0 shrink-0 grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-5">
               <BudgetTile
                 label="Approved budget"
-                value={formatInr(budget?.totalBudget || 0)}
+                value={formatInrCompact(budget?.totalBudget || 0)}
+                title={formatInr(budget?.totalBudget || 0)}
               />
               <BudgetTile
                 label="Actual spend"
-                value={formatInr(budget?.totalSpent || 0)}
+                value={formatInrCompact(budget?.totalSpent || 0)}
+                title={formatInr(budget?.totalSpent || 0)}
               />
               <BudgetTile
                 label="Committed POs"
-                value={formatInr(budget?.committedAmount || 0)}
+                value={formatInrCompact(budget?.committedAmount || 0)}
+                title={formatInr(budget?.committedAmount || 0)}
                 tone="blue"
               />
               <BudgetTile
                 label="Pending expenses"
-                value={formatInr(budget?.pendingAmount || 0)}
+                value={formatInrCompact(budget?.pendingAmount || 0)}
+                title={formatInr(budget?.pendingAmount || 0)}
                 tone="amber"
               />
               <BudgetTile
                 label="Variance"
-                value={formatInr(budget?.variance || 0)}
+                value={formatInrCompact(budget?.variance || 0)}
+                title={formatInr(budget?.variance || 0)}
                 tone={(budget?.variance || 0) < 0 ? 'red' : 'green'}
               />
             </div>
@@ -343,7 +352,9 @@ export function CompanyAdminDashboard() {
               {budget?.periodSpend != null && (
                 <p className="mt-2 text-[11px] text-secondary">
                   Approved expense spend in range:{' '}
-                  {formatInr(budget.periodSpend)}
+                  <span title={formatInr(budget.periodSpend)}>
+                    {formatInrCompact(budget.periodSpend)}
+                  </span>
                   {budget.spendDelta != null && (
                     <span
                       className={cn(
@@ -396,8 +407,11 @@ export function CompanyAdminDashboard() {
                             }}
                           />
                         </div>
-                        <span className="shrink-0 text-[10.5px] tabular-nums text-secondary">
-                          {formatInr(row.spent)} / {formatInr(row.budget)}
+                        <span
+                          className="shrink-0 text-[10.5px] tabular-nums text-secondary"
+                          title={`${formatInr(row.spent)} / ${formatInr(row.budget)}`}
+                        >
+                          {formatInrCompact(row.spent)} / {formatInrCompact(row.budget)}
                         </span>
                       </div>
                     </div>
@@ -539,8 +553,11 @@ export function CompanyAdminDashboard() {
                           <p className="truncate text-[13px] font-medium text-primary">
                             {vendor.name}
                           </p>
-                          <span className="shrink-0 text-[12px] font-semibold tabular-nums text-primary">
-                            {formatInr(vendor.value)}
+                          <span
+                            className="shrink-0 text-[12px] font-semibold tabular-nums text-primary"
+                            title={formatInr(vendor.value)}
+                          >
+                            {formatInrCompact(vendor.value)}
                           </span>
                         </div>
                         <div className="mt-1 flex items-center gap-2">
@@ -570,9 +587,15 @@ export function CompanyAdminDashboard() {
             </ul>
             <div className="mt-2 shrink-0 rounded-[8px] border border-dashed border-border bg-canvas px-3 py-2 text-center text-[11px] text-secondary">
               {(d?.topVendors || []).length} vendors ·{' '}
-              {formatInr(
-                (d?.topVendors || []).reduce((s, v) => s + (v.value || 0), 0),
-              )}{' '}
+              <span
+                title={formatInr(
+                  (d?.topVendors || []).reduce((s, v) => s + (v.value || 0), 0),
+                )}
+              >
+                {formatInrCompact(
+                  (d?.topVendors || []).reduce((s, v) => s + (v.value || 0), 0),
+                )}
+              </span>{' '}
               total PO value
             </div>
           </div>
@@ -689,13 +712,16 @@ export function CompanyAdminDashboard() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-5 py-3 text-right tabular-nums">
+                  <td
+                    className="px-5 py-3 text-right tabular-nums"
+                    title={`${formatInr(row.spent)} / ${formatInr(row.budget)}`}
+                  >
                     <span className="font-semibold text-primary">
-                      {formatInr(row.spent)}
+                      {formatInrCompact(row.spent)}
                     </span>
                     <span className="text-secondary">
                       {' '}
-                      / {formatInr(row.budget)}
+                      / {formatInrCompact(row.budget)}
                     </span>
                   </td>
                 </tr>
@@ -738,8 +764,11 @@ export function CompanyAdminDashboard() {
                   {row.progress || 0}%
                 </span>
               </div>
-              <p className="mt-2 text-[12px] tabular-nums text-secondary">
-                {formatInr(row.spent)} / {formatInr(row.budget)}
+              <p
+                className="mt-2 text-[12px] tabular-nums text-secondary"
+                title={`${formatInr(row.spent)} / ${formatInr(row.budget)}`}
+              >
+                {formatInrCompact(row.spent)} / {formatInrCompact(row.budget)}
               </p>
             </Link>
           ))}
@@ -754,7 +783,7 @@ export function CompanyAdminDashboard() {
   )
 }
 
-function StatCard({ to, icon: Icon, tone, label, value, delta, foot }) {
+function StatCard({ to, icon: Icon, tone, label, value, delta, foot, footTitle }) {
   const tones = {
     blue: 'bg-[var(--accent)]/12 text-[var(--accent-hover)]',
     violet: 'bg-[var(--accent)]/12 text-[var(--accent-hover)]',
@@ -764,7 +793,7 @@ function StatCard({ to, icon: Icon, tone, label, value, delta, foot }) {
   return (
     <Link
       to={to}
-      className="group block rounded-[12px] border border-border bg-surface p-4 transition hover:bg-canvas"
+      className="group block min-w-0 overflow-hidden rounded-[12px] border border-border bg-surface p-4 transition hover:bg-canvas"
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-secondary">
@@ -779,8 +808,8 @@ function StatCard({ to, icon: Icon, tone, label, value, delta, foot }) {
           <Icon className="h-4 w-4" />
         </span>
       </div>
-      <div className="mt-1 flex items-baseline gap-2">
-        <p className="text-[26px] font-semibold tabular-nums tracking-tight text-primary">
+      <div className="mt-1 flex min-w-0 items-baseline gap-2">
+        <p className="truncate text-[26px] font-semibold tabular-nums tracking-tight text-primary">
           {value}
         </p>
         {delta && (
@@ -796,12 +825,17 @@ function StatCard({ to, icon: Icon, tone, label, value, delta, foot }) {
           </span>
         )}
       </div>
-      <p className="mt-1.5 text-[11px] text-secondary">{foot}</p>
+      <p
+        className="mt-1.5 truncate text-[11px] leading-snug text-secondary"
+        title={footTitle || (typeof foot === 'string' ? foot : undefined)}
+      >
+        {foot}
+      </p>
     </Link>
   )
 }
 
-function BudgetTile({ label, value, tone }) {
+function BudgetTile({ label, value, title, tone }) {
   const tones = {
     blue: 'bg-[var(--accent)]/12 text-[var(--accent-hover)]',
     amber: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
@@ -809,16 +843,22 @@ function BudgetTile({ label, value, tone }) {
     green: 'bg-[var(--accent)]/12 text-[var(--accent-hover)]',
   }
   return (
-    <div className={cn('rounded-[8px] p-3', tone ? tones[tone] : 'bg-canvas text-primary')}>
+    <div
+      className={cn(
+        'min-w-0 overflow-hidden rounded-[8px] p-3',
+        tone ? tones[tone] : 'bg-canvas text-primary',
+      )}
+      title={title || value}
+    >
       <p
         className={cn(
-          'text-[11px] font-medium',
+          'truncate text-[11px] font-medium',
           tone ? 'opacity-80' : 'text-secondary',
         )}
       >
         {label}
       </p>
-      <p className="mt-1 text-[17px] font-semibold tabular-nums tracking-tight">
+      <p className="mt-1 truncate text-[16px] font-semibold tabular-nums leading-tight tracking-tight">
         {value}
       </p>
     </div>

@@ -35,7 +35,7 @@ export function PlatformCompaniesScreen({ navigation }: Props) {
 
   const chromeProps = {
     title: "Companies",
-    subtitle: "Workspaces on Cubic",
+    subtitle: "Workspaces on Clyro",
     subtitleIcon: 'business-outline' as const,
   }
 

@@ -3,11 +3,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { BottomTabBarProps, BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { typography, radius, type AppColors } from '../constants/theme'
-import { useColors, useShadows } from '../theme/useColors'
+import { useColors } from '../theme/useColors'
 import { useResponsive } from '../theme/useResponsive'
 import { glyphs, type Glyph } from '../icons'
 import { Icon } from './Icon'
 import { QuickCreateSheet } from './QuickCreateSheet'
+import { TAB_ROOT_SCREEN } from '../navigation/openProject'
 import type { RootTabParamList } from '../navigation/types'
 
 /** Home · Projects · center FAB · Chat · More */
@@ -28,11 +29,10 @@ export const TAB_BAR_CLEARANCE = 104
 export function GlassyTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets()
   const colors = useColors()
-  const shadows = useShadows()
   const { isCompact, pagePadding } = useResponsive()
   const styles = useMemo(
-    () => createStyles(colors, shadows, pagePadding, isCompact),
-    [colors, shadows, pagePadding, isCompact],
+    () => createStyles(colors, pagePadding, isCompact),
+    [colors, pagePadding, isCompact],
   )
   // Floating pill, so it needs a visible gap under it, not just inset clearance.
   const bottomPad = Math.max(insets.bottom, 14)
@@ -55,9 +55,9 @@ export function GlassyTabBar({ state, navigation }: BottomTabBarProps) {
             target: route.key,
             canPreventDefault: true,
           })
-          if (!focused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params)
-          }
+          if (event.defaultPrevented) return
+          const root = TAB_ROOT_SCREEN[route.name as keyof RootTabParamList]
+          navigation.navigate(route.name, root ? { screen: root } : route.params)
         }}
         accessibilityRole="button"
         accessibilityState={{ selected: focused }}
@@ -68,7 +68,7 @@ export function GlassyTabBar({ state, navigation }: BottomTabBarProps) {
         <Icon
           name={focused ? meta.on : meta.off}
           size={isCompact ? 21 : 23}
-          color={focused ? colors.accent : colors.textMuted}
+          color={focused ? colors.textPrimary : colors.textMuted}
           decorative
         />
         <Text style={[styles.label, focused && styles.labelActive]} numberOfLines={1}>
@@ -123,12 +123,7 @@ export function GlassyTabBar({ state, navigation }: BottomTabBarProps) {
   )
 }
 
-function createStyles(
-  c: AppColors,
-  shadows: ReturnType<typeof useShadows>,
-  pagePadding: number,
-  isCompact: boolean,
-) {
+function createStyles(c: AppColors, pagePadding: number, isCompact: boolean) {
   const edge = Math.max(pagePadding - 2, 12)
 
   return StyleSheet.create({
@@ -142,25 +137,18 @@ function createStyles(
       left: 0,
       right: 0,
       bottom: 0,
-      paddingHorizontal: edge,
+      backgroundColor: c.canvas,
     },
-    /**
-     * Floating pill rather than a full-width bar pinned to the edge: it reads
-     * as a control sitting above the page instead of a border closing it off,
-     * and the rounded corners match the sheets and cards used everywhere else.
-     */
     bar: {
       flexDirection: 'row',
       alignItems: 'flex-end',
       backgroundColor: c.surface,
-      borderRadius: radius.xl + 8,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
       paddingHorizontal: edge,
-      paddingTop: 12,
-      paddingBottom: 10,
-      minHeight: 60,
-      ...shadows.floating,
+      paddingTop: 8,
+      paddingBottom: 8,
+      minHeight: 56,
     },
     pair: {
       flex: 1,
@@ -188,24 +176,22 @@ function createStyles(
       textAlign: 'center',
     },
     labelActive: {
-      color: c.accent,
-      fontWeight: '700',
+      color: c.textPrimary,
+      fontWeight: '600',
     },
     fabSlot: {
-      width: isCompact ? 76 : 84,
+      width: isCompact ? 64 : 72,
       alignItems: 'center',
-      justifyContent: 'flex-start',
-      marginTop: -32,
+      justifyContent: 'center',
       flexShrink: 0,
     },
     fab: {
-      width: isCompact ? 56 : 60,
-      height: isCompact ? 56 : 60,
-      borderRadius: radius.full,
-      backgroundColor: c.accent,
+      width: 44,
+      height: 44,
+      borderRadius: radius.sm,
+      backgroundColor: c.cta,
       alignItems: 'center',
       justifyContent: 'center',
-      ...shadows.floating,
     },
   })
 }

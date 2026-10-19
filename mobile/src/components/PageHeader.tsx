@@ -131,7 +131,7 @@ function createStyles(c: AppColors, pagePadding: number, titleSize: number, isCo
     topIconBtn: {
       width: ICON_TARGET,
       height: ICON_TARGET,
-      borderRadius: ICON_TARGET / 2,
+      borderRadius: 4,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -175,7 +175,7 @@ function createStyles(c: AppColors, pagePadding: number, titleSize: number, isCo
       ...typography.h1,
       fontSize: Math.min(titleSize, 28),
       color: c.textPrimary,
-      fontWeight: '700',
+      fontWeight: '500',
       letterSpacing: -0.5,
       flex: 1,
       minWidth: 0,

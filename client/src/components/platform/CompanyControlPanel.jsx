@@ -291,13 +291,13 @@ export function CompanyControlPanel({ tenant, expanded, onToggle }) {
               <span className="text-[11px] font-medium text-[#ef4444]">Subscription cancelled</span>
             )}
             {tenant.subscriptionPlan && (
-              <span className="rounded-full bg-[#ecfdf5] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#3ecf8e]">
+              <span className="rounded-full bg-[var(--nav-active-bg)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
                 {tenant.subscriptionPlan}
               </span>
             )}
           </div>
           <p className="mt-0.5 text-xs text-secondary">
-            <span className="font-mono font-medium text-[#3ecf8e]">{tenant.slug}</span>
+            <span className="font-mono font-medium text-[var(--accent)]">{tenant.slug}</span>
             {' · '}
             {tenant.seatsUsed ?? 0}/{tenant.seatLimit} active seats
             {' · '}
@@ -315,7 +315,7 @@ export function CompanyControlPanel({ tenant, expanded, onToggle }) {
               e.stopPropagation()
               copyLogin()
             }}
-            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-secondary hover:border-[#3ecf8e]/30 hover:bg-[#ecfdf5] hover:text-[#3ecf8e]"
+            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-secondary hover:border-[var(--accent)]/30 hover:bg-[var(--nav-active-bg)] hover:text-[var(--accent)]"
           >
             <Copy className="h-3.5 w-3.5" />
             Copy login
@@ -325,7 +325,7 @@ export function CompanyControlPanel({ tenant, expanded, onToggle }) {
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-secondary hover:border-[#3ecf8e]/30 hover:bg-[#ecfdf5] hover:text-[#3ecf8e]"
+            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-secondary hover:border-[var(--accent)]/30 hover:bg-[var(--nav-active-bg)] hover:text-[var(--accent)]"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Open login
@@ -375,7 +375,7 @@ export function CompanyControlPanel({ tenant, expanded, onToggle }) {
                   className={cn(
                     'flex cursor-pointer items-center gap-3 rounded-[8px] border border-dashed px-3 py-3 transition',
                     logoDragging
-                      ? 'border-[#3ecf8e] bg-[#ecfdf5]'
+                      ? 'border-[var(--accent)] bg-[var(--nav-active-bg)]'
                       : 'border-border bg-surface-raised hover:border-[#c7c7c7]',
                     (uploadLogo.isPending || removeLogo.isPending) && 'pointer-events-none opacity-60',
                   )}
@@ -605,7 +605,7 @@ export function CompanyControlPanel({ tenant, expanded, onToggle }) {
                         features: { ...s.features, [key]: e.target.checked },
                       }))
                     }
-                    className="h-4 w-4 rounded border-[#c7c7c7] text-[#3ecf8e]"
+                    className="h-4 w-4 rounded border-[#c7c7c7] text-[var(--accent)]"
                   />
                   <span className="text-primary">{label}</span>
                 </label>

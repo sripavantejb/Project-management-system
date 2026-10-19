@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -29,9 +29,9 @@
   --color-shell: var(--shell-bg);
   --color-shell-text: var(--shell-text);
   --color-panel-dark: var(--panel-dark);
-  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-display: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-landing: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: "Hanken Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Space Grotesk", "Hanken Grotesk", Helvetica, Arial, sans-serif;
+  --font-landing: "Space Grotesk", "Hanken Grotesk", Helvetica, Arial, sans-serif;
 }
 
 /*
@@ -42,53 +42,54 @@
 [data-theme="light"] {
   color-scheme: light;
   /* Content canvas — soft grey like the product screenshots */
-  --bg-canvas: #f4f4f5;
+  --bg-canvas: #faf9f7;
   --bg-surface: #ffffff;
-  --bg-surface-raised: #f4f4f5;
+  --bg-surface-raised: #f3efea;
   --bg-light-card: #ffffff;
-  --bg-active: #e4e4e7;
-  --bg-muted: #f4f4f5;
-  --bg-rail: #ffffff;
-  /* App chrome (sidebar + top bar) — follows light theme */
-  --shell-bg: #ffffff;
-  --shell-hover: #f4f4f5;
-  --shell-border: #e4e4e7;
-  --shell-text: #71717a;
-  --shell-text-strong: #18181b;
-  --shell-input: #f4f4f5;
+  --bg-active: #f3efea;
+  --bg-muted: #f9f8f6;
+  --bg-rail: #faf9f7;
+  /* App chrome (sidebar + top bar) — Architectural Atelier */
+  --shell-bg: #faf9f7;
+  --shell-hover: #f3efea;
+  --shell-border: #e5dfd7;
+  --shell-text: #68645e;
+  --shell-text-strong: #1e2022;
+  --shell-input: #ffffff;
   /* Content panels follow the theme (legacy name kept for existing classes) */
   --panel-dark: #ffffff;
-  --panel-dark-raised: #f4f4f5;
-  --panel-dark-border: #e4e4e7;
-  --text-primary: #18181b;
-  --text-secondary: #71717a;
-  --text-muted: #a1a1aa;
-  --text-soft: #3f3f46;
-  --text-on-light: #18181b;
-  --accent: #3ecf8e;
-  --accent-hover: #24b47e;
-  --border-subtle: #e4e4e7;
-  --border-subtle-light: #d4d4d8;
-  --tab-underline: #3ecf8e;
-  --scrollbar: #d4d4d8;
-  --scrollbar-hover: #a1a1aa;
-  --create-bg: #3ecf8e;
-  --create-fg: #171717;
-  --create-hover: #24b47e;
+  --panel-dark-raised: #f3efea;
+  --panel-dark-border: #e5dfd7;
+  --text-primary: #1e2022;
+  --text-secondary: #68645e;
+  --text-muted: #8a847c;
+  --text-soft: #44423e;
+  --text-on-light: #1e2022;
+  --accent: #1e2022;
+  --accent-hover: #33373b;
+  --bronze: #a27b5c;
+  --border-subtle: #e5dfd7;
+  --border-subtle-light: #d6cebe;
+  --tab-underline: #1e2022;
+  --scrollbar: #d6cebe;
+  --scrollbar-hover: #a27b5c;
+  --create-bg: #1e2022;
+  --create-fg: #ffffff;
+  --create-hover: #33373b;
 
-  --cu-rail: #ffffff;
-  --cu-sidebar: #ffffff;
-  --cu-main: #f4f4f5;
+  --cu-rail: #faf9f7;
+  --cu-sidebar: #faf9f7;
+  --cu-main: #faf9f7;
   --cu-row: #ffffff;
-  --cu-hover: #f4f4f5;
+  --cu-hover: #fbf9f6;
 
-  --status-not-started: #a1a1aa;
-  --status-in-progress: #3ecf8e;
-  --status-on-hold: #eab308;
-  --status-completed: #24b47e;
-  --status-delayed: #ef4444;
-  --nav-active-bg: #ecfdf5;
-  --nav-active-fg: #171717;
+  --status-not-started: #68645e;
+  --status-in-progress: #2d5a46;
+  --status-on-hold: #c4823f;
+  --status-completed: #2d5a46;
+  --status-delayed: #9e3b3b;
+  --nav-active-bg: #f3efea;
+  --nav-active-fg: #1e2022;
 }
 
 [data-theme="dark"] {
@@ -1042,10 +1043,21 @@ body {
   .lp-glow-frame::before {
     background: linear-gradient(
       135deg,
-      rgba(62, 207, 142, 0.45),
-      rgba(74, 222, 128, 0.35),
+      rgba(162, 123, 92, 0.45),
+      rgba(30, 32, 34, 0.2),
       transparent 60%
     );
     inset: 0;
   }
+}
+
+/* Graphite primary actions stay readable after the Atelier palette swap. */
+.bg-accent.text-\[\#171717\],
+.bg-\[var\(--accent\)\].text-\[\#171717\],
+.hover\:bg-accent:hover.text-\[\#171717\] {
+  color: #ffffff !important;
+}
+
+h1, h2, .font-display {
+  font-family: var(--font-display);
 }

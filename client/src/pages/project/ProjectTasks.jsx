@@ -41,7 +41,7 @@ const GROUPS = [
     key: 'in_progress',
     label: 'Working on it',
     hint: 'Happening now',
-    dot: 'bg-[#3ecf8e]',
+    dot: 'bg-[var(--accent)]',
     tint: 'bg-black/[0.02]',
   },
   {
@@ -255,7 +255,7 @@ export function ProjectTasks() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Find…"
-                className="h-8 w-full rounded-full border border-border bg-surface-raised pl-8 pr-3 text-[12px] outline-none focus:border-[#3ecf8e]/50 focus:bg-surface"
+                className="h-8 w-full rounded-full border border-border bg-surface-raised pl-8 pr-3 text-[12px] outline-none focus:border-[var(--accent)]/50 focus:bg-surface"
               />
             </div>
             {caps.createTask && (
@@ -265,7 +265,7 @@ export function ProjectTasks() {
                   setCreateStatus('todo')
                   setCreateOpen(true)
                 }}
-                className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#3ecf8e] px-3 text-[12px] font-semibold text-[#171717] hover:bg-[#24b47e]"
+                className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-[var(--accent)] px-3 text-[12px] font-semibold text-[#171717] hover:bg-[var(--accent-hover)]"
               >
                 <Plus className="h-3.5 w-3.5" />
                 New
@@ -409,7 +409,7 @@ function TaskCard({ task, users, canManage, onOpen, onPatch }) {
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           ) : status === 'in_progress' ? (
             <Circle
-              className="h-4 w-4 fill-[#3ecf8e]/25 text-[#3ecf8e]"
+              className="h-4 w-4 fill-[var(--accent)]/25 text-[var(--accent)]"
               strokeWidth={2.5}
             />
           ) : status === 'review' ? (

@@ -453,7 +453,7 @@ export function MoreMainScreen({ navigation }: Props) {
             <NavRow
               icon="server-outline"
               label="Workspaces"
-              hint="Companies on Cubic"
+              hint="Companies on Clyro"
               tone={3}
               onPress={() => goMore(tabNav,'PlatformAdmin', { screen: 'PlatformOverview' })}
             />
@@ -480,7 +480,7 @@ export function MoreMainScreen({ navigation }: Props) {
           <NavRow
             icon="book-outline"
             label="Handbook"
-            hint="How Cubic works"
+            hint="How Clyro works"
             tone={4}
             onPress={() => goMore(tabNav,'Docs')}
           />

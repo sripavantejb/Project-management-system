@@ -47,7 +47,7 @@ const LOG_FILTERS = [
 ]
 
 const FIELD =
-  'h-10 rounded-xl border-black/[0.08] bg-[#fbfbfd] focus:border-[#3ecf8e]/55 focus:bg-white'
+  'h-10 rounded-xl border-black/[0.08] bg-[#fbfbfd] focus:border-[var(--accent)]/55 focus:bg-white'
 
 const emptyItemForm = {
   name: '',
@@ -276,7 +276,7 @@ function InventoryHub() {
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder="Search name, SKU…"
-                    className="h-9 w-[200px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] placeholder:text-[#86868b] focus:bg-white focus:ring-[#3ecf8e]/40"
+                    className="h-9 w-[200px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] placeholder:text-[#86868b] focus:bg-white focus:ring-[var(--accent)]/40"
                   />
                 </div>
                 <select
@@ -299,7 +299,7 @@ function InventoryHub() {
                   value={logQ}
                   onChange={(e) => setLogQ(e.target.value)}
                   placeholder="Search activity…"
-                  className="h-9 w-[200px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] placeholder:text-[#86868b] focus:bg-white focus:ring-[#3ecf8e]/40"
+                  className="h-9 w-[200px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] placeholder:text-[#86868b] focus:bg-white focus:ring-[var(--accent)]/40"
                 />
               </div>
             )}
@@ -463,7 +463,7 @@ function InventoryHub() {
                     <button
                       type="button"
                       onClick={() => openMove(item, 'in')}
-                      className="inline-flex h-8 items-center gap-1 rounded-full bg-[#3ecf8e]/12 px-3 text-[11px] font-semibold text-[#0d7a4f] transition hover:bg-[#3ecf8e]/20"
+                      className="inline-flex h-8 items-center gap-1 rounded-full bg-[var(--accent)]/12 px-3 text-[11px] font-semibold text-[#0d7a4f] transition hover:bg-[var(--accent)]/20"
                     >
                       <ArrowDownLeft className="h-3.5 w-3.5" />
                       In

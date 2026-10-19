@@ -370,7 +370,7 @@ export function ReportsPage() {
                       allowDecimals={false}
                     />
                     <Tooltip contentStyle={CHART_TOOLTIP} />
-                    <Bar dataKey="count" fill="#3ecf8e" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="count" fill="var(--accent)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -429,7 +429,7 @@ export function ReportsPage() {
                 value={peopleSearch}
                 onChange={(e) => setPeopleSearch(e.target.value)}
                 placeholder="Search people…"
-                className="h-9 w-[200px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] focus:bg-white focus:ring-[#3ecf8e]/40"
+                className="h-9 w-[200px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] focus:bg-white focus:ring-[var(--accent)]/40"
               />
             </div>
             <select
@@ -500,7 +500,7 @@ export function ReportsPage() {
                           person.completionRate >= 75
                             ? 'bg-emerald-500'
                             : person.completionRate >= 40
-                              ? 'bg-[#3ecf8e]'
+                              ? 'bg-[var(--accent)]'
                               : 'bg-amber-400',
                         )}
                         style={{ width: `${person.completionRate}%` }}
@@ -531,7 +531,7 @@ export function ReportsPage() {
                 value={projectSearch}
                 onChange={(e) => setProjectSearch(e.target.value)}
                 placeholder="Search projects…"
-                className="h-9 w-[220px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] focus:bg-white focus:ring-[#3ecf8e]/40"
+                className="h-9 w-[220px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] focus:bg-white focus:ring-[var(--accent)]/40"
               />
             </div>
             <span className="text-[11px] text-[#86868b]">
@@ -588,7 +588,7 @@ export function ReportsPage() {
                           'h-full rounded-full',
                           project.isDelayed || project.overdue > 0
                             ? 'bg-red-400'
-                            : 'bg-[#3ecf8e]',
+                            : 'bg-[var(--accent)]',
                         )}
                         style={{ width: `${project.progress}%` }}
                       />
@@ -629,7 +629,7 @@ function Kpi({ icon: Icon, label, value, hint, progress }) {
       {progress !== undefined && (
         <div className="mt-2 h-1 overflow-hidden rounded-full bg-[#f5f5f7]">
           <div
-            className="h-full rounded-full bg-[#3ecf8e]"
+            className="h-full rounded-full bg-[var(--accent)]"
             style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
           />
         </div>

@@ -21,7 +21,6 @@ export function RootNavigator() {
   const tenant = useAuthStore((s) => s.tenant)
   const authHydrated = useAuthStore((s) => s.hasHydrated)
   const uiHydrated = useUiStore((s) => s.hasHydrated)
-  const hasSeenIntro = useIntroStore((s) => s.hasSeenIntro)
   const introHydrated = useIntroStore((s) => s.hasHydrated)
   const { isRestoring } = useSessionRestore()
   const colors = useColors()
@@ -32,9 +31,9 @@ export function RootNavigator() {
   const bootReady = authHydrated && uiHydrated && introHydrated && !isRestoring
   const showSplash = !splashDone
   const isAuthedEarly = !!user && !!accessToken
-  // First-launch tour only — never shown again once seen, and skipped
-  // entirely for anyone who's already signed in (e.g. reopening the app).
-  const showTour = !showSplash && bootReady && introHydrated && !hasSeenIntro && !isAuthedEarly && !tourDone
+  // Logo splash, then the editorial pages, then sign-in. A restored session
+  // skips the pages and opens the studio.
+  const showTour = !showSplash && bootReady && !isAuthedEarly && !tourDone
 
   const navTheme = useMemo(
     () => ({
@@ -58,7 +57,7 @@ export function RootNavigator() {
     <View
       style={{
         flex: 1,
-        backgroundColor: showSplash ? SPLASH_BG : showTour ? '#004838' : colors.canvas,
+        backgroundColor: showSplash || showTour ? SPLASH_BG : colors.canvas,
       }}
     >
       {showSplash ? (

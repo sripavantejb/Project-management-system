@@ -572,7 +572,7 @@ function ProjectBoqBoard({ project, projectId, quotes, loading, onBack }) {
           onClick={onBack}
           title="Back to all projects"
           aria-label="Back to all projects"
-          className="group flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9aa7ba] transition hover:bg-[#f2f6fb] hover:text-[#24b47e]"
+          className="group flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9aa7ba] transition hover:bg-[#f2f6fb] hover:text-[var(--accent-hover)]"
         >
           <ArrowLeft className="h-4 w-4 transition-transform duration-150 group-hover:-translate-x-0.5" />
         </button>
@@ -601,7 +601,7 @@ function ProjectBoqBoard({ project, projectId, quotes, loading, onBack }) {
                 <span
                   className={cn(
                     'max-w-[170px] truncate text-[12px] font-semibold leading-none tracking-[-0.005em]',
-                    active ? 'text-[#24b47e]' : 'text-[#0b1220]',
+                    active ? 'text-[var(--accent-hover)]' : 'text-[#0b1220]',
                   )}
                 >
                   {q.title}
@@ -613,8 +613,8 @@ function ProjectBoqBoard({ project, projectId, quotes, loading, onBack }) {
             )
           })}
           {draft && draftType && (
-            <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-[#b6cef7] bg-[#f5f9ff] px-2.5 text-[12px] font-semibold leading-none text-[#24b47e]">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#3ecf8e]" />
+            <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-[#b6cef7] bg-[#f5f9ff] px-2.5 text-[12px] font-semibold leading-none text-[var(--accent-hover)]">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--accent)]" />
               New {BOQ_TYPE_META[draftType]?.label} · unsaved
             </span>
           )}
@@ -637,7 +637,7 @@ function ProjectBoqBoard({ project, projectId, quotes, loading, onBack }) {
           onClick={() =>
             project?.type === 'blank' ? setTypeModalOpen(true) : startDraft()
           }
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-[#3ecf8e] px-3 text-[12px] font-semibold text-white shadow-[0_6px_16px_-8px_rgba(37,99,235,0.75)] transition hover:bg-[#24b47e]"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 text-[12px] font-semibold text-white shadow-[0_6px_16px_-8px_rgba(37,99,235,0.75)] transition hover:bg-[var(--accent-hover)]"
         >
           <Plus className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">New sheet</span>
@@ -707,7 +707,7 @@ function EmptyProject({ onCreate, projectType }) {
   return (
     <div className="flex h-full items-center justify-center p-6">
       <div className={cn(CARD, 'max-w-lg px-10 py-12 text-center')}>
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#eef4ff] to-[#f7faff] text-[#3ecf8e] ring-1 ring-inset ring-[#dbe7fb]">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#eef4ff] to-[#f7faff] text-[var(--accent)] ring-1 ring-inset ring-[#dbe7fb]">
           <FileSpreadsheet className="h-6 w-6" />
         </div>
         <p className="mt-4 text-[17px] font-semibold tracking-[-0.02em] text-[#0b1220]">
@@ -721,7 +721,7 @@ function EmptyProject({ onCreate, projectType }) {
         <button
           type="button"
           onClick={onCreate}
-          className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-[#3ecf8e] px-5 text-[13.5px] font-semibold text-white shadow-[0_6px_16px_-6px_rgba(37,99,235,0.6)] transition hover:bg-[#24b47e]"
+          className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-[13.5px] font-semibold text-white shadow-[0_6px_16px_-6px_rgba(37,99,235,0.6)] transition hover:bg-[var(--accent-hover)]"
         >
           <Plus className="h-4 w-4" />
           Open quotation BOQ
@@ -1544,7 +1544,7 @@ function BoqSheet({
   }
 
   const cell =
-    'w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-[12.5px] outline-none transition hover:bg-[#f4f7fb] focus:border-[#b6cef7] focus:bg-surface focus:ring-2 focus:ring-[#3ecf8e]/10 disabled:cursor-not-allowed disabled:opacity-60'
+    'w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-[12.5px] outline-none transition hover:bg-[#f4f7fb] focus:border-[#b6cef7] focus:bg-surface focus:ring-2 focus:ring-[var(--accent)]/10 disabled:cursor-not-allowed disabled:opacity-60'
 
   const filledLines = items.filter(lineHasContent).length
 
@@ -1570,10 +1570,10 @@ function BoqSheet({
         onDrop={onDropFiles}
       >
         {dragOver && (
-          <div className="pointer-events-none absolute inset-3 z-30 flex items-center justify-center rounded-2xl border-2 border-dashed border-[#3ecf8e] bg-[#eef4ff]/85 backdrop-blur-[2px]">
+          <div className="pointer-events-none absolute inset-3 z-30 flex items-center justify-center rounded-2xl border-2 border-dashed border-[var(--accent)] bg-[#eef4ff]/85 backdrop-blur-[2px]">
             <div className="text-center">
-              <Upload className="mx-auto h-7 w-7 text-[#3ecf8e]" />
-              <p className="mt-2 text-[14px] font-semibold text-[#24b47e]">
+              <Upload className="mx-auto h-7 w-7 text-[var(--accent)]" />
+              <p className="mt-2 text-[14px] font-semibold text-[var(--accent-hover)]">
                 Drop to add
               </p>
               <p className="text-[12px] text-[#3b6fd4]">
@@ -1874,7 +1874,7 @@ function BoqSheet({
                           return
                         save.mutate(payload({ status: 'approved' }))
                       }}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#3ecf8e] px-3 text-[12px] font-semibold text-white transition hover:bg-[#24b47e] disabled:opacity-50"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 text-[12px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
                     >
                       <Check className="h-3.5 w-3.5" />
                       Approve
@@ -2029,7 +2029,7 @@ function BoqSheet({
                         )}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="h-3.5 w-[3px] rounded-full bg-[#3ecf8e]" />
+                          <span className="h-3.5 w-[3px] rounded-full bg-[var(--accent)]" />
                           <input
                             list="boq-rooms"
                             data-room={g.startIdx}
@@ -2063,7 +2063,7 @@ function BoqSheet({
                                 type="button"
                                 title={`Add a line to ${g.room}`}
                                 onClick={() => addLine(g.endIdx, g.room)}
-                                className="rounded-md p-1 text-[#9aa7ba] transition hover:bg-surface hover:text-[#3ecf8e]"
+                                className="rounded-md p-1 text-[#9aa7ba] transition hover:bg-surface hover:text-[var(--accent)]"
                               >
                                 <Plus className="h-3.5 w-3.5" />
                               </button>
@@ -2071,7 +2071,7 @@ function BoqSheet({
                                 type="button"
                                 title="Add a new category below"
                                 onClick={() => addCategory(g.endIdx)}
-                                className="rounded-md p-1 text-[#9aa7ba] transition hover:bg-surface hover:text-[#3ecf8e]"
+                                className="rounded-md p-1 text-[#9aa7ba] transition hover:bg-surface hover:text-[var(--accent)]"
                               >
                                 <Layers className="h-3.5 w-3.5" />
                               </button>
@@ -2300,7 +2300,7 @@ function BoqSheet({
                                   rowImageTarget.current = idx
                                   rowImageInputRef.current?.click()
                                 }}
-                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-dashed border-[#dde5ef] text-[#c3ccd9] transition hover:border-[#b6cef7] hover:bg-[#f5f9ff] hover:text-[#3ecf8e] disabled:opacity-40"
+                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-dashed border-[#dde5ef] text-[#c3ccd9] transition hover:border-[#b6cef7] hover:bg-[#f5f9ff] hover:text-[var(--accent)] disabled:opacity-40"
                               >
                                 <ImageIcon className="h-3.5 w-3.5" />
                               </button>
@@ -2421,7 +2421,7 @@ function BoqSheet({
                 <button
                   type="button"
                   onClick={() => addLine()}
-                  className="flex items-center gap-2 rounded-lg px-2 py-1 text-left text-[12.5px] font-semibold text-[#3ecf8e] transition hover:bg-[#f7faff]"
+                  className="flex items-center gap-2 rounded-lg px-2 py-1 text-left text-[12.5px] font-semibold text-[var(--accent)] transition hover:bg-[#f7faff]"
                 >
                   <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#eef4ff]">
                     <Plus className="h-3.5 w-3.5" />
@@ -2432,7 +2432,7 @@ function BoqSheet({
                   type="button"
                   onClick={() => addCategory()}
                   title="Start a new category band at the end of the sheet"
-                  className="flex items-center gap-2 rounded-lg px-2 py-1 text-left text-[12.5px] font-semibold text-[#3ecf8e] transition hover:bg-[#f7faff]"
+                  className="flex items-center gap-2 rounded-lg px-2 py-1 text-left text-[12.5px] font-semibold text-[var(--accent)] transition hover:bg-[#f7faff]"
                 >
                   <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#eef4ff]">
                     <Layers className="h-3.5 w-3.5" />
@@ -2533,7 +2533,7 @@ function BoqSheet({
                           markDirty()
                           setChargesPercent(Number(e.target.value))
                         }}
-                        className="h-7 w-16 rounded-lg border border-[#e4eaf3] bg-[#f7f9fc] pl-2 pr-5 text-right text-[12px] tabular-nums text-primary outline-none transition focus:border-[#b6cef7] focus:bg-surface focus:ring-2 focus:ring-[#3ecf8e]/10 disabled:opacity-50"
+                        className="h-7 w-16 rounded-lg border border-[#e4eaf3] bg-[#f7f9fc] pl-2 pr-5 text-right text-[12px] tabular-nums text-primary outline-none transition focus:border-[#b6cef7] focus:bg-surface focus:ring-2 focus:ring-[var(--accent)]/10 disabled:opacity-50"
                       />
                       <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10.5px] text-[#9aa7ba]">
                         %
@@ -2558,7 +2558,7 @@ function BoqSheet({
                         markDirty()
                         setGst(Number(e.target.value))
                       }}
-                      className="h-7 w-16 rounded-lg border border-[#e4eaf3] bg-[#f7f9fc] pl-2 pr-5 text-right text-[12px] tabular-nums text-primary outline-none transition focus:border-[#b6cef7] focus:bg-surface focus:ring-2 focus:ring-[#3ecf8e]/10 disabled:opacity-50"
+                      className="h-7 w-16 rounded-lg border border-[#e4eaf3] bg-[#f7f9fc] pl-2 pr-5 text-right text-[12px] tabular-nums text-primary outline-none transition focus:border-[#b6cef7] focus:bg-surface focus:ring-2 focus:ring-[var(--accent)]/10 disabled:opacity-50"
                     />
                     <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10.5px] text-[#9aa7ba]">
                       %
@@ -2580,7 +2580,7 @@ function BoqSheet({
                     markDirty()
                     setDiscount(Number(e.target.value))
                   }}
-                  className="h-7 w-[124px] rounded-lg border border-[#e4eaf3] bg-[#f7f9fc] px-2 text-right text-[12px] tabular-nums text-primary outline-none transition focus:border-[#b6cef7] focus:bg-surface focus:ring-2 focus:ring-[#3ecf8e]/10 disabled:opacity-50"
+                  className="h-7 w-[124px] rounded-lg border border-[#e4eaf3] bg-[#f7f9fc] px-2 text-right text-[12px] tabular-nums text-primary outline-none transition focus:border-[#b6cef7] focus:bg-surface focus:ring-2 focus:ring-[var(--accent)]/10 disabled:opacity-50"
                 />
               </div>
             </div>
@@ -2591,7 +2591,7 @@ function BoqSheet({
                   type="button"
                   disabled={save.isPending}
                   onClick={() => save.mutate(payload())}
-                  className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#3ecf8e] text-[13px] font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.9)] transition hover:bg-[#24b47e] disabled:opacity-50"
+                  className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-[13px] font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.9)] transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
                 >
                   <Save className="h-4 w-4" />
                   {save.isPending
@@ -2655,7 +2655,7 @@ function BoqSheet({
                       }
                       save.mutate(payload({ status: 'sent' }))
                     }}
-                    className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-[#d7e5fc] bg-[#eef4ff] text-[12.5px] font-semibold text-[#24b47e] transition hover:bg-[#e0ebff] disabled:opacity-40"
+                    className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-[#d7e5fc] bg-[#eef4ff] text-[12.5px] font-semibold text-[var(--accent-hover)] transition hover:bg-[#e0ebff] disabled:opacity-40"
                   >
                     <Send className="h-3.5 w-3.5" />
                     Mark sent to client
@@ -2744,7 +2744,7 @@ function BoqSheet({
                 type="button"
                 disabled={locked || uploading}
                 onClick={() => galleryInputRef.current?.click()}
-                className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#e4eaf3] bg-surface px-2 text-[11px] font-semibold text-secondary transition hover:border-[#c7dbfb] hover:text-[#24b47e] disabled:opacity-40"
+                className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#e4eaf3] bg-surface px-2 text-[11px] font-semibold text-secondary transition hover:border-[#c7dbfb] hover:text-[var(--accent-hover)] disabled:opacity-40"
               >
                 <Upload className="h-3 w-3" />
                 {uploading ? 'Uploading…' : 'Add'}
@@ -2810,7 +2810,7 @@ function BoqSheet({
                       <div className="mt-1 flex items-center gap-2">
                         <div className="h-1 flex-1 overflow-hidden rounded-full bg-surface-raised">
                           <div
-                            className="h-full rounded-full bg-[#3ecf8e]/70 transition-all duration-500"
+                            className="h-full rounded-full bg-[var(--accent)]/70 transition-all duration-500"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -3182,7 +3182,7 @@ function Step({ index, label, hint, state, last }) {
         className={cn(
           'relative z-[1] mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ring-2 ring-white',
           state === 'done' && 'bg-emerald-500 text-white',
-          state === 'current' && 'bg-[#3ecf8e] text-white',
+          state === 'current' && 'bg-[var(--accent)] text-white',
           state === 'todo' && 'bg-surface-raised text-[#b4c0d0]',
         )}
       >
@@ -3441,7 +3441,7 @@ function BoqHistoryPanel({ quotes = [], activeId, onClose, onSelect }) {
       <aside className="relative flex h-full w-full max-w-md flex-col border-l border-[#e1e8f1] bg-surface shadow-[-20px_0_50px_-28px_rgba(11,18,32,0.45)]">
         <header className="flex items-start gap-3 border-b border-[#edf1f7] px-5 py-4">
           <div className="min-w-0 flex-1">
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#3ecf8e]">
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--accent)]">
               <History className="h-3.5 w-3.5" />
               Version history
             </div>
@@ -3522,7 +3522,7 @@ function BoqHistoryPanel({ quotes = [], activeId, onClose, onSelect }) {
                             className={cn(
                               'mt-2.5 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg text-[12px] font-semibold transition',
                               active
-                                ? 'border border-[#c7dbfb] bg-white text-[#24b47e]'
+                                ? 'border border-[#c7dbfb] bg-white text-[var(--accent-hover)]'
                                 : 'bg-[#0b1220] text-white hover:bg-[#1f2937]',
                             )}
                           >

@@ -159,7 +159,7 @@ export function GoogleCalendarScreen(_: Props) {
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.title}>{connected ? 'Connected' : 'Not connected'}</Text>
               <Text style={styles.meta} numberOfLines={1}>
-                {status.data?.email || status.data?.localEmail || 'Your meetings stay on Google — Cubic only reads them.'}
+                {status.data?.email || status.data?.localEmail || 'Your meetings stay on Google — Clyro only reads them.'}
               </Text>
             </View>
             {connected ? <Pill label="Live" color={colors.success} bg={colors.successSoft} /> : null}
@@ -172,7 +172,7 @@ export function GoogleCalendarScreen(_: Props) {
                 variant="secondary"
                 size="sm"
                 onPress={() =>
-                  Alert.alert('Disconnect Google Calendar?', 'Events stop appearing in Cubic on this device.', [
+                  Alert.alert('Disconnect Google Calendar?', 'Events stop appearing in Clyro on this device.', [
                     { text: 'Cancel', style: 'cancel' },
                     { text: 'Disconnect', style: 'destructive', onPress: () => disconnect.mutate() },
                   ])

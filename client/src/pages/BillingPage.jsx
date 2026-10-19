@@ -342,7 +342,7 @@ export function BillingPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search invoice, vendor, PO…"
-                className="h-9 w-[220px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] text-primary outline-none ring-1 ring-black/[0.04] placeholder:text-[#86868b] focus:bg-white focus:ring-[#3ecf8e]/40"
+                className="h-9 w-[220px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] text-primary outline-none ring-1 ring-black/[0.04] placeholder:text-[#86868b] focus:bg-white focus:ring-[var(--accent)]/40"
               />
             </div>
             <select
@@ -593,7 +593,7 @@ export function BillingPage() {
                                     status: 'paid',
                                   })
                                 }
-                                className="inline-flex h-8 items-center gap-1 rounded-full bg-[#3ecf8e]/12 px-3 text-[11px] font-semibold text-[#0d7a4f] transition hover:bg-[#3ecf8e]/20"
+                                className="inline-flex h-8 items-center gap-1 rounded-full bg-[var(--accent)]/12 px-3 text-[11px] font-semibold text-[#0d7a4f] transition hover:bg-[var(--accent)]/20"
                               >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                 Mark paid
@@ -794,7 +794,7 @@ export function BillingPage() {
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="flex w-full items-center gap-3 rounded-xl border border-dashed border-black/10 bg-[#fbfbfd] px-3.5 py-3 text-left transition hover:border-[#3ecf8e]/45 hover:bg-[#3ecf8e]/[0.04]"
+              className="flex w-full items-center gap-3 rounded-xl border border-dashed border-black/10 bg-[#fbfbfd] px-3.5 py-3 text-left transition hover:border-[var(--accent)]/45 hover:bg-[var(--accent)]/[0.04]"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-black/[0.06]">
                 <Upload className="h-4 w-4 text-[#86868b]" />
@@ -1023,7 +1023,7 @@ function ProjectPicker({ projects, value, selected, onChange }) {
                   ? 'Type project name or client…'
                   : 'Search or pick a project…'
               }
-              className="h-10 w-full rounded-xl border-0 bg-[#f5f5f7] pl-9 pr-9 text-[13px] text-primary outline-none ring-1 ring-black/[0.05] placeholder:text-[#86868b] focus:bg-white focus:ring-[#3ecf8e]/45"
+              className="h-10 w-full rounded-xl border-0 bg-[#f5f5f7] pl-9 pr-9 text-[13px] text-primary outline-none ring-1 ring-black/[0.05] placeholder:text-[#86868b] focus:bg-white focus:ring-[var(--accent)]/45"
             />
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c7c7cc]" />
           </div>

@@ -257,7 +257,7 @@ function AlertRow({ item, onDismiss, onReview, onDecide, deciding }) {
                   type="button"
                   disabled={deciding}
                   onClick={() => onDecide(item, 'approved')}
-                  className="inline-flex h-8 items-center rounded-lg bg-[#3ecf8e] px-3.5 text-[12px] font-semibold text-[#171717] transition hover:bg-[#24b47e] disabled:opacity-50"
+                  className="inline-flex h-8 items-center rounded-lg bg-[var(--accent)] px-3.5 text-[12px] font-semibold text-[#171717] transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
                 >
                   Approve
                 </button>
@@ -266,7 +266,7 @@ function AlertRow({ item, onDismiss, onReview, onDecide, deciding }) {
               <button
                 type="button"
                 onClick={onReview}
-                className="inline-flex h-8 items-center rounded-lg bg-[#3ecf8e] px-3.5 text-[12px] font-semibold text-[#171717] transition hover:bg-[#24b47e]"
+                className="inline-flex h-8 items-center rounded-lg bg-[var(--accent)] px-3.5 text-[12px] font-semibold text-[#171717] transition hover:bg-[var(--accent-hover)]"
               >
                 {config.cta}
               </button>

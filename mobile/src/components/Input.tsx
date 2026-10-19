@@ -103,10 +103,12 @@ function createStyles(c: AppColors) {
   return StyleSheet.create({
     wrap: { gap: 6, alignSelf: 'stretch' },
     label: {
-      ...typography.captionStrong,
+      ...typography.micro,
       color: c.textSecondary,
-      paddingHorizontal: INSET,
-      lineHeight: 16,
+      paddingHorizontal: 2,
+      lineHeight: 14,
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
     },
     field: {
       flexDirection: 'row',
@@ -114,14 +116,14 @@ function createStyles(c: AppColors) {
       height: FIELD_H,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: radius.lg,
+      borderRadius: radius.sm,
       backgroundColor: c.surface,
       paddingLeft: INSET,
       paddingRight: 6,
       width: '100%',
       overflow: 'hidden',
     },
-    fieldFocused: { borderColor: c.accent, backgroundColor: c.accentSoft },
+    fieldFocused: { borderColor: c.textPrimary, backgroundColor: c.surface },
     fieldError: { borderColor: c.danger, backgroundColor: c.dangerSoft },
     input: {
       flex: 1,

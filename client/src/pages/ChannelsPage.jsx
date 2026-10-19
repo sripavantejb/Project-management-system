@@ -226,7 +226,7 @@ function ChannelChat({ channelId, me }) {
             type="button"
             disabled={!text.trim() || send.isPending}
             onClick={() => send.mutate()}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#3ecf8e] text-[#171717] disabled:opacity-40"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] text-[#171717] disabled:opacity-40"
           >
             <Send className="h-4 w-4" />
           </button>

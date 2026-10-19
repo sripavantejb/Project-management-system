@@ -136,7 +136,7 @@ export function CreateMaterialIssueScreen({ route, navigation }: Props) {
         />
       }
     >
-      {!params.projectId ? <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} /> : null}
+      <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
 
       <Text style={styles.label}>Items from stock</Text>
       {lines.length === 0 ? (

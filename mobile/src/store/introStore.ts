@@ -23,7 +23,7 @@ export const useIntroStore = create<IntroState>()(
       setHasHydrated: (v) => set({ hasHydrated: v }),
     }),
     {
-      name: 'cubic-intro-tour',
+      name: 'clyro-intro-tour',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({ hasSeenIntro: s.hasSeenIntro }),
       onRehydrateStorage: () => (state) => {

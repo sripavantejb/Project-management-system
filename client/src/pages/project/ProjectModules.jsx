@@ -182,7 +182,7 @@ export function ProjectProcurement() {
         </Card>
         <Card className="!bg-surface p-4 shadow-sm">
           <p className="text-[12px] text-secondary">Order value</p>
-          <p className="mt-1 text-[20px] font-semibold tabular-nums text-[#3ecf8e]">
+          <p className="mt-1 text-[20px] font-semibold tabular-nums text-[var(--accent)]">
             {formatInr(totalValue)}
           </p>
         </Card>
@@ -202,7 +202,7 @@ export function ProjectProcurement() {
       <Card padding={false} className="overflow-hidden !bg-surface shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ecfdf5] text-[#3ecf8e]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--nav-active-bg)] text-[var(--accent)]">
               <FileSpreadsheet className="h-4 w-4" />
             </div>
             <div>
@@ -229,7 +229,7 @@ export function ProjectProcurement() {
                 type="button"
                 onClick={() => setRfqOpen(true)}
                 disabled={!selectedItems.length}
-                className="rounded-lg bg-[#3ecf8e] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[#24b47e] disabled:opacity-40"
+                className="rounded-lg bg-[var(--accent)] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[var(--accent-hover)] disabled:opacity-40"
               >
                 Raise RFQ from selected
               </button>
@@ -249,7 +249,7 @@ export function ProjectProcurement() {
             </p>
             <Link
               to={`/boq/${id}`}
-              className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-[#3ecf8e]"
+              className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--accent)]"
             >
               Open BOQ <ArrowRight className="h-3 w-3" />
             </Link>
@@ -288,7 +288,7 @@ export function ProjectProcurement() {
                         it.ordered
                           ? 'bg-surface-raised text-secondary'
                           : isSelected
-                            ? 'bg-[#ecfdf5]'
+                            ? 'bg-[var(--nav-active-bg)]'
                             : 'hover:bg-surface-raised',
                       )}
                     >
@@ -297,7 +297,7 @@ export function ProjectProcurement() {
                           <button
                             type="button"
                             onClick={() => toggle(it._key)}
-                            className="text-[#3ecf8e]"
+                            className="text-[var(--accent)]"
                             aria-label="Select"
                           >
                             {isSelected ? (
@@ -577,7 +577,7 @@ function PoForm({
       }}
     >
       {fromQuote && (
-        <div className="rounded-xl border border-[#d1fae5] bg-[#ecfdf5] px-3 py-2.5 text-[12px] text-[#24b47e]">
+        <div className="rounded-xl border border-[#d1fae5] bg-[var(--nav-active-bg)] px-3 py-2.5 text-[12px] text-[var(--accent-hover)]">
           <p className="font-semibold">
             From {projectName || 'project'} approved quote
           </p>
@@ -612,7 +612,7 @@ function PoForm({
           <button
             type="button"
             onClick={() => setNewVendorOpen(true)}
-            className="mt-1.5 text-[12px] font-semibold text-[#3ecf8e] hover:underline"
+            className="mt-1.5 text-[12px] font-semibold text-[var(--accent)] hover:underline"
           >
             + Add a new vendor
           </button>
@@ -775,9 +775,9 @@ const SNAG_FLOW = {
 
 function SiteStat({ icon: Icon, label, value, hint, tone = 'blue' }) {
   const tones = {
-    blue: 'bg-[#ecfdf5] text-[#3ecf8e]',
+    blue: 'bg-[var(--nav-active-bg)] text-[var(--accent)]',
     red: 'bg-[#fef2f2] text-[#dc2626]',
-    green: 'bg-[#ecfdf5] text-[#059669]',
+    green: 'bg-[var(--nav-active-bg)] text-[#059669]',
   }
   return (
     <Card className="flex items-center gap-3 !bg-surface shadow-sm">
@@ -1091,7 +1091,7 @@ export function ProjectSite() {
                     </p>
                   </div>
                   {u.progress > 0 && (
-                    <span className="ml-auto shrink-0 rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[11px] font-semibold text-[#3ecf8e]">
+                    <span className="ml-auto shrink-0 rounded-full bg-[var(--nav-active-bg)] px-2.5 py-1 text-[11px] font-semibold text-[var(--accent)]">
                       {u.progress}% done
                     </span>
                   )}
@@ -1203,7 +1203,7 @@ export function ProjectSite() {
                     <button
                       type="button"
                       disabled={patchSnag.isPending}
-                      className="rounded-md border border-[#d1fae5] bg-[#ecfdf5] px-2 py-1 text-[11px] font-semibold text-[#3ecf8e] hover:bg-[#d1fae5] disabled:opacity-60"
+                      className="rounded-md border border-[#d1fae5] bg-[var(--nav-active-bg)] px-2 py-1 text-[11px] font-semibold text-[var(--accent)] hover:bg-[#d1fae5] disabled:opacity-60"
                       onClick={() =>
                         patchSnag.mutate({
                           snagId: s._id,
@@ -1216,7 +1216,7 @@ export function ProjectSite() {
                     {s.taskId ? (
                       <Link
                         to={`/projects/${id}/tasks?task=${s.taskId}`}
-                        className="rounded-md px-2 py-1 text-[11px] font-semibold text-secondary underline hover:text-[#3ecf8e]"
+                        className="rounded-md px-2 py-1 text-[11px] font-semibold text-secondary underline hover:text-[var(--accent)]"
                       >
                         View task
                       </Link>

@@ -114,9 +114,7 @@ export function CreateRfqScreen({ route, navigation }: Props) {
         />
       }
     >
-      {!params.projectId ? (
-        <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
-      ) : null}
+      <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
 
       <View style={styles.wrap}>
         <Text style={styles.label}>Vendors</Text>

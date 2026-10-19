@@ -83,7 +83,7 @@ export function CreateBoqScreen({ route, navigation }: Props) {
         value={title}
         onChangeText={setTitle}
       />
-      {!params.projectId ? <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} /> : null}
+      <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
       <Text style={styles.label}>Property type</Text>
       <View style={styles.typeRow}>
         {TYPES.map((opt) => {
@@ -103,8 +103,8 @@ export function CreateBoqScreen({ route, navigation }: Props) {
       </View>
       <Text style={styles.hint}>
         {effectiveType === 'commercial'
-          ? 'Loads the full office renovation schedule — every row from the Cubic template.'
-          : 'Loads the full home interior schedule — every row from the Cubic template.'}
+          ? 'Loads the full office renovation schedule — every row from the Clyro template.'
+          : 'Loads the full home interior schedule — every row from the Clyro template.'}
       </Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </FormLayout>

@@ -10,14 +10,14 @@
 export type ThemeMode = 'light' | 'dark'
 
 const statusLight = {
-  not_started: '#8c8c98',
-  todo: '#8c8c98',
-  in_progress: '#3ecf8e',
-  review: '#e0a010',
-  on_hold: '#e0a010',
-  completed: '#17a06d',
-  done: '#17a06d',
-  delayed: '#e0483d',
+  not_started: '#68645e',
+  todo: '#68645e',
+  in_progress: '#c4823f',
+  review: '#3b6b88',
+  on_hold: '#c4823f',
+  completed: '#2d5a46',
+  done: '#2d5a46',
+  delayed: '#9e3b3b',
 } as Record<string, string>
 
 const statusDark = {
@@ -32,10 +32,10 @@ const statusDark = {
 } as Record<string, string>
 
 const priorityLight = {
-  urgent: '#e0483d',
-  high: '#e0a010',
-  medium: '#3ecf8e',
-  low: '#8c8c98',
+  urgent: '#9e3b3b',
+  high: '#c4823f',
+  medium: '#2d5a46',
+  low: '#68645e',
 } as Record<string, string>
 
 const priorityDark = {
@@ -46,50 +46,49 @@ const priorityDark = {
 } as Record<string, string>
 
 export const lightColors = {
-  canvas: '#f6f6f8',
+  canvas: '#faf9f7',
   surface: '#ffffff',
-  surfaceRaised: '#f3f3f6',
-  muted: '#f3f3f6',
-  active: '#e8e8ee',
+  surfaceRaised: '#f3efea',
+  muted: '#f3efea',
+  active: '#e9e8e6',
   rail: '#ffffff',
-  railHover: '#f2f2f6',
+  railHover: '#f4f3f1',
 
-  textPrimary: '#16161a',
-  textSecondary: '#5c5c68',
-  textMuted: '#6c6c78',
-  textSoft: '#3c3c46',
-  textOnRail: '#16161a',
-  textOnRailMuted: '#5c5c68',
-  /** CTA / primary button label on emerald */
-  textOnAccent: '#0d1a14',
+  textPrimary: '#1e2022',
+  textSecondary: '#68645e',
+  textMuted: '#68645e',
+  textSoft: '#44474a',
+  textOnRail: '#1e2022',
+  textOnRailMuted: '#68645e',
+  /** CTA / primary button label on graphite */
+  textOnAccent: '#ffffff',
   /** Label on danger / solid red surfaces */
   textOnDanger: '#ffffff',
 
-  accent: '#3ecf8e',
-  accentHover: '#24b47e',
-  accentSoft: '#e9faf2',
-  /** Emerald set as type — the brand green is 2.0:1 on white */
-  accentText: '#0d7a52',
-  /** Filled CTA — login Sign in, Apple-style pill */
-  cta: '#004838',
+  accent: '#a27b5c',
+  accentHover: '#8c674a',
+  accentSoft: '#fbf5ee',
+  accentText: '#7a573b',
+  /** Filled CTA — warm graphite from the Stitch design system */
+  cta: '#1e2022',
   ctaText: '#ffffff',
 
-  border: '#e7e7ec',
-  borderLight: '#d3d3dc',
-  borderStrong: '#d3d3dc',
+  border: '#e5dfd7',
+  borderLight: '#e5dfd7',
+  borderStrong: '#d6cebe',
 
-  danger: '#e0483d',
-  dangerSoft: '#fdecea',
-  dangerText: '#b3271d',
-  success: '#17a06d',
-  successSoft: '#e6f8ef',
-  successText: '#0d7a52',
-  warning: '#e0a010',
-  warningSoft: '#fdf3dc',
-  warningText: '#8a5d05',
-  info: '#2b7fff',
-  infoSoft: '#e9f1ff',
-  infoText: '#1b5fc4',
+  danger: '#9e3b3b',
+  dangerSoft: '#ffdad6',
+  dangerText: '#9e3b3b',
+  success: '#2d5a46',
+  successSoft: '#eef4f0',
+  successText: '#2d5a46',
+  warning: '#c4823f',
+  warningSoft: '#fbf5ee',
+  warningText: '#c4823f',
+  info: '#3b6b88',
+  infoSoft: '#f2f6f9',
+  infoText: '#3b6b88',
 
   status: statusLight,
   priority: priorityLight,
@@ -161,12 +160,12 @@ export const spacing = {
 
 export const radius = {
   /** Matches the web ladder: control 8 · menu 10 · card 12 · sheet 16 */
-  xs: 6,
-  sm: 8,
-  md: 10,
-  lg: 12,
-  xl: 16,
-  xxl: 20,
+  xs: 4,
+  sm: 4,
+  md: 8,
+  lg: 8,
+  xl: 12,
+  xxl: 12,
   /** Native form-sheet corner radius (options.ts formSheetOptions) */
   sheet: 22,
   full: 999,
@@ -177,12 +176,12 @@ export const TAB_BAR_CLEARANCE = 96
 
 /** Home hero palette — matched to AppNavBar NAV_HERO_BG and HomeScreen mock */
 export const heroLight = {
-  bg: '#004838',
-  panel: '#0a5c48',
-  lime: '#C5E966',
-  limeText: '#0a2e24',
-  limeMuted: 'rgba(197,233,102,0.15)',
-  card: '#0a5c48',
+  bg: '#1e2022',
+  panel: '#2a2c2e',
+  lime: '#a27b5c',
+  limeText: '#ffffff',
+  limeMuted: 'rgba(162,123,92,0.22)',
+  card: '#2a2c2e',
   border: 'rgba(255,255,255,0.14)',
   text: '#ffffff',
   textMuted: 'rgba(255,255,255,0.72)',
@@ -201,8 +200,8 @@ export function heroFor(_mode: ThemeMode) {
 
 /** Inbox / chat hub — matches home hero green + app canvas surfaces. */
 export const chatLight = {
-  headerFrom: '#004838',
-  headerTo: '#0a5c48',
+  headerFrom: '#1e2022',
+  headerTo: '#2a2c2e',
   headerText: '#ffffff',
   headerTextMuted: 'rgba(255,255,255,0.72)',
   headerSearchBg: 'rgba(255,255,255,0.14)',

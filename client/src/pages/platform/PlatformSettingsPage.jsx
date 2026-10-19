@@ -33,11 +33,11 @@ export function PlatformSettingsPage() {
         <ul className="space-y-2 text-sm text-secondary">
           <li>
             <span className="font-medium text-primary">Platform admin: </span>
-            <code className="rounded bg-surface-raised px-1.5 py-0.5 text-[#3ecf8e]">/platform/login</code>
+            <code className="rounded bg-surface-raised px-1.5 py-0.5 text-[var(--accent)]">/platform/login</code>
           </li>
           <li>
             <span className="font-medium text-primary">Company workspaces: </span>
-            <code className="rounded bg-surface-raised px-1.5 py-0.5 text-[#3ecf8e]">/login</code>
+            <code className="rounded bg-surface-raised px-1.5 py-0.5 text-[var(--accent)]">/login</code>
           </li>
         </ul>
       </Card>

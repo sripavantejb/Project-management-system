@@ -79,6 +79,7 @@ export interface Task {
   startDate?: string | null
   stage?: string
   tags?: string[]
+  attachments?: { url: string; name?: string; mime?: string }[]
   checklist?: ChecklistItem[]
   customFields?: Record<string, unknown>
   timeEstimate?: number | null

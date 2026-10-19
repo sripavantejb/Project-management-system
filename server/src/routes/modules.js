@@ -54,7 +54,7 @@ import {
 } from '../models/index.js'
 import { Tenant } from '../models/Tenant.js'
 import { ROLES } from '../models/User.js'
-import { resolveApproval } from '../lib/approvals.js'
+import { resolveApproval, approvalStamp, decideApproval } from '../lib/approvals.js'
 
 const router = express.Router()
 
@@ -647,12 +647,20 @@ router.post(
         discount,
         grandTotal,
         createdBy: req.user._id,
-        approvalStatus: boqApproval.rule ? 'pending' : 'none',
-        approver: boqApproval.approver,
-        approvalRule: boqApproval.rule?._id || null,
+        ...approvalStamp(boqApproval, req.user._id),
       }),
     )
     await quotation.populate('approver', 'name email avatar role')
+    if (quotation.approver && quotation.approvalStatus === 'pending') {
+      await notifyUser(req, {
+        userId: quotation.approver._id || quotation.approver,
+        type: 'approval_requested',
+        title: 'Quotation needs approval',
+        body: `${req.user.name} sent “${quotation.title}” for sign-off`,
+        link: '/approvals?tab=inbox',
+        projectId: quotation.projectId,
+      })
+    }
     res.status(201).json({ success: true, quotation })
   }),
 )
@@ -731,6 +739,13 @@ router.patch(
       })
       quotation.subtotal = totals.subtotal
       quotation.grandTotal = totals.grandTotal
+    }
+
+    if (
+      (req.body.status === 'sent' || req.body.status === 'approved') &&
+      (quotation.approvalStatus === 'pending' || quotation.approvalStatus === 'rejected')
+    ) {
+      throw new AppError('This quotation still needs its internal approval', 409)
     }
 
     if (req.body.status === 'sent') quotation.sentAt = new Date()
@@ -1014,34 +1029,32 @@ router.post(
     const approvalType = String(req.body.approvalType || 'drawing').trim() || 'drawing'
     const note = String(req.body.note || '').trim()
 
-    let approverId = null
-    let ruleId = null
-
+    let resolved
     if (req.body.approverUser) {
       const pinned = await User.findOne(
         tenantFilter(req, { _id: req.body.approverUser, isActive: { $ne: false } }),
       ).select('_id name')
       if (!pinned) throw new AppError('That approver is not in this workspace', 400)
-      approverId = pinned._id
+      resolved = {
+        rule: { _id: null },
+        approver: pinned._id,
+        chain: [{ approverRole: '', approver: pinned._id, status: 'pending', note: '' }],
+      }
     } else {
-      const resolved = await resolveApproval(req.tenantId, approvalType, 0)
+      resolved = await resolveApproval(req.tenantId, approvalType, 0)
       if (!resolved.rule || !resolved.approver) {
         throw new AppError(
           'No approval routing for drawings yet. Open Approvals, add a rule under “Drawing / file”, then try again.',
           400,
         )
       }
-      approverId = resolved.approver
-      ruleId = resolved.rule._id
     }
 
     const project = await Project.findById(file.projectId).select('name').lean()
 
     file.status = 'sent'
-    file.approvalStatus = 'pending'
+    Object.assign(file, approvalStamp(resolved, req.user._id))
     file.approvalType = approvalType
-    file.approvalRule = ruleId
-    file.approver = approverId
     file.requestedBy = req.user._id
     file.requestedAt = new Date()
     file.approvalNote = note
@@ -1112,16 +1125,14 @@ router.post(
     }
 
     const decision = String(req.body.decision || '').trim()
-    if (!['approved', 'rejected'].includes(decision)) {
-      throw new AppError('decision must be approved or rejected', 400)
-    }
     const decisionNote = String(req.body.note || '').trim()
-
-    file.approvalStatus = decision
-    file.status = decision
-    file.decidedBy = req.user._id
-    file.decidedAt = new Date()
-    file.decisionNote = decisionNote
+    const result = decideApproval(file, { user: req.user, isAdmin, decision, note: decisionNote })
+    if (result.finished) {
+      file.status = decision
+      file.decidedBy = req.user._id
+      file.decidedAt = new Date()
+      file.decisionNote = decisionNote
+    }
     await file.save()
     await file.populate([
       { path: 'approver', select: 'name avatar role' },
@@ -1134,12 +1145,14 @@ router.post(
         projectId: file.projectId,
         actor: req.user._id,
         type: 'file_status',
-        message: `${req.user.name} ${decision} “${file.name}”`,
-        meta: { fileId: file._id, decision },
+        message: result.finished
+          ? `${req.user.name} ${decision} “${file.name}”`
+          : `${req.user.name} approved step ${(result.stepIndex || 0)} of “${file.name}”`,
+        meta: { fileId: file._id, decision, finished: result.finished },
       }),
     )
 
-    if (file.requestedBy) {
+    if (result.finished && file.requestedBy) {
       await notifyUser(req, {
         userId: file.requestedBy._id || file.requestedBy,
         type: 'approval_decided',
@@ -1155,6 +1168,15 @@ router.post(
           decision,
           note: decisionNote,
         },
+      })
+    } else if (result.nextApprover) {
+      await notifyUser(req, {
+        userId: result.nextApprover,
+        type: 'approval_requested',
+        title: 'Drawing needs your sign-off',
+        body: `${req.user.name} approved the previous step on “${file.name}”`,
+        link: '/approvals?tab=inbox',
+        projectId: file.projectId,
       })
     }
 
@@ -1335,9 +1357,7 @@ router.post(
 
     const po = await PurchaseOrder.create(
       withTenant(req, {
-        approvalStatus: poApproval.rule ? 'pending' : 'none',
-        approver: poApproval.approver,
-        approvalRule: poApproval.rule?._id || null,
+        ...approvalStamp(poApproval, req.user._id),
         projectId: req.body.projectId,
         vendor: req.body.vendor || undefined,
         items,
@@ -1353,6 +1373,16 @@ router.post(
     )
     await po.populate('vendor', 'name contact phone gst')
     await po.populate('approver', 'name email avatar role')
+    if (po.approver && po.approvalStatus === 'pending') {
+      await notifyUser(req, {
+        userId: po.approver._id || po.approver,
+        type: 'approval_requested',
+        title: 'Purchase order needs approval',
+        body: `${req.user.name} raised ${po.poNumber}`,
+        link: '/approvals?tab=inbox',
+        projectId: po.projectId,
+      })
+    }
     res.status(201).json({ success: true, purchaseOrder: po })
   }),
 )
@@ -1364,6 +1394,21 @@ router.patch(
   asyncHandler(async (req, res) => {
     const po = await PurchaseOrder.findById(req.params.id)
     assertTenantDoc(po, req, 'PO')
+    if (
+      po.approvalStatus === 'pending' &&
+      req.body.status &&
+      req.body.status !== 'draft' &&
+      req.body.status !== po.status
+    ) {
+      throw new AppError('This purchase order is still waiting for approval', 409)
+    }
+    if (
+      po.approvalStatus === 'rejected' &&
+      req.body.status &&
+      !['draft'].includes(req.body.status)
+    ) {
+      throw new AppError('This purchase order was rejected. Send it back to draft before continuing.', 409)
+    }
     const allowed = [
       'vendor',
       'items',
@@ -1423,11 +1468,21 @@ router.post(
         amount,
         status: 'pending',
         submittedBy: req.user._id,
-        approver: expenseApproval.approver,
-        approvalRule: expenseApproval.rule?._id || null,
+        ...approvalStamp(expenseApproval, req.user._id),
+        ...(expenseApproval.rule ? {} : { approvalStatus: 'none' }),
       }),
     )
     await expense.populate('approver', 'name email avatar role')
+    if (expense.approver && expense.approvalStatus === 'pending') {
+      await notifyUser(req, {
+        userId: expense.approver._id || expense.approver,
+        type: 'approval_requested',
+        title: 'Expense needs approval',
+        body: `${req.user.name} submitted an expense for sign-off`,
+        link: '/approvals?tab=inbox',
+        projectId: expense.projectId,
+      })
+    }
     res.status(201).json({ success: true, expense })
   }),
 )
@@ -1446,8 +1501,34 @@ router.patch(
     if (expense.status !== 'pending') {
       throw new AppError('Only pending expenses can be reviewed', 409)
     }
-    expense.status = status
-    if (status === 'approved') expense.approvedBy = req.user._id
+    if (expense.approvalStatus === 'pending') {
+      const isAdmin = req.user?.isPlatformAdmin || isCompanyAdminRole(req.user?.role)
+      const result = decideApproval(expense, {
+        user: req.user,
+        isAdmin,
+        decision: status,
+        note: req.body.note,
+      })
+      if (result.finished) {
+        expense.status = status
+        if (status === 'approved') expense.approvedBy = req.user._id
+      } else if (result.nextApprover) {
+        await notifyUser(req, {
+          userId: result.nextApprover,
+          type: 'approval_requested',
+          title: 'Expense needs approval',
+          body: 'The previous approver signed off. This expense is now with you.',
+          link: '/approvals?tab=inbox',
+          projectId: expense.projectId,
+        })
+      }
+    } else {
+      if (status === 'rejected' && !String(req.body.note || '').trim()) {
+        throw new AppError('A reason is required to reject', 400)
+      }
+      expense.status = status
+      if (status === 'approved') expense.approvedBy = req.user._id
+    }
     await expense.save()
     await expense.populate('submittedBy', 'name avatar')
     await expense.populate('approvedBy', 'name avatar')

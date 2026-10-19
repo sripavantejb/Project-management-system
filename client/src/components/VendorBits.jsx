@@ -86,7 +86,7 @@ export function SendPoButton({ po, className }) {
           openComposeEmail(poEmailDraft(po))
           void markPoSent(po, 'email')
         }}
-        className="inline-flex h-7 items-center gap-1 rounded-lg bg-accent px-2 text-[11.5px] font-semibold text-[#171717] shadow-sm transition hover:bg-[#24b47e]"
+        className="inline-flex h-7 items-center gap-1 rounded-lg bg-accent px-2 text-[11.5px] font-semibold text-[#171717] shadow-sm transition hover:bg-[var(--accent-hover)]"
       >
         <Mail className="h-3 w-3" />
         Mail

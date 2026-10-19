@@ -141,7 +141,7 @@ export function CreateProjectModal({ open, onClose, defaultSpaceId }) {
                 onClick={() => setType(opt.value)}
                 className={
                   type === opt.value
-                    ? 'rounded-lg border border-[#3ecf8e] bg-[#3ecf8e]/10 px-3 py-2.5 text-left'
+                    ? 'rounded-lg border border-[var(--accent)] bg-[var(--accent)]/10 px-3 py-2.5 text-left'
                     : 'rounded-lg border border-[#2e2e32] bg-[#121214] px-3 py-2.5 text-left'
                 }
               >

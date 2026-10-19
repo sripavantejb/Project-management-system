@@ -108,7 +108,7 @@ export function MeetingNotes({ projectId, project, user }) {
               type="button"
               disabled={!text.trim() || add.isPending}
               onClick={submit}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#3ecf8e] px-3 text-[12px] font-semibold text-white shadow-sm transition hover:bg-[#24b47e] disabled:opacity-40"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 text-[12px] font-semibold text-white shadow-sm transition hover:bg-[var(--accent-hover)] disabled:opacity-40"
             >
               <StickyNote className="h-3.5 w-3.5" />
               {add.isPending ? 'Saving…' : 'Add note'}
@@ -167,7 +167,7 @@ export function MeetingNotes({ projectId, project, user }) {
                                 setEditingId(note._id)
                                 setEditText(note.text)
                               }}
-                              className="flex h-6 w-6 items-center justify-center rounded-md text-secondary hover:bg-[#ecfdf5] hover:text-[#3ecf8e]"
+                              className="flex h-6 w-6 items-center justify-center rounded-md text-secondary hover:bg-[var(--nav-active-bg)] hover:text-[var(--accent)]"
                             >
                               <Pencil className="h-3 w-3" />
                             </button>
@@ -207,7 +207,7 @@ export function MeetingNotes({ projectId, project, user }) {
                             onClick={() =>
                               update.mutate({ noteId: note._id, value: editText })
                             }
-                            className="h-7 rounded-lg bg-[#3ecf8e] px-2.5 text-[11.5px] font-semibold text-white hover:bg-[#24b47e] disabled:opacity-40"
+                            className="h-7 rounded-lg bg-[var(--accent)] px-2.5 text-[11.5px] font-semibold text-white hover:bg-[var(--accent-hover)] disabled:opacity-40"
                           >
                             {update.isPending ? 'Saving…' : 'Save'}
                           </button>

@@ -36,7 +36,7 @@ export function PlatformUsersPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search users…"
-          className="h-10 w-full rounded-xl border border-border bg-surface pl-10 pr-3 text-sm outline-none focus:border-[#3ecf8e] focus:ring-2 focus:ring-[#3ecf8e]/15"
+          className="h-10 w-full rounded-xl border border-border bg-surface pl-10 pr-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/15"
         />
       </div>
 
@@ -64,7 +64,7 @@ export function PlatformUsersPage() {
                     <td className="px-4 py-3 text-secondary">{u.email}</td>
                     <td className="px-4 py-3">
                       <span className="font-medium text-primary">{u.companyName}</span>
-                      <span className="ml-1 font-mono text-xs text-[#3ecf8e]">{u.workspace}</span>
+                      <span className="ml-1 font-mono text-xs text-[var(--accent)]">{u.workspace}</span>
                     </td>
                     <td className="px-4 py-3 text-secondary">{ROLE_LABELS[u.role] || u.role}</td>
                     <td className="px-4 py-3">

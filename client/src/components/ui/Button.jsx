@@ -3,7 +3,7 @@ import { cn } from '../../lib/utils'
 
 const variants = {
   primary:
-    'bg-accent text-[#171717] hover:bg-accent-hover shadow-[0_1px_2px_rgba(0,0,0,0.08)]',
+    'bg-accent text-white hover:bg-accent-hover shadow-[0_1px_2px_rgba(30,32,34,0.08)]',
   secondary:
     'bg-surface-raised text-primary border border-transparent hover:bg-active',
   ghost: 'bg-transparent text-secondary hover:text-primary hover:bg-surface-raised',
@@ -39,7 +39,7 @@ export const Button = forwardRef(function Button(
       type={type}
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center rounded-[6px] font-medium transition-[transform,background-color,color,box-shadow,opacity] duration-125 ease-out',
+        'inline-flex items-center justify-center rounded-[4px] font-medium transition-[transform,background-color,color,box-shadow,opacity] duration-125 ease-out',
         'disabled:pointer-events-none disabled:border-transparent disabled:bg-surface-raised disabled:text-secondary disabled:shadow-none',
         'active:scale-[0.97] motion-reduce:active:scale-100',
         variants[variant],

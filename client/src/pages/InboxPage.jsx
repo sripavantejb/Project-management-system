@@ -247,7 +247,7 @@ function PrimaryNotifications({ mode = 'primary' }) {
           key={n._id}
           className={cn(
             'flex w-full items-start gap-3 border-b border-border px-5 py-3.5 transition hover:bg-surface-raised',
-            !n.read && 'bg-[#ecfdf5]/50',
+            !n.read && 'bg-[var(--nav-active-bg)]/50',
           )}
         >
           <button
@@ -264,7 +264,7 @@ function PrimaryNotifications({ mode = 'primary' }) {
             <span
               className={cn(
                 'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-                n.read ? 'bg-[#c7c7c7]' : 'bg-[#3ecf8e]',
+                n.read ? 'bg-[#c7c7c7]' : 'bg-[var(--accent)]',
               )}
             />
             <div className="min-w-0 flex-1">

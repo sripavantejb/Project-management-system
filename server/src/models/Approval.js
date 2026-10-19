@@ -99,6 +99,20 @@ const approvalRuleSchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    /**
+     * Ordered sign-off. Step 1 must approve before step 2 is asked.
+     * Empty means the single approverRole / approverUser above.
+     */
+    steps: [
+      {
+        approverRole: { type: String, required: true, trim: true },
+        approverUser: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          default: null,
+        },
+      },
+    ],
 
     isActive: { type: Boolean, default: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -107,6 +121,34 @@ const approvalRuleSchema = new mongoose.Schema(
 )
 
 approvalRuleSchema.index({ tenantId: 1, entityType: 1, minAmount: 1 })
+
+/** Progress stored on the real record (PO, quote, expense, task, file). */
+export const approvalProgressFields = {
+  approvalStep: { type: Number, default: 0 },
+  approvalChain: [
+    {
+      approverRole: { type: String, default: '' },
+      approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      status: {
+        type: String,
+        enum: ['waiting', 'pending', 'approved', 'rejected'],
+        default: 'waiting',
+      },
+      decidedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      decidedAt: Date,
+      note: { type: String, default: '' },
+    },
+  ],
+  approvalHistory: [
+    {
+      action: { type: String, enum: ['requested', 'approved', 'rejected'], required: true },
+      actor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      at: { type: Date, default: Date.now },
+      note: { type: String, default: '' },
+      step: { type: Number, default: 0 },
+    },
+  ],
+}
 
 export const ApprovalType = mongoose.model('ApprovalType', approvalTypeSchema)
 export const ApprovalRule = mongoose.model('ApprovalRule', approvalRuleSchema)

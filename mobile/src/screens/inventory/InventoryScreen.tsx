@@ -2,7 +2,6 @@ import { NestedChrome } from '../../components/NestedChrome'
 import { useMemo, useState } from 'react'
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Ionicons } from '@expo/vector-icons'
 import { SectionLabel } from '../../components/SectionLabel'
 import { StatCard } from '../../components/StatCard'
 import { SurfaceCard } from '../../components/SurfaceCard'
@@ -42,8 +41,8 @@ export function InventoryScreen({ navigation }: Props) {
   })
 
   const chromeProps = {
-    title: "Inventory",
-    subtitle: "Stock on hand",
+    title: 'Master stock catalog',
+    subtitle: 'On-hand materials, value, and low stock',
     subtitleIcon: 'cube-outline' as const,
   }
 
@@ -69,39 +68,43 @@ export function InventoryScreen({ navigation }: Props) {
     return (
       <SurfaceCard>
         <View style={styles.cardTop}>
-          <Text style={styles.name} numberOfLines={1}>
-            {item.name}
+          <Text style={styles.sku} numberOfLines={1}>
+            {[item.sku, item.category].filter(Boolean).join(' · ') || 'Stock'}
           </Text>
-          {low ? <Ionicons name="warning-outline" size={16} color={colors.warning} /> : null}
+          <Text style={[styles.stockPill, low && styles.stockPillLow]}>{low ? 'Low stock' : 'In stock'}</Text>
         </View>
+        <Text style={styles.name} numberOfLines={2}>
+          {item.name}
+        </Text>
         <Text style={styles.meta}>
-          {item.quantity} {item.unit} · {item.category}
+          {item.quantity} {item.unit}
           {item.location ? ` · ${item.location}` : ''}
+          {item.reorderLevel ? ` · reorder at ${item.reorderLevel}` : ''}
         </Text>
         <Text style={styles.value}>{formatInr(item.quantity * item.unitCost)}</Text>
         <View style={styles.moveRow}>
           <Pressable
-            style={[styles.moveBtn, { backgroundColor: colors.successSoft }]}
+            style={[styles.moveBtn, styles.moveBtnDark]}
             disabled={busyId === item._id}
             onPress={() => {
               setBusyId(item._id)
               moveMutation.mutate({ id: item._id, type: 'in' })
             }}
           >
-            <Text style={[styles.moveText, { color: colors.success }]}>+1 In</Text>
+            <Text style={styles.moveTextLight}>Receive</Text>
           </Pressable>
           <Pressable
-            style={[styles.moveBtn, { backgroundColor: colors.dangerSoft }]}
+            style={styles.moveBtn}
             disabled={busyId === item._id || item.quantity <= 0}
             onPress={() => {
               setBusyId(item._id)
               moveMutation.mutate({ id: item._id, type: 'out' })
             }}
           >
-            <Text style={[styles.moveText, { color: colors.danger }]}>-1 Out</Text>
+            <Text style={styles.moveText}>Dispatch</Text>
           </Pressable>
           <Pressable style={styles.moveBtn} onPress={() => navigation.navigate('InventoryMovements')}>
-            <Text style={styles.moveText}>History</Text>
+            <Text style={styles.moveText}>Ledger</Text>
           </Pressable>
         </View>
       </SurfaceCard>
@@ -127,10 +130,9 @@ export function InventoryScreen({ navigation }: Props) {
         ListHeaderComponent={
           <View style={{ gap: spacing.md }}>
             <View style={styles.statsGrid}>
-              <StatCard label="Items" value={data.totals.items} />
-              <StatCard label="Low stock" value={data.totals.lowStock} tone={data.totals.lowStock ? 'warning' : 'default'} />
-              <StatCard label="Total units" value={data.totals.units} />
+              <StatCard label="Active SKUs" value={data.totals.items} />
               <StatCard label="Stock value" value={formatInr(data.totals.value)} />
+              <StatCard label="Low stock" value={data.totals.lowStock} tone={data.totals.lowStock ? 'warning' : 'default'} />
             </View>
             {list.length > 0 ? <SectionLabel count={list.length}>Items</SectionLabel> : null}
           </View>
@@ -154,11 +156,16 @@ function createStyles(c: AppColors) {
   return StyleSheet.create({
     statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
     cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    name: { ...typography.bodyStrong, color: c.textPrimary, flexShrink: 1 },
+    sku: { ...typography.micro, color: '#7a573b', letterSpacing: 0.4, textTransform: 'uppercase', flex: 1 },
+    stockPill: { ...typography.micro, color: '#2d5a46', backgroundColor: '#e4f3ea', overflow: 'hidden', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3 },
+    stockPillLow: { color: '#9e3b3b', backgroundColor: '#ffdad6' },
+    name: { ...typography.bodyStrong, color: c.textPrimary, fontSize: 18, marginTop: 4 },
     meta: { ...typography.caption, color: c.textSecondary, marginTop: 4 },
-    value: { ...typography.captionStrong, color: c.accent, marginTop: 2 },
-    moveRow: { flexDirection: 'row', gap: spacing.sm, marginTop: 8 },
-    moveBtn: { paddingHorizontal: spacing.sm, paddingVertical: 6, borderRadius: radius.full, backgroundColor: c.surfaceRaised },
-    moveText: { ...typography.micro, color: c.textSecondary, fontWeight: '700' },
+    value: { ...typography.captionStrong, color: c.textPrimary, marginTop: 2 },
+    moveRow: { flexDirection: 'row', gap: spacing.sm, marginTop: 10 },
+    moveBtn: { paddingHorizontal: spacing.sm, paddingVertical: 8, borderRadius: 4, backgroundColor: '#efeeec' },
+    moveBtnDark: { backgroundColor: '#1e2022' },
+    moveText: { ...typography.micro, color: c.textSecondary, fontWeight: '700', letterSpacing: 0.3 },
+    moveTextLight: { ...typography.micro, color: '#ffffff', fontWeight: '700', letterSpacing: 0.3 },
   })
 }

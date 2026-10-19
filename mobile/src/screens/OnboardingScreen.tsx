@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { AuthLayout } from '../components/AuthLayout'
 import { Input } from '../components/Input'
 import { Button } from '../components/Button'
-import { radius, spacing, typography, type AppColors } from '../constants/theme'
+import { spacing, typography, type AppColors } from '../constants/theme'
 import { useColors } from '../theme/useColors'
 import { authApi } from '../api/auth'
 import { useAuthStore } from '../store/authStore'
@@ -28,8 +28,8 @@ export function OnboardingScreen() {
   return (
     <AuthLayout
       title={`Welcome, ${user?.name?.split(' ')[0] || 'there'}`}
-      subtitle="Let’s set up your profile so Cubic feels like home."
-      footer={<Button title="Enter Cubic" onPress={() => mutation.mutate()} loading={mutation.isPending} fullWidth />}
+      subtitle="Let’s set up your profile so Clyro feels like home."
+      footer={<Button title="Enter Clyro" onPress={() => mutation.mutate()} loading={mutation.isPending} fullWidth />}
     >
       <View style={styles.progress}>
         <View style={styles.progressFill} />
@@ -47,8 +47,8 @@ export function OnboardingScreen() {
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-    progress: { height: 6, backgroundColor: c.border, borderRadius: radius.full, overflow: 'hidden' },
-    progressFill: { height: '100%', width: '70%', backgroundColor: c.accent },
+    progress: { height: 2, backgroundColor: c.border, overflow: 'hidden' },
+    progressFill: { height: '100%', width: '70%', backgroundColor: c.textPrimary },
     error: { ...typography.caption, color: c.danger },
   })
 }

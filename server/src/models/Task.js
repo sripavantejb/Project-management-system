@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { approvalProgressFields } from './Approval.js'
 
 const checklistSchema = new mongoose.Schema(
   {
@@ -60,6 +61,7 @@ const taskSchema = new mongoose.Schema(
     },
     approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     approvalRule: { type: mongoose.Schema.Types.ObjectId, ref: 'ApprovalRule', default: null },
+    ...approvalProgressFields,
     dependsOn: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
     isMilestone: { type: Boolean, default: false },
     tags: [{ type: String }],

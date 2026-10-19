@@ -135,18 +135,15 @@ export function ApprovalsPage() {
     onError,
   })
 
-  const decideFile = useMutation({
-    mutationFn: ({ id, decision }) =>
-      api(`/files/${id}/decide`, {
+  const decide = useMutation({
+    mutationFn: ({ kind, id, decision, note }) =>
+      api('/approvals/decide', {
         method: 'POST',
-        body: JSON.stringify({ decision }),
+        body: JSON.stringify({ kind, id, decision, note }),
       }),
     onSuccess: (_res, vars) => {
       invalidate()
-      qc.invalidateQueries({ queryKey: ['files'] })
-      toast(vars.decision === 'approved' ? 'Approved' : 'Rejected', {
-        type: 'success',
-      })
+      toast(vars.decision === 'approved' ? 'Approved' : 'Rejected', { type: 'success' })
     },
     onError,
   })
@@ -167,8 +164,8 @@ export function ApprovalsPage() {
     <div className="mx-auto w-full max-w-4xl space-y-5 pb-16">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-[22px] font-semibold tracking-tight text-primary">
-            Approvals
+          <h1 className="text-[28px] font-medium tracking-[-0.02em] text-primary">
+            Central approvals
           </h1>
           <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-secondary">
             Build any approval type, decide who signs off, and act on what is
@@ -222,8 +219,12 @@ export function ApprovalsPage() {
           loading={inboxLoading}
           scope={inboxScope}
           setScope={setInboxScope}
-          onDecideFile={(id, decision) => decideFile.mutate({ id, decision })}
-          deciding={decideFile.isPending}
+          onDecide={(item, decision) => {
+            const note = decision === 'rejected' ? window.prompt('Reason for rejection') : ''
+            if (decision === 'rejected' && !note?.trim()) return
+            decide.mutate({ kind: item.kind, id: item.id, decision, note })
+          }}
+          deciding={decide.isPending}
         />
       ) : (
         <>
@@ -287,7 +288,7 @@ export function ApprovalsPage() {
   )
 }
 
-function InboxPanel({ items, loading, scope, setScope, onDecideFile, deciding }) {
+function InboxPanel({ items, loading, scope, setScope, onDecide, deciding }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -354,6 +355,12 @@ function InboxPanel({ items, loading, scope, setScope, onDecideFile, deciding })
                     : ''}
                   {item.amount != null ? ` · ${formatInr(item.amount)}` : ''}
                 </p>
+                {item.stepTotal > 1 ? (
+                  <p className="mt-1 text-[12px] text-secondary">
+                    Step {item.step + 1} of {item.stepTotal}
+                    {item.stepRole ? ` · ${roleLabel(item.stepRole)}` : ''}
+                  </p>
+                ) : null}
                 {item.note ? (
                   <p className="mt-1 text-[12px] italic text-secondary">
                     “{item.note}”
@@ -379,25 +386,17 @@ function InboxPanel({ items, loading, scope, setScope, onDecideFile, deciding })
                     Open
                   </Link>
                 ) : null}
-                {item.kind === 'file' && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={deciding}
-                      onClick={() => onDecideFile(item.id, 'rejected')}
-                    >
-                      Reject
-                    </Button>
-                    <Button
-                      size="sm"
-                      disabled={deciding}
-                      onClick={() => onDecideFile(item.id, 'approved')}
-                    >
-                      Approve
-                    </Button>
-                  </>
-                )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={deciding}
+                  onClick={() => onDecide(item, 'rejected')}
+                >
+                  Reject
+                </Button>
+                <Button size="sm" disabled={deciding} onClick={() => onDecide(item, 'approved')}>
+                  Approve
+                </Button>
               </div>
             </div>
           ))}
@@ -552,20 +551,21 @@ function RuleRow({ band, hasAmount, onRemove }) {
 
       <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted" />
 
-      {approver ? (
-        <span className="flex min-w-0 items-center gap-2">
-          <Avatar name={approver.name} src={approver.avatar} size="xs" />
+      {(rule?.steps?.length ? rule.steps : [{ resolvedApprover: approver, approverRole: rule?.approverRole }]).map((step, index, list) => (
+        <span key={index} className="flex min-w-0 items-center gap-2">
+          {index > 0 ? <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted" /> : null}
           <span className="truncate text-[13px] font-medium text-primary">
-            {approver.name}
+            {step.resolvedApprover?.name || roleLabel(step.approverRole) || 'Approver'}
+            {list.length > 1 ? ` (${index + 1})` : ''}
           </span>
         </span>
-      ) : (
-        /* A role with nobody in it silently swallows approvals, so call it out. */
+      ))}
+      {!approver && !(rule?.steps?.length) ? (
         <span className="flex items-center gap-1.5 text-[12px] font-medium text-status-delayed">
           <UserRound className="h-3.5 w-3.5" />
           Nobody in this role
         </span>
-      )}
+      ) : null}
 
       <span className="flex items-center gap-1.5 text-[11px] text-secondary">
         {pinned ? (
@@ -596,20 +596,22 @@ function RuleRow({ band, hasAmount, onRemove }) {
 function RuleForm({ hasAmount, roles, members, pending, onCancel, onSubmit }) {
   const [minAmount, setMinAmount] = useState('')
   const [maxAmount, setMaxAmount] = useState('')
-  const [approverRole, setApproverRole] = useState('owner')
-  const [approverUser, setApproverUser] = useState('')
-
-  // Pinning a person is an override, so the role select follows them — the
-  // rule still records a role for when the pin is later cleared.
-  const pinnedMember = members.find((m) => m._id === approverUser)
-  const effectiveRole = pinnedMember?.role || approverRole
+  const [steps, setSteps] = useState([{ approverRole: 'project_manager', approverUser: '' }])
 
   const submit = () => {
+    const clean = steps.map((step) => {
+      const pinned = members.find((m) => m._id === step.approverUser)
+      return {
+        approverRole: pinned?.role || step.approverRole,
+        approverUser: step.approverUser || null,
+      }
+    })
     onSubmit({
       minAmount: hasAmount && minAmount !== '' ? Number(minAmount) : 0,
       maxAmount: hasAmount && maxAmount !== '' ? Number(maxAmount) : null,
-      approverRole: effectiveRole,
-      approverUser: approverUser || null,
+      approverRole: clean[0].approverRole,
+      approverUser: clean[0].approverUser,
+      steps: clean,
     })
   }
 
@@ -638,23 +640,46 @@ function RuleForm({ hasAmount, roles, members, pending, onCancel, onSubmit }) {
             />
           </>
         )}
-        <Select
-          label="Approver role"
-          value={effectiveRole}
-          disabled={!!pinnedMember}
-          onChange={(e) => setApproverRole(e.target.value)}
-          options={roles.map((r) => ({ value: r, label: roleLabel(r) }))}
-        />
-        <Select
-          label="Pin to a person (optional)"
-          value={approverUser}
-          onChange={(e) => setApproverUser(e.target.value)}
-          options={[
-            { value: '', label: `Anyone with the ${roleLabel(effectiveRole)} role` },
-            ...members.map((m) => ({ value: m._id, label: `${m.name} · ${roleLabel(m.role)}` })),
-          ]}
-        />
+        {steps.map((step, index) => (
+          <div key={index} className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+            <Select
+              label={steps.length > 1 ? `Step ${index + 1} role` : 'Approver role'}
+              value={step.approverRole}
+              onChange={(e) =>
+                setSteps((prev) => prev.map((row, i) => (i === index ? { ...row, approverRole: e.target.value } : row)))
+              }
+              options={roles.map((r) => ({ value: r, label: roleLabel(r) }))}
+            />
+            <Select
+              label={steps.length > 1 ? `Step ${index + 1} person` : 'Pin to a person (optional)'}
+              value={step.approverUser}
+              onChange={(e) =>
+                setSteps((prev) => prev.map((row, i) => (i === index ? { ...row, approverUser: e.target.value } : row)))
+              }
+              options={[
+                { value: '', label: 'Anyone in that role' },
+                ...members.map((m) => ({ value: m._id, label: `${m.name} · ${roleLabel(m.role)}` })),
+              ]}
+            />
+          </div>
+        ))}
       </div>
+      <button
+        type="button"
+        className="mt-3 text-[12px] font-semibold text-secondary"
+        onClick={() => setSteps((prev) => [...prev, { approverRole: 'owner', approverUser: '' }])}
+      >
+        Add next approver
+      </button>
+      {steps.length > 1 ? (
+        <button
+          type="button"
+          className="ml-3 mt-3 text-[12px] font-semibold text-secondary"
+          onClick={() => setSteps((prev) => prev.slice(0, -1))}
+        >
+          Remove last step
+        </button>
+      ) : null}
       <div className="mt-3 flex items-center gap-2">
         <Button size="sm" onClick={submit} loading={pending}>
           Add routing

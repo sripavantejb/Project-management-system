@@ -23,15 +23,15 @@ const cn = (...c) => c.filter(Boolean).join(' ')
 const STATUS = {
   draft: { label: 'Draft', pill: 'bg-[#f4f7fb] text-[#5b6b80] ring-[#e4eaf3]' },
   sent: { label: 'Awaiting quotes', pill: 'bg-[#fff8ed] text-[#a2620f] ring-[#f0dcc0]' },
-  comparing: { label: 'Comparing', pill: 'bg-[#eef4ff] text-[#24b47e] ring-[#c7dbfb]' },
-  awarded: { label: 'Awarded', pill: 'bg-[#ecfdf5] text-[#0b7a52] ring-[#b6e9d2]' },
+  comparing: { label: 'Comparing', pill: 'bg-[#eef4ff] text-[var(--accent-hover)] ring-[#c7dbfb]' },
+  awarded: { label: 'Awarded', pill: 'bg-[var(--nav-active-bg)] text-[#0b7a52] ring-[#b6e9d2]' },
   cancelled: { label: 'Cancelled', pill: 'bg-[#fdf2f2] text-[#b42318] ring-[#f5c9c4]' },
 }
 
 const VENDOR_STATE = {
   pending: { label: 'Not sent', dot: 'bg-[#c3cbd6]' },
   sent: { label: 'Awaiting', dot: 'bg-[#eab308]' },
-  quoted: { label: 'Quoted', dot: 'bg-[#3ecf8e]' },
+  quoted: { label: 'Quoted', dot: 'bg-[var(--accent)]' },
   declined: { label: 'Declined', dot: 'bg-[#ef4444]' },
 }
 
@@ -270,7 +270,7 @@ function CreateRfqModal({ open, onClose, items, vendors, onCreate, saving }) {
               </tbody>
             </table>
           </div>
-          <p className="border-t border-[#e9eef6] bg-[#ecfdf5] px-3 py-2 text-[11px] text-[#0b7a52]">
+          <p className="border-t border-[#e9eef6] bg-[var(--nav-active-bg)] px-3 py-2 text-[11px] text-[#0b7a52]">
             Vendor rate is editable here for your notes — vendors still only get
             Item, Qty and Unit. BOQ amounts stay internal.
           </p>
@@ -305,14 +305,14 @@ function CreateRfqModal({ open, onClose, items, vendors, onCreate, saving }) {
                   className={cn(
                     'flex w-full items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition',
                     on
-                      ? 'border-[#3ecf8e] bg-[#ecfdf5]'
+                      ? 'border-[var(--accent)] bg-[var(--nav-active-bg)]'
                       : 'border-[#e9eef6] bg-surface hover:border-[#c7dbfb]',
                   )}
                 >
                   <span
                     className={cn(
                       'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                      on ? 'border-[#3ecf8e] bg-[#3ecf8e] text-white' : 'border-[#d7e0ec]',
+                      on ? 'border-[var(--accent)] bg-[var(--accent)] text-white' : 'border-[#d7e0ec]',
                     )}
                   >
                     {on ? <Check className="h-3 w-3" /> : null}
@@ -383,7 +383,7 @@ function CreateRfqModal({ open, onClose, items, vendors, onCreate, saving }) {
               items: submitItems,
             })
           }
-          className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl bg-[#3ecf8e] text-[13px] font-semibold text-white transition hover:bg-[#24b47e] disabled:opacity-40"
+          className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl bg-[var(--accent)] text-[13px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-40"
         >
           {saving
             ? 'Creating…'
@@ -546,7 +546,7 @@ function QuoteModal({ rfq, entry, onClose, onSave, saving }) {
             type="button"
             disabled={saving}
             onClick={() => onSave({ ...charges, rates: rates.map(num), remarks })}
-            className="h-10 flex-1 rounded-xl bg-[#3ecf8e] text-[13px] font-semibold text-white transition hover:bg-[#24b47e] disabled:opacity-50"
+            className="h-10 flex-1 rounded-xl bg-[var(--accent)] text-[13px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save quote'}
           </button>
@@ -637,7 +637,7 @@ function RfqCard({ rfq, onSend, onQuote, onAward, busy }) {
                   className={cn(
                     'flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2',
                     awarded
-                      ? 'border-[#b6e9d2] bg-[#ecfdf5]'
+                      ? 'border-[#b6e9d2] bg-[var(--nav-active-bg)]'
                       : isL1
                         ? 'border-[#c7dbfb] bg-[#f7faff]'
                         : 'border-[#e9eef6] bg-surface',
@@ -650,12 +650,12 @@ function RfqCard({ rfq, onSend, onQuote, onAward, busy }) {
                         {v.name || 'Vendor'}
                       </span>
                       {isL1 && !awarded && (
-                        <span className="inline-flex items-center gap-0.5 rounded-md bg-[#eef4ff] px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.06em] text-[#24b47e]">
+                        <span className="inline-flex items-center gap-0.5 rounded-md bg-[#eef4ff] px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.06em] text-[var(--accent-hover)]">
                           <Trophy className="h-2.5 w-2.5" /> L1
                         </span>
                       )}
                       {awarded && (
-                        <span className="inline-flex items-center gap-0.5 rounded-md bg-[#3ecf8e] px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.06em] text-white">
+                        <span className="inline-flex items-center gap-0.5 rounded-md bg-[var(--accent)] px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.06em] text-white">
                           <Award className="h-2.5 w-2.5" /> Awarded
                         </span>
                       )}
@@ -693,7 +693,7 @@ function RfqCard({ rfq, onSend, onQuote, onAward, busy }) {
                         rel="noreferrer"
                         onClick={() => onSend(rfq, v._id)}
                         title={`Send ${rfq.rfqNumber} to ${v.name} on WhatsApp Web`}
-                        className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#b6e9d2] bg-[#ecfdf5] px-2 text-[11px] font-semibold text-[#0b7a52] transition hover:bg-[#d7f7e9]"
+                        className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#b6e9d2] bg-[var(--nav-active-bg)] px-2 text-[11px] font-semibold text-[#0b7a52] transition hover:bg-[#d7f7e9]"
                       >
                         <MessageCircle className="h-3 w-3" />
                         {entry.status === 'pending' ? 'WA' : 'WA again'}
@@ -932,7 +932,7 @@ export function RfqPanel({
               ? `Raise an RFQ for ${selectedItems.length} selected item(s)`
               : 'Select approved BOQ items above first'
           }
-          className="ml-auto inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-[#3ecf8e] px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-[#24b47e] disabled:opacity-40"
+          className="ml-auto inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-[var(--accent)] px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-40"
         >
           <Plus className="h-4 w-4" />
           Raise RFQ

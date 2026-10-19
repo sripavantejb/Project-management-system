@@ -93,9 +93,7 @@ export function CreateMaterialRequestScreen({ route, navigation }: Props) {
         />
       }
     >
-      {!route.params?.projectId ? (
-        <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
-      ) : null}
+      <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
 
       <Input
         label="Needed by"

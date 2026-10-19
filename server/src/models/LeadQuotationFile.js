@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { approvalProgressFields } from './Approval.js'
 
 const leadSchema = new mongoose.Schema(
   {
@@ -195,6 +196,7 @@ const quotationSchema = new mongoose.Schema(
     },
     approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     approvalRule: { type: mongoose.Schema.Types.ObjectId, ref: 'ApprovalRule', default: null },
+    ...approvalProgressFields,
   },
   { timestamps: true },
 )
@@ -269,6 +271,7 @@ const fileSchema = new mongoose.Schema(
     decidedAt: Date,
     approvalNote: { type: String, default: '' },
     decisionNote: { type: String, default: '' },
+    ...approvalProgressFields,
     clientVisible: { type: Boolean, default: false },
     versions: [fileVersionSchema],
     currentVersion: { type: Number, default: 1 },

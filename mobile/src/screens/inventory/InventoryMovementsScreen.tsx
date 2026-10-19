@@ -1,11 +1,9 @@
 import { NestedChrome } from '../../components/NestedChrome'
 import { useNavigation } from '@react-navigation/native'
-import { useMemo } from 'react'
-import { FlatList, StyleSheet, Text, View } from 'react-native'
+import { useMemo, useState } from 'react'
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
-import { SectionLabel } from '../../components/SectionLabel'
 import { SurfaceCard } from '../../components/SurfaceCard'
-import { Pill } from '../../components/Badge'
 import { EmptyState, ErrorState, LoadingState } from '../../components/States'
 import { spacing, typography, type AppColors } from '../../constants/theme'
 import { useColors } from '../../theme/useColors'
@@ -22,6 +20,7 @@ export function InventoryMovementsScreen() {
   const colors = useColors()
   const { listContent } = useResponsive()
   const styles = useMemo(() => createStyles(colors), [colors])
+  const [filter, setFilter] = useState<'all' | 'in' | 'out' | 'adjust'>('all')
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['inventory-movements'],
@@ -29,8 +28,8 @@ export function InventoryMovementsScreen() {
   })
 
   const chromeProps = {
-    title: "Stock log",
-    subtitle: "In and out movements",
+    title: 'Stock movement history',
+    subtitle: 'Inward, dispatch, and adjustments',
     subtitleIcon: 'time-outline' as const,
   }
 
@@ -49,7 +48,9 @@ export function InventoryMovementsScreen() {
     )
   }
 
-  const movements = data || []
+  const movements = (data || []).filter((m) => filter === 'all' || m.type === filter)
+  const inward = (data || []).filter((m) => m.type === 'in').reduce((n, m) => n + m.quantity, 0)
+  const dispatched = (data || []).filter((m) => m.type === 'out').reduce((n, m) => n + m.quantity, 0)
 
   return (
     <NestedChrome {...chromeProps}>
@@ -58,26 +59,52 @@ export function InventoryMovementsScreen() {
         keyExtractor={(m) => m._id}
         contentContainerStyle={listContent}
         ListHeaderComponent={
-          movements.length > 0 ? <SectionLabel count={movements.length}>Movements</SectionLabel> : null
+          <View style={{ gap: 12, marginBottom: 8 }}>
+            <View style={styles.metrics}>
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Total inward</Text>
+                <Text style={styles.metricValue}>{inward}</Text>
+              </View>
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Total dispatched</Text>
+                <Text style={styles.metricValue}>{dispatched}</Text>
+              </View>
+            </View>
+            <View style={styles.filters}>
+              {(['all', 'in', 'out', 'adjust'] as const).map((key) => (
+                <Pressable key={key} onPress={() => setFilter(key)} style={[styles.filter, filter === key && styles.filterOn]}>
+                  <Text style={[styles.filterText, filter === key && styles.filterTextOn]}>
+                    {key === 'all' ? 'All' : key === 'in' ? 'Inward' : key === 'out' ? 'Dispatch' : 'Adjust'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
         }
         renderItem={({ item }) => {
           const itemName = typeof item.itemId === 'object' ? item.itemId?.name : 'Item'
+          const signed = item.type === 'out' ? -item.quantity : item.quantity
+          const who = item.createdBy?.name
+          const where = item.projectId?.name
           return (
             <SurfaceCard>
               <View style={styles.row}>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={styles.name} numberOfLines={1}>
+                <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                  <Text style={styles.kind}>
+                    {item.type === 'in' ? 'Inward' : item.type === 'out' ? 'Dispatch' : 'Adjustment'}
+                    {' · '}
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </Text>
+                  <Text style={styles.name} numberOfLines={2}>
                     {itemName}
                   </Text>
-                  <Text style={styles.meta}>
-                    Balance {item.balanceAfter} · {new Date(item.createdAt).toLocaleDateString()}
+                  <Text style={styles.meta} numberOfLines={2}>
+                    {[where, who, item.note, `Balance ${item.balanceAfter}`].filter(Boolean).join(' · ')}
                   </Text>
                 </View>
-                <Pill
-                  label={`${item.type} ${item.quantity}`}
-                  color={typeColorMap(colors)[item.type]}
-                  bg={`${typeColorMap(colors)[item.type]}22`}
-                />
+                <Text style={[styles.qty, { color: typeColorMap(colors)[item.type] }]}>
+                  {signed > 0 ? `+${signed}` : signed}
+                </Text>
               </View>
             </SurfaceCard>
           )
@@ -90,8 +117,19 @@ export function InventoryMovementsScreen() {
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
+    metrics: { flexDirection: 'row', gap: 8 },
+    metric: { flex: 1, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: c.border, padding: 12 },
+    metricLabel: { ...typography.micro, color: c.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 },
+    metricValue: { fontSize: 28, fontWeight: '500', color: c.textPrimary, marginTop: 4 },
+    filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    filter: { backgroundColor: '#efeeec', borderRadius: 4, paddingHorizontal: 12, paddingVertical: 8 },
+    filterOn: { backgroundColor: '#1e2022' },
+    filterText: { ...typography.captionStrong, color: '#44474a' },
+    filterTextOn: { color: '#fff' },
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-    name: { ...typography.bodyStrong, color: c.textPrimary },
+    kind: { ...typography.micro, color: '#7a573b', letterSpacing: 0.4, textTransform: 'uppercase' },
+    name: { ...typography.bodyStrong, color: c.textPrimary, fontSize: 16 },
     meta: { ...typography.caption, color: c.textSecondary },
+    qty: { fontSize: 22, fontWeight: '600' },
   })
 }

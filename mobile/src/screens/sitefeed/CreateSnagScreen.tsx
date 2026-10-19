@@ -59,7 +59,7 @@ export function CreateSnagScreen({ route, navigation }: Props) {
         />
       }
     >
-      {!params.projectId ? <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} /> : null}
+      <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
       <Input
         label="Issue"
         placeholder="e.g. Chipped tile in master bath"

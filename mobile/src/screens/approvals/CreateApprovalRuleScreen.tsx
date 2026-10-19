@@ -30,8 +30,7 @@ export function CreateApprovalRuleScreen({ route, navigation }: Props) {
 
   const [minAmount, setMinAmount] = useState('')
   const [maxAmount, setMaxAmount] = useState('')
-  const [approverRole, setApproverRole] = useState('owner')
-  const [approverUser, setApproverUser] = useState<string | null>(null)
+  const [steps, setSteps] = useState([{ approverRole: 'owner', approverUser: null as string | null }])
   const [error, setError] = useState('')
 
   const { data } = useQuery({ queryKey: ['approvals', 'flow'], queryFn: approvalsApi.flow })
@@ -40,18 +39,21 @@ export function CreateApprovalRuleScreen({ route, navigation }: Props) {
 
   // Pinning a person is an override, so the role follows them. The rule still
   // stores a role, for when the pin is cleared later.
-  const pinned = members.find((m) => m._id === approverUser)
-  const effectiveRole = pinned?.role || approverRole
-
   const mutation = useMutation({
-    mutationFn: () =>
-      approvalsApi.createRule({
+    mutationFn: () => {
+      const clean = steps.map((step) => {
+        const pinned = members.find((m) => m._id === step.approverUser)
+        return { approverRole: pinned?.role || step.approverRole, approverUser: step.approverUser }
+      })
+      return approvalsApi.createRule({
         entityType,
         minAmount: hasAmount && minAmount !== '' ? Number(minAmount) : 0,
         maxAmount: hasAmount && maxAmount !== '' ? Number(maxAmount) : null,
-        approverRole: effectiveRole,
-        approverUser,
-      }),
+        approverRole: clean[0].approverRole,
+        approverUser: clean[0].approverUser,
+        steps: clean,
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['approvals'] })
       navigation.goBack()
@@ -120,69 +122,59 @@ export function CreateApprovalRuleScreen({ route, navigation }: Props) {
         </Text>
       </View>
 
-      <SectionLabel>Approver role</SectionLabel>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipRow}
-        style={styles.chipScroll}
-      >
-        {roles.map((r) => {
-          const active = effectiveRole === r
-          return (
-            <Pressable
-              key={r}
-              onPress={() => {
-                setApproverRole(r)
-                setApproverUser(null)
-              }}
-              style={[styles.chip, active && styles.chipActive]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {roleLabel(r)}
-              </Text>
-            </Pressable>
-          )
-        })}
-      </ScrollView>
-
-      <SectionLabel>Pin to a person (optional)</SectionLabel>
-      <Pressable
-        onPress={() => setApproverUser(null)}
-        style={[styles.person, !approverUser && styles.personActive]}
-      >
-        <View style={styles.anyoneWell}>
-          <Ionicons name="people-outline" size={15} color={colors.textSecondary} />
-        </View>
-        <Text style={styles.personName} numberOfLines={1}>
-          Anyone with the {roleLabel(effectiveRole)} role
-        </Text>
-        {!approverUser && <Ionicons name="checkmark" size={16} color={colors.accent} />}
-      </Pressable>
-
-      {members.map((m) => {
-        const active = approverUser === m._id
+      {steps.map((step, index) => {
+        const pinned = members.find((m) => m._id === step.approverUser)
+        const effectiveRole = pinned?.role || step.approverRole
         return (
-          <Pressable
-            key={m._id}
-            onPress={() => setApproverUser(active ? null : m._id)}
-            style={[styles.person, active && styles.personActive]}
-          >
-            <Avatar name={m.name} uri={m.avatar} size={26} />
-            <View style={styles.personText}>
-              <Text style={styles.personName} numberOfLines={1}>
-                {m.name}
-              </Text>
-              <Text style={styles.personRole} numberOfLines={1}>
-                {roleLabel(m.role)}
-              </Text>
-            </View>
-            {active && <Ionicons name="checkmark" size={16} color={colors.accent} />}
-          </Pressable>
+          <View key={index}>
+            <SectionLabel>{steps.length > 1 ? `Step ${index + 1}` : 'Approver role'}</SectionLabel>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow} style={styles.chipScroll}>
+              {roles.map((r) => {
+                const active = effectiveRole === r && !pinned
+                return (
+                  <Pressable
+                    key={r}
+                    onPress={() =>
+                      setSteps((prev) => prev.map((row, i) => (i === index ? { approverRole: r, approverUser: null } : row)))
+                    }
+                    style={[styles.chip, active && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{roleLabel(r)}</Text>
+                  </Pressable>
+                )
+              })}
+            </ScrollView>
+            <Pressable
+              onPress={() => setSteps((prev) => prev.map((row, i) => (i === index ? { ...row, approverUser: null } : row)))}
+              style={[styles.person, !step.approverUser && styles.personActive]}
+            >
+              <Text style={styles.personName}>Anyone with the {roleLabel(effectiveRole)} role</Text>
+            </Pressable>
+            {members.map((m) => {
+              const active = step.approverUser === m._id
+              return (
+                <Pressable
+                  key={m._id}
+                  onPress={() =>
+                    setSteps((prev) =>
+                      prev.map((row, i) => (i === index ? { ...row, approverUser: active ? null : m._id } : row)),
+                    )
+                  }
+                  style={[styles.person, active && styles.personActive]}
+                >
+                  <Avatar name={m.name} uri={m.avatar} size={26} />
+                  <Text style={styles.personName}>{m.name}</Text>
+                </Pressable>
+              )
+            })}
+          </View>
         )
       })}
+      <Button
+        title="Add next approver"
+        variant="secondary"
+        onPress={() => setSteps((prev) => [...prev, { approverRole: 'owner', approverUser: null }])}
+      />
 
       {!!error && <Text style={styles.error}>{error}</Text>}
     </FormLayout>

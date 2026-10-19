@@ -570,7 +570,7 @@ export function TaskDetailPanel({
                         setForm({ ...form, status: 'done' })
                         if (!isCreate) save({ status: 'done' })
                       }}
-                      className="flex h-6 w-6 items-center justify-center rounded text-secondary hover:bg-[#ecfdf5] hover:text-[#3ecf8e]"
+                      className="flex h-6 w-6 items-center justify-center rounded text-secondary hover:bg-[var(--nav-active-bg)] hover:text-[var(--accent)]"
                     >
                       <Check className="h-3.5 w-3.5" />
                     </button>
@@ -689,7 +689,7 @@ export function TaskDetailPanel({
                       <Square className="h-2.5 w-2.5 fill-current" />
                     </span>
                   ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#d1fae5] text-[#3ecf8e]">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#d1fae5] text-[var(--accent)]">
                       <Play className="h-2.5 w-2.5 fill-current" />
                     </span>
                   )}
@@ -762,7 +762,7 @@ export function TaskDetailPanel({
                 onBlur={() => canManageTask && !isCreate && save()}
                 rows={4}
                 placeholder="Add more detail so anyone can pick this up…"
-                className="w-full resize-none rounded-xl border border-border bg-surface-raised px-3 py-2.5 text-[14px] leading-relaxed text-primary outline-none placeholder:text-secondary focus:border-[#3ecf8e] focus:bg-surface"
+                className="w-full resize-none rounded-xl border border-border bg-surface-raised px-3 py-2.5 text-[14px] leading-relaxed text-primary outline-none placeholder:text-secondary focus:border-[var(--accent)] focus:bg-surface"
               />
             </div>
 
@@ -786,7 +786,7 @@ export function TaskDetailPanel({
                         setForm({ ...form, checklist })
                         if (!isCreate) save({ checklist })
                       }}
-                      className="accent-[#3ecf8e]"
+                      className="accent-[var(--accent)]"
                     />
                     <span
                       className={cn(item.done && 'line-through text-secondary')}
@@ -833,14 +833,14 @@ export function TaskDetailPanel({
                     setNewField({ ...newField, name: e.target.value })
                   }
                   placeholder="Field name (e.g. Site engineer)"
-                  className="w-full rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[13px] text-primary outline-none focus:border-[#3ecf8e]"
+                  className="w-full rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[13px] text-primary outline-none focus:border-[var(--accent)]"
                 />
                 <select
                   value={newField.type}
                   onChange={(e) =>
                     setNewField({ ...newField, type: e.target.value })
                   }
-                  className="w-full rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[13px] text-primary outline-none focus:border-[#3ecf8e]"
+                  className="w-full rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[13px] text-primary outline-none focus:border-[var(--accent)]"
                 >
                   <option value="user">Person (company members)</option>
                   <option value="text">Text</option>
@@ -854,14 +854,14 @@ export function TaskDetailPanel({
                       setNewField({ ...newField, options: e.target.value })
                     }
                     placeholder="Options, comma separated"
-                    className="w-full rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[13px] text-primary outline-none focus:border-[#3ecf8e]"
+                    className="w-full rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[13px] text-primary outline-none focus:border-[var(--accent)]"
                   />
                 )}
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={createField}
-                    className="rounded-lg bg-[#3ecf8e] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#24b47e]"
+                    className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[var(--accent-hover)]"
                   >
                     Create field
                   </button>
@@ -882,7 +882,7 @@ export function TaskDetailPanel({
                   type="button"
                   disabled={saving || !form.title.trim()}
                   onClick={() => save()}
-                  className="rounded-lg bg-[#3ecf8e] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#24b47e] disabled:opacity-50"
+                  className="rounded-lg bg-[var(--accent)] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[var(--accent-hover)] disabled:opacity-50"
                 >
                   {saving ? 'Creating…' : 'Create task'}
                 </button>
@@ -926,7 +926,7 @@ export function TaskDetailPanel({
             </div>
 
             <div className="border-t border-border p-3">
-              <div className="relative rounded-xl border border-border bg-surface focus-within:border-[#3ecf8e] focus-within:ring-2 focus-within:ring-[#3ecf8e]/15">
+              <div className="relative rounded-xl border border-border bg-surface focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)]/15">
                 {mentionOpen && mentionMatches.length > 0 && (
                   <div className="absolute bottom-full left-0 right-0 z-20 mb-1 max-h-40 overflow-y-auto rounded-lg border border-border bg-surface py-1 shadow-xl">
                     {mentionMatches.map((u) => (
@@ -976,7 +976,7 @@ export function TaskDetailPanel({
                     onClick={triggerMentionFromButton}
                     className={cn(
                       'flex h-7 w-7 items-center justify-center rounded-md text-secondary hover:bg-surface-raised hover:text-primary disabled:opacity-40',
-                      mentionOpen && 'bg-[#ecfdf5] text-[#3ecf8e]',
+                      mentionOpen && 'bg-[var(--nav-active-bg)] text-[var(--accent)]',
                     )}
                   >
                     <AtSign className="h-3.5 w-3.5" />
@@ -985,7 +985,7 @@ export function TaskDetailPanel({
                     type="button"
                     disabled={isCreate || !comment.trim()}
                     onClick={() => postComment.mutate(comment.trim())}
-                    className="ml-auto flex h-7 w-7 items-center justify-center rounded-md bg-[#3ecf8e] text-white hover:bg-[#24b47e] disabled:opacity-40"
+                    className="ml-auto flex h-7 w-7 items-center justify-center rounded-md bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] disabled:opacity-40"
                   >
                     <Send className="h-3.5 w-3.5" />
                   </button>
@@ -1024,7 +1024,7 @@ function DateChip({
     <div
       className={cn(
         'relative flex h-8 w-[108px] shrink-0 items-center gap-1.5 rounded-lg border border-border bg-surface-raised px-2 transition-colors',
-        !disabled && 'hover:border-[#3ecf8e]/60 hover:bg-surface',
+        !disabled && 'hover:border-[var(--accent)]/60 hover:bg-surface',
       )}
     >
       <Calendar className="h-3.5 w-3.5 shrink-0 text-secondary" />
@@ -1163,7 +1163,7 @@ function PersonPicker({ value, users, loading, onChange, label = 'Person' }) {
                   }}
                   className={cn(
                     'flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-surface-raised',
-                    active && 'bg-[#ecfdf5]',
+                    active && 'bg-[var(--nav-active-bg)]',
                   )}
                 >
                   <Avatar src={u.avatar} name={u.name} size="xs" />
@@ -1203,7 +1203,7 @@ function CustomFieldInput({ field, value, users, usersLoading, onChange }) {
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value || null)}
-        className="w-full max-w-[180px] rounded-md border border-border bg-surface px-2 py-1 text-[13px] text-primary outline-none focus:border-[#3ecf8e]"
+        className="w-full max-w-[180px] rounded-md border border-border bg-surface px-2 py-1 text-[13px] text-primary outline-none focus:border-[var(--accent)]"
       >
         <option value="">Empty</option>
         {(field.options || []).map((opt) => (
@@ -1246,7 +1246,7 @@ function ActionLink({ icon: Icon, label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-secondary hover:border-[#bfdbfe] hover:bg-[#ecfdf5] hover:text-[#24b47e]"
+      className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-secondary hover:border-[#bfdbfe] hover:bg-[var(--nav-active-bg)] hover:text-[var(--accent-hover)]"
     >
       <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
       {label}

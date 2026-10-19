@@ -38,7 +38,7 @@ export function DocsScreen(_props: Props) {
     .filter((s) => s.features.length)
 
   return (
-    <NestedChrome title="Handbook" subtitle="How Cubic works" subtitleIcon="book-outline">
+    <NestedChrome title="Handbook" subtitle="How Clyro works" subtitleIcon="book-outline">
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}

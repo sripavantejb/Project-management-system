@@ -60,7 +60,7 @@ export function PlatformLoginPage() {
     >
       <div className="w-full max-w-md rounded-[12px] border border-border bg-surface p-8 shadow-[0_8px_24px_rgba(0,0,0,0.08)] md:p-10">
         <div className="mb-8 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-[6px] bg-[#3ecf8e] text-[14px] font-bold text-[#171717]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-[6px] bg-[var(--accent)] text-[14px] font-bold text-[#171717]">
             E
           </span>
           <div>
@@ -101,7 +101,7 @@ export function PlatformLoginPage() {
 
         <Link
           to="/login"
-          className="mt-6 block text-center text-[12px] text-secondary hover:text-[#3ecf8e]"
+          className="mt-6 block text-center text-[12px] text-secondary hover:text-[var(--accent)]"
         >
           ← Back to company login
         </Link>

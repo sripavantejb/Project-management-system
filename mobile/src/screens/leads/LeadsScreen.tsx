@@ -111,8 +111,8 @@ export function LeadsScreen({ navigation }: Props) {
 
   return (
     <NestedChrome
-      title="Enquiries"
-      subtitle="Assign and follow up"
+      title="Client enquiries"
+      subtitle="Pipeline from first call to a live project"
       subtitleIcon="briefcase-outline"
     >
       {isLoading ? (
@@ -125,6 +125,12 @@ export function LeadsScreen({ navigation }: Props) {
           keyExtractor={(l) => l._id}
           contentContainerStyle={listContent}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.accent} />}
+          ListHeaderComponent={
+            <View style={styles.pipeline}>
+              <Text style={styles.pipelineValue}>{formatInr((data || []).reduce((n, l) => n + (l.estimatedValue || 0), 0))}</Text>
+              <Text style={styles.pipelineHint}>{(data || []).filter((l) => l.stage !== 'dead' && l.stage !== 'lost').length} active enquiries</Text>
+            </View>
+          }
           renderItem={({ item }) => {
             const next = nextStage(item.stage)
             const ownerId = item.owner?._id
@@ -246,6 +252,9 @@ export function LeadsScreen({ navigation }: Props) {
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
+    pipeline: { marginBottom: 8, gap: 2 },
+    pipelineValue: { fontSize: 32, fontWeight: '500', letterSpacing: -0.6, color: c.textPrimary },
+    pipelineHint: { ...typography.caption, color: c.textSecondary },
     cardInner: { gap: 4 },
     cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
     name: { ...typography.bodyStrong, color: c.textPrimary, flexShrink: 1 },

@@ -145,8 +145,8 @@ export function LiveDashboardPage() {
             </span>
             Live board
           </div>
-          <h1 className="text-[22px] font-semibold tracking-tight text-primary">
-            Who is working on what
+          <h1 className="text-[28px] font-medium tracking-[-0.02em] text-primary">
+            Live operational board
           </h1>
           <p className="mt-1 max-w-2xl text-[13px] text-secondary">
             Open tasks across the team — assignee, who assigned it, and priority

@@ -32,7 +32,7 @@ export function PageToolbar({ left, right, className }) {
 
 /** Shared selected-pill look — theme tokens (light + dark) */
 export const PILL_TRACK =
-  'inline-flex flex-wrap items-center gap-0.5 rounded-full bg-active p-[3px]'
+  'inline-flex flex-wrap items-center gap-0.5 rounded-[4px] border border-border bg-surface p-[3px]'
 export const PILL_ACTIVE =
   'bg-surface text-primary shadow-[0_1px_2px_rgba(0,0,0,0.06),0_0_0_0.5px_rgba(0,0,0,0.04)]'
 export const PILL_IDLE = 'text-secondary hover:text-primary'
@@ -55,7 +55,7 @@ export function ToolbarPills({ items, value, onChange, className }) {
             aria-selected={active}
             onClick={() => onChange?.(key)}
             className={cn(
-              'relative rounded-full px-3.5 py-1.5 text-[12px] font-medium tracking-[-0.01em] transition-[color,background-color,box-shadow] duration-200 ease-out',
+              'relative rounded-[4px] px-3.5 py-1.5 text-[12px] font-medium tracking-[0.01em] transition-[color,background-color,box-shadow] duration-200 ease-out',
               active ? PILL_ACTIVE : PILL_IDLE,
             )}
           >

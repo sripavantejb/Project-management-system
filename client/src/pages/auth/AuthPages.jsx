@@ -102,7 +102,7 @@ function AuthShell({ title, subtitle, children }) {
     >
       <div className="w-full max-w-md rounded-[12px] border border-border bg-surface p-8 shadow-[0_8px_24px_rgba(0,0,0,0.08)] md:p-10">
         <Link to="/login" className="mb-8 flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-[6px] bg-[#3ecf8e] text-[12px] font-bold text-[#171717]">
+          <span className="flex h-8 w-8 items-center justify-center rounded-[6px] bg-[var(--accent)] text-[12px] font-bold text-[#171717]">
             E
           </span>
           <span className="text-[16px] font-semibold text-primary">EPM</span>

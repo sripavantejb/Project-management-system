@@ -26,7 +26,7 @@ export function ProjectPanel({ children, className, padding = true }) {
   return (
     <section
       className={cn(
-        'rounded-2xl border border-border bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+        'rounded-xl border border-[#e5dfd7] bg-white shadow-none',
         padding && 'p-4 sm:p-5',
         className,
       )}

@@ -37,7 +37,7 @@ const VIEW_FILTERS = [
 ]
 
 const FIELD =
-  'h-10 rounded-xl border-black/[0.08] bg-[#fbfbfd] focus:border-[#3ecf8e]/55 focus:bg-white'
+  'h-10 rounded-xl border-black/[0.08] bg-[#fbfbfd] focus:border-[var(--accent)]/55 focus:bg-white'
 
 const PROJECT_PICK_LIMIT = 8
 
@@ -564,7 +564,7 @@ export function SiteFeedPage() {
               type="button"
               disabled={!compose.projectId || uploading}
               onClick={() => fileRef.current?.click()}
-              className="flex w-full items-center gap-3 rounded-xl border border-dashed border-black/10 bg-[#fbfbfd] px-3.5 py-3 text-left transition hover:border-[#3ecf8e]/45 disabled:opacity-50"
+              className="flex w-full items-center gap-3 rounded-xl border border-dashed border-black/10 bg-[#fbfbfd] px-3.5 py-3 text-left transition hover:border-[var(--accent)]/45 disabled:opacity-50"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-black/[0.06]">
                 <ImageIcon className="h-4 w-4 text-[#86868b]" />
@@ -780,7 +780,7 @@ function ProjectFilter({ projects, value, selected, onChange }) {
               ? 'Type a project name or client…'
               : 'Search projects or keep All'
           }
-          className="h-10 w-full rounded-xl border-0 bg-[#f5f5f7] pl-9 pr-9 text-[13px] outline-none ring-1 ring-black/[0.05] placeholder:text-[#86868b] focus:bg-white focus:ring-[#3ecf8e]/45"
+          className="h-10 w-full rounded-xl border-0 bg-[#f5f5f7] pl-9 pr-9 text-[13px] outline-none ring-1 ring-black/[0.05] placeholder:text-[#86868b] focus:bg-white focus:ring-[var(--accent)]/45"
         />
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c7c7cc]" />
       </div>
@@ -935,7 +935,7 @@ function ComposeProjectPicker({ projects, value, selected, onChange }) {
                   ? 'Type project name or client…'
                   : 'Search or pick a project…'
               }
-              className="h-10 w-full rounded-xl border-0 bg-[#f5f5f7] pl-9 pr-9 text-[13px] outline-none ring-1 ring-black/[0.05] focus:bg-white focus:ring-[#3ecf8e]/45"
+              className="h-10 w-full rounded-xl border-0 bg-[#f5f5f7] pl-9 pr-9 text-[13px] outline-none ring-1 ring-black/[0.05] focus:bg-white focus:ring-[var(--accent)]/45"
             />
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c7c7cc]" />
           </div>

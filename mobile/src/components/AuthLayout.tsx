@@ -5,8 +5,8 @@ import { Screen } from './Screen'
 import { KeyboardAwareView } from './KeyboardAwareView'
 import { PageScrollView } from './PageScrollView'
 import { isKeyboardOpen, useKeyboardInset } from '../hooks/useKeyboardInset'
-import { radius, spacing, typography, type AppColors } from '../constants/theme'
-import { useColors, useShadows } from '../theme/useColors'
+import { spacing, typography, type AppColors } from '../constants/theme'
+import { useColors } from '../theme/useColors'
 import { useResponsive } from '../theme/useResponsive'
 
 type AuthLayoutProps = {
@@ -24,13 +24,12 @@ type AuthLayoutProps = {
  */
 export function AuthLayout({ title, subtitle, children, footer, brand }: AuthLayoutProps) {
   const colors = useColors()
-  const shadows = useShadows()
   const keyboardInset = useKeyboardInset()
   const keyboardOpen = isKeyboardOpen(keyboardInset)
   const { pagePadding } = useResponsive()
   const styles = useMemo(
-    () => createStyles(colors, shadows, pagePadding),
-    [colors, shadows, pagePadding],
+    () => createStyles(colors, pagePadding),
+    [colors, pagePadding],
   )
 
   return (
@@ -44,8 +43,8 @@ export function AuthLayout({ title, subtitle, children, footer, brand }: AuthLay
           ]}
           keyboardDismissMode="interactive"
         >
-          {brand}
-          <View style={styles.card}>
+          <View style={styles.page}>
+            <Text style={styles.kicker}>Studio</Text>
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
             <View style={styles.fields}>{children}</View>
@@ -57,11 +56,7 @@ export function AuthLayout({ title, subtitle, children, footer, brand }: AuthLay
   )
 }
 
-function createStyles(
-  c: AppColors,
-  sh: ReturnType<typeof useShadows>,
-  pagePadding: number,
-) {
+function createStyles(c: AppColors, pagePadding: number) {
   return StyleSheet.create({
     flex: { flex: 1 },
     scroll: {
@@ -75,21 +70,23 @@ function createStyles(
       justifyContent: 'flex-start',
       paddingTop: spacing.lg,
     },
-    card: {
-      backgroundColor: c.surface,
-      borderRadius: radius.xl,
-      borderWidth: 1,
-      borderColor: c.border,
-      padding: spacing.lg,
-      gap: spacing.md,
+    page: {
       width: '100%',
-      ...sh.card,
+      gap: spacing.md,
+    },
+    kicker: {
+      ...typography.micro,
+      color: '#a27b5c',
+      letterSpacing: 1.4,
+      textTransform: 'uppercase',
     },
     title: {
       ...typography.h2,
-      fontSize: 22,
+      fontSize: 32,
+      lineHeight: 36,
+      fontWeight: '500',
       color: c.textPrimary,
-      letterSpacing: -0.4,
+      letterSpacing: -0.6,
     },
     subtitle: {
       ...typography.body,

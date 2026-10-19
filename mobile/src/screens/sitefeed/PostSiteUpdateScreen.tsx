@@ -81,7 +81,7 @@ export function PostSiteUpdateScreen({ route, navigation }: Props) {
         />
       }
     >
-      {!params.projectId ? <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} /> : null}
+      <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
       <Input
         label="Update"
         placeholder="What's happening on site?"

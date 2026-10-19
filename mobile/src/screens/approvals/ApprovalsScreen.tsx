@@ -1,5 +1,5 @@
 import { NestedChrome } from '../../components/NestedChrome'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Ionicons } from '@expo/vector-icons'
@@ -13,6 +13,7 @@ import { formatInr, radius, spacing, typography, type AppColors } from '../../co
 import { useColors } from '../../theme/useColors'
 import { useResponsive } from '../../theme/useResponsive'
 import { approvalsApi } from '../../api/approvals'
+import { CentralApprovalsQueue } from './CentralApprovalsQueue'
 import { isApiError } from '../../api/client'
 import { useToastStore } from '../../store/toastStore'
 import { ROLE_LABELS } from '../../utils/roles'
@@ -49,6 +50,7 @@ function bandLabel(band: ApprovalBand, hasAmount: boolean) {
 }
 
 export function ApprovalsScreen({ route, navigation }: Props) {
+  const [mode, setMode] = useState<'queue' | 'routing'>('queue')
   const colors = useColors()
   const { listContent } = useResponsive()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -103,11 +105,32 @@ export function ApprovalsScreen({ route, navigation }: Props) {
     )
   }
 
+  if (mode === 'queue') {
+    return (
+      <NestedChrome
+        title="Central approvals"
+        subtitle="Drawings, expenses, and tasks waiting for a sign-off"
+        subtitleIcon="shield-checkmark-outline"
+        onBack={() => smartGoBack(navigation, route)}
+        right={
+          <IconButton
+            icon="options-outline"
+            label="Approval routing"
+            tone="ghost"
+            onPress={() => setMode('routing')}
+          />
+        }
+      >
+        <CentralApprovalsQueue />
+      </NestedChrome>
+    )
+  }
+
   const chromeProps = {
     title: 'Approvals',
     subtitle: 'Who signs off on what',
     subtitleIcon: 'shield-checkmark-outline' as const,
-    onBack: () => smartGoBack(navigation, route),
+    onBack: () => setMode('queue'),
     right: (
       <IconButton
         icon="add-outline"

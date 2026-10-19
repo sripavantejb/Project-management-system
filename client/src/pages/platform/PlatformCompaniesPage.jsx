@@ -114,7 +114,7 @@ export function PlatformCompaniesPage() {
       {showCreate && (
         <Card variant="light" className="space-y-4">
           <div className="flex items-center gap-2 font-semibold text-primary">
-            <Building2 className="h-4 w-4 text-[#3ecf8e]" />
+            <Building2 className="h-4 w-4 text-[var(--accent)]" />
             New company workspace
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -140,7 +140,7 @@ export function PlatformCompaniesPage() {
               <Input label="Admin password" type="text" placeholder="Auto-generate if blank" light value={form.adminPassword}
                 onChange={(e) => setForm((s) => ({ ...s, adminPassword: e.target.value }))} />
               <button type="button" onClick={() => setForm((s) => ({ ...s, adminPassword: generatePassword() }))}
-                className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-medium text-[#3ecf8e]">
+                className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--accent)]">
                 <KeyRound className="h-3.5 w-3.5" /> Generate password
               </button>
             </div>
@@ -156,7 +156,7 @@ export function PlatformCompaniesPage() {
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search companies…"
-          className="h-10 w-full rounded-xl border border-border bg-surface pl-10 pr-3 text-sm outline-none focus:border-[#3ecf8e] focus:ring-2 focus:ring-[#3ecf8e]/15" />
+          className="h-10 w-full rounded-xl border border-border bg-surface pl-10 pr-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/15" />
       </div>
 
       {isLoading && <p className="text-sm text-secondary">Loading…</p>}

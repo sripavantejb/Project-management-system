@@ -67,7 +67,7 @@ export function CreateExpenseScreen({ route, navigation }: Props) {
         />
       }
     >
-      {!params.projectId ? <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} /> : null}
+      <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
       <Input label="Amount" placeholder="0" keyboardType="numeric" value={amount} onChangeText={setAmount} />
       <Input label="Category (optional)" placeholder="Materials" value={category} onChangeText={setCategory} />
       <Input

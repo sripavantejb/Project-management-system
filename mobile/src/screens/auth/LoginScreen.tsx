@@ -4,12 +4,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { useMutation } from '@tanstack/react-query'
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { AuthHero } from '../../components/AuthHero'
 import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
 import { KeyboardAwareView } from '../../components/KeyboardAwareView'
 import { isKeyboardOpen, useKeyboardInset } from '../../hooks/useKeyboardInset'
-import { heroLight, radius, spacing, typography, type AppColors } from '../../constants/theme'
+import { spacing, typography, type AppColors } from '../../constants/theme'
 import { useColors } from '../../theme/useColors'
 import { authApi } from '../../api/auth'
 import { useAuthStore } from '../../store/authStore'
@@ -18,11 +17,15 @@ import type { AuthStackParamList } from '../../navigation/types'
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>
 
-const CANVAS = '#f7fbf9'
+const CANVAS = '#faf9f7'
+const INK = '#191b1d'
+const GOLD = '#c5a880'
+const MUTED = '#6b6964'
 
 /**
- * Momento-inspired welcome + sign-in: brand header, project beam hero,
- * credential form, and pill CTAs — all in Cubic emerald.
+ * Studio sign-in. Workspace, email, and password are the only credentials
+ * the API accepts. Forgot password and the access note stay because those
+ * screens already exist.
  */
 export function LoginScreen({ navigation }: Props) {
   const colors = useColors()
@@ -73,90 +76,80 @@ export function LoginScreen({ navigation }: Props) {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <StatusBar style="dark" />
-      <View style={styles.ambient} />
       <KeyboardAwareView style={styles.flex}>
         <View
           style={[
             styles.body,
             keyboardOpen && styles.bodyKeyboard,
-            { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.md },
+            { paddingBottom: Math.max(insets.bottom, spacing.lg) },
           ]}
         >
-          <View style={styles.top}>
-            <View style={styles.header}>
-              <Text style={styles.welcome}>Welcome to</Text>
-              <Text style={styles.wordmark}>Cubic</Text>
-              <Text style={styles.tagline}>
-                All your projects, people,{'\n'}and progress — in one place.
-              </Text>
+          <View style={styles.brand}>
+            <View style={styles.mark}>
+              <Text style={styles.markLetter}>C</Text>
+              <View style={styles.markDot} />
             </View>
-
-            {!keyboardOpen ? (
-              <View style={styles.hero}>
-                <AuthHero size={compact ? 'sm' : 'md'} animated />
-              </View>
-            ) : null}
+            <Text style={styles.wordmark}>Clyro</Text>
+            <Text style={styles.tagline}>Studio operations</Text>
           </View>
 
-          <View style={styles.bottom}>
-            <View style={styles.form}>
-              {errors.form ? (
-                <View style={styles.formError}>
-                  <Text style={styles.formErrorText}>{errors.form}</Text>
-                </View>
-              ) : null}
-              <Input
-                label="Workspace"
-                placeholder="cubicassociates"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={workspaceValue}
-                onChangeText={setWorkspace}
-                error={errors.workspace}
-                returnKeyType="next"
-              />
-              <Input
-                label="Email"
-                placeholder="you@company.com"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                value={email}
-                onChangeText={setEmail}
-                error={errors.email}
-                returnKeyType="next"
-              />
-              <Input
-                label="Password"
-                placeholder="Your password"
-                secureTextEntry
-                textContentType="password"
-                value={password}
-                onChangeText={setPassword}
-                error={errors.password}
-                returnKeyType="go"
-                onSubmitEditing={onSubmit}
-              />
-            </View>
+          <View style={styles.workspace}>
+            <Text style={styles.fieldLabel}>Workspace</Text>
+            <Input
+              placeholder="your-studio"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={workspaceValue}
+              onChangeText={setWorkspace}
+              error={errors.workspace}
+              returnKeyType="next"
+            />
+          </View>
 
-            <View style={styles.actions}>
-              <Button title="Sign in" onPress={onSubmit} loading={mutation.isPending} fullWidth />
-              <Button
-                title="Join Now"
-                variant="secondary"
-                onPress={() => navigation.navigate('Register')}
-                fullWidth
-              />
+          <View style={styles.card}>
+            {errors.form ? <Text style={styles.formErrorText}>{errors.form}</Text> : null}
+            <Text style={styles.fieldLabel}>Work email</Text>
+            <Input
+              placeholder="you@studio.com"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              value={email}
+              onChangeText={setEmail}
+              error={errors.email}
+              returnKeyType="next"
+            />
+            <View style={styles.passwordHead}>
+              <Text style={styles.fieldLabel}>Password</Text>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => navigation.navigate('ForgotPassword')}
-                style={styles.forgot}
+                hitSlop={8}
               >
-                <Text style={styles.forgotLabel}>Forgot password?</Text>
+                <Text style={styles.forgot}>Forgot credentials?</Text>
               </Pressable>
             </View>
+            <Input
+              placeholder="Your password"
+              secureTextEntry
+              textContentType="password"
+              value={password}
+              onChangeText={setPassword}
+              error={errors.password}
+              returnKeyType="go"
+              onSubmitEditing={onSubmit}
+            />
+            <Button title="Enter studio" onPress={onSubmit} loading={mutation.isPending} fullWidth />
           </View>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('Register')}
+            style={styles.access}
+          >
+            <Text style={styles.accessText}>Need access? Ask your studio admin</Text>
+          </Pressable>
         </View>
       </KeyboardAwareView>
     </View>
@@ -165,101 +158,85 @@ export function LoginScreen({ navigation }: Props) {
 
 function createStyles(c: AppColors, compact: boolean) {
   return StyleSheet.create({
-    root: {
-      flex: 1,
-      backgroundColor: CANVAS,
-      overflow: 'hidden',
-    },
-    flex: { flex: 1, minHeight: 0, overflow: 'hidden' },
-    ambient: {
-      position: 'absolute',
-      top: '18%',
-      alignSelf: 'center',
-      width: 320,
-      height: 320,
-      borderRadius: 999,
-      backgroundColor: 'rgba(62, 207, 142, 0.11)',
-    },
+    root: { flex: 1, backgroundColor: CANVAS },
+    flex: { flex: 1, minHeight: 0 },
     body: {
       flex: 1,
-      minHeight: 0,
-      overflow: 'hidden',
-      paddingHorizontal: spacing.xl,
-      paddingTop: compact ? spacing.md : spacing.lg,
-      justifyContent: 'space-between',
-      gap: compact ? spacing.sm : spacing.md,
+      paddingHorizontal: 24,
+      paddingTop: compact ? 12 : 28,
+      gap: 18,
     },
-    bodyKeyboard: {
-      paddingTop: spacing.md,
-      justifyContent: 'flex-start',
-    },
-    top: {
-      flexShrink: 1,
-      minHeight: 0,
+    bodyKeyboard: { paddingTop: 8 },
+    brand: { alignItems: 'center', gap: 8 },
+    mark: {
+      width: 64,
+      height: 64,
+      borderRadius: 16,
+      backgroundColor: '#ffffff',
       alignItems: 'center',
-      gap: compact ? 4 : 8,
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: '#e4e2dd',
     },
-    bottom: {
-      flexShrink: 0,
-      gap: spacing.md,
+    markLetter: {
+      fontSize: 28,
+      fontWeight: '500',
+      color: INK,
+      letterSpacing: -0.5,
     },
-    header: {
-      alignItems: 'center',
-      width: '100%',
-    },
-    welcome: {
-      ...typography.body,
-      color: c.textSecondary,
-      fontSize: 15,
-      lineHeight: 20,
-      textAlign: 'center',
+    markDot: {
+      position: 'absolute',
+      right: 10,
+      bottom: 12,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: GOLD,
     },
     wordmark: {
       ...typography.h1,
-      fontSize: compact ? 32 : 38,
-      lineHeight: compact ? 38 : 44,
-      letterSpacing: -0.8,
-      color: heroLight.bg,
-      fontWeight: '700',
-      textAlign: 'center',
-      marginTop: 2,
+      fontSize: compact ? 32 : 36,
+      lineHeight: compact ? 36 : 40,
+      color: INK,
+      fontWeight: '500',
+      marginTop: 4,
     },
     tagline: {
-      ...typography.body,
-      color: c.textSecondary,
-      textAlign: 'center',
-      fontSize: 15,
-      lineHeight: 22,
-      marginTop: 8,
-      alignSelf: 'center',
+      fontSize: 11,
+      letterSpacing: 1.6,
+      textTransform: 'uppercase',
+      color: MUTED,
+      fontWeight: '600',
     },
-    hero: {
+    workspace: { gap: 6 },
+    card: {
+      backgroundColor: '#ffffff',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: '#e4e2dd',
+      padding: 16,
+      gap: 8,
+    },
+    fieldLabel: {
+      fontSize: 11,
+      letterSpacing: 1.4,
+      textTransform: 'uppercase',
+      color: MUTED,
+      fontWeight: '600',
+    },
+    passwordHead: {
+      marginTop: 6,
+      flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: compact ? -4 : 0,
-    },
-    form: {
-      gap: 14,
-    },
-    formError: {
-      backgroundColor: c.dangerSoft,
-      borderRadius: radius.md,
-      padding: spacing.md,
-    },
-    formErrorText: { ...typography.caption, color: c.danger },
-    actions: {
-      gap: 10,
+      justifyContent: 'space-between',
     },
     forgot: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 6,
+      fontSize: 12,
+      color: GOLD,
+      fontWeight: '600',
     },
-    forgotLabel: {
-      ...typography.caption,
-      color: c.textSecondary,
-      lineHeight: 18,
-      textAlign: 'center',
-    },
+    formErrorText: { ...typography.caption, color: c.danger },
+    access: { alignItems: 'center', paddingVertical: 4 },
+    accessText: { fontSize: 13, color: MUTED },
   })
 }

@@ -55,188 +55,83 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
     params?: object,
   ) => {
     navigation.closeDrawer()
-    openTabScreen(navigation, tab, screen, params)
+    const drawerState = navigation.getState()
+    const main = drawerState.routes.find((r) => r.name === 'MainTabs')
+    const tabState = main?.state as { index: number; routes: { name: string }[] } | undefined
+    const from = tabState?.routes?.[tabState.index]?.name
+    const remembered =
+      screen && from && from !== 'More' && from !== tab ? { returnTo: from } : null
+    openTabScreen(navigation, tab, screen, remembered ? { ...(params || {}), ...remembered } : params)
   }
 
-  const primary: DrawerLink[] = [
+  const sections: { title: string; items: DrawerLink[] }[] = [
     {
-      key: 'home',
-      label: 'Home',
-      icon: 'home-outline',
-      onPress: () => goTab('Home'),
-    },
-    ...(caps.projects
-      ? [
-          {
-            key: 'projects',
-            label: 'Projects',
-            icon: 'folder-outline' as const,
-            onPress: () => goTab('Projects'),
-          },
-        ]
-      : []),
-    {
-      key: 'inbox',
-      label: 'Chat',
-      icon: 'chatbubbles-outline',
-      onPress: () => goTab('Inbox'),
+      title: 'Pipeline',
+      items: [
+        ...(caps.leads
+          ? [{ key: 'leads', label: 'New enquiries', icon: 'briefcase-outline' as const, onPress: () => goTab('More', 'Leads') }]
+          : []),
+        ...(caps.myWork
+          ? [{ key: 'live-board', label: 'Live board', icon: 'pulse-outline' as const, onPress: () => goTab('More', 'LiveBoard') }]
+          : []),
+        ...(caps.boq
+          ? [{ key: 'boq', label: 'BOQ / Quotes', icon: 'document-text-outline' as const, onPress: () => goTab('More', 'BoqList') }]
+          : []),
+      ],
     },
     {
-      key: 'more',
-      label: 'More',
-      icon: 'grid-outline',
-      onPress: () => goTab('More'),
+      title: 'Site and stock',
+      items: [
+        ...(caps.siteFeed
+          ? [
+              { key: 'site', label: 'Site updates', icon: 'camera-outline' as const, onPress: () => goTab('More', 'SiteFeed') },
+              { key: 'snags', label: 'Snags', icon: 'warning-outline' as const, onPress: () => goTab('More', 'Snags') },
+            ]
+          : []),
+        ...(caps.inventory
+          ? [{ key: 'inventory', label: 'Inventory', icon: 'cube-outline' as const, onPress: () => goTab('More', 'Inventory') }]
+          : []),
+        ...(caps.procurement
+          ? [
+              { key: 'vendors', label: 'Vendors', icon: 'storefront-outline' as const, onPress: () => goTab('More', 'Vendors') },
+              { key: 'pos', label: 'Purchase orders', icon: 'cart-outline' as const, onPress: () => goTab('More', 'PurchaseOrders') },
+            ]
+          : []),
+      ],
     },
-  ]
-
-  const tools: DrawerLink[] = [
     {
-      key: 'notifications',
-      label: 'Alerts',
-      icon: 'notifications-outline',
-      onPress: () => goTab('More', 'Notifications'),
+      title: 'Money',
+      items: [
+        ...(caps.finance
+          ? [
+              { key: 'finance', label: 'Revenue', icon: 'wallet-outline' as const, onPress: () => goTab('More', 'Finance') },
+              { key: 'billing', label: 'Billing', icon: 'receipt-outline' as const, onPress: () => goTab('More', 'Billing') },
+              { key: 'tax-invoices', label: 'Tax invoices', icon: 'document-text-outline' as const, onPress: () => goTab('More', 'TaxInvoices') },
+            ]
+          : []),
+      ],
     },
     {
-      key: 'profile',
-      label: 'Profile',
-      icon: 'person-outline',
-      onPress: () => goTab('More', 'ProfileHub'),
+      title: 'Studio',
+      items: [
+        ...(caps.reports
+          ? [{ key: 'reports', label: 'Reports', icon: 'bar-chart-outline' as const, onPress: () => goTab('More', 'Reports') }]
+          : []),
+        ...(caps.portfolio
+          ? [{ key: 'portfolio', label: 'Portfolio', icon: 'grid-outline' as const, onPress: () => goTab('More', 'Portfolio') }]
+          : []),
+        ...(caps.companyAdmin
+          ? [{ key: 'company', label: 'Company', icon: 'stats-chart-outline' as const, onPress: () => goTab('More', 'CompanyAdminDashboard') }]
+          : []),
+        ...(caps.impact
+          ? [{ key: 'impact', label: 'Impact', icon: 'trophy-outline' as const, onPress: () => goTab('More', 'Impact') }]
+          : []),
+        ...(caps.companyAdmin
+          ? [{ key: 'approvals', label: 'Approvals', icon: 'shield-checkmark-outline' as const, onPress: () => goTab('More', 'Approvals') }]
+          : []),
+      ],
     },
-    ...(caps.leads
-      ? [
-          {
-            key: 'leads',
-            label: 'New enquiries',
-            icon: 'briefcase-outline' as const,
-            onPress: () => goTab('More', 'Leads'),
-          },
-        ]
-      : []),
-    ...(caps.boq
-      ? [
-          {
-            key: 'boq',
-            label: 'BOQ / Quotes',
-            icon: 'document-text-outline' as const,
-            onPress: () => goTab('More', 'BoqList'),
-          },
-        ]
-      : []),
-    ...(caps.procurement
-      ? [
-          {
-            key: 'vendors',
-            label: 'Vendors',
-            icon: 'storefront-outline' as const,
-            onPress: () => goTab('More', 'Vendors'),
-          },
-          {
-            key: 'pos',
-            label: 'Purchase orders',
-            icon: 'cart-outline' as const,
-            onPress: () => goTab('More', 'PurchaseOrders'),
-          },
-        ]
-      : []),
-    ...(caps.finance
-      ? [
-          {
-            key: 'finance',
-            label: 'Revenue',
-            icon: 'wallet-outline' as const,
-            onPress: () => goTab('More', 'Finance'),
-          },
-          {
-            key: 'billing',
-            label: 'Billing',
-            icon: 'receipt-outline' as const,
-            onPress: () => goTab('More', 'Billing'),
-          },
-          {
-            key: 'tax-invoices',
-            label: 'Tax invoices',
-            icon: 'document-text-outline' as const,
-            onPress: () => goTab('More', 'TaxInvoices'),
-          },
-        ]
-      : []),
-    ...(caps.siteFeed
-      ? [
-          {
-            key: 'site',
-            label: 'Site updates',
-            icon: 'camera-outline' as const,
-            onPress: () => goTab('More', 'SiteFeed'),
-          },
-          {
-            key: 'snags',
-            label: 'Snags',
-            icon: 'warning-outline' as const,
-            onPress: () => goTab('More', 'Snags'),
-          },
-        ]
-      : []),
-    ...(caps.portfolio
-      ? [
-          {
-            key: 'portfolio',
-            label: 'Portfolio',
-            icon: 'grid-outline' as const,
-            onPress: () => goTab('More', 'Portfolio'),
-          },
-        ]
-      : []),
-    ...(caps.reports
-      ? [
-          {
-            key: 'reports',
-            label: 'Reports',
-            icon: 'bar-chart-outline' as const,
-            onPress: () => goTab('More', 'Reports'),
-          },
-        ]
-      : []),
-    ...(caps.myWork
-      ? [
-          {
-            key: 'live-board',
-            label: 'Live board',
-            icon: 'pulse-outline' as const,
-            onPress: () => goTab('More', 'LiveBoard'),
-          },
-        ]
-      : []),
-    ...(caps.inventory
-      ? [
-          {
-            key: 'inventory',
-            label: 'Inventory',
-            icon: 'cube-outline' as const,
-            onPress: () => goTab('More', 'Inventory'),
-          },
-        ]
-      : []),
-    ...(caps.companyAdmin
-      ? [
-          {
-            key: 'company',
-            label: 'Company dashboard',
-            icon: 'stats-chart-outline' as const,
-            onPress: () => goTab('More', 'CompanyAdminDashboard'),
-          },
-        ]
-      : []),
-    ...(caps.impact
-      ? [
-          {
-            key: 'impact',
-            label: 'Impact',
-            icon: 'trophy-outline' as const,
-            onPress: () => goTab('More', 'Impact'),
-          },
-        ]
-      : []),
-  ]
+  ].filter((section) => section.items.length > 0)
 
   return (
     <View style={styles.root}>
@@ -263,7 +158,7 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.sm }]}
       >
       <View style={styles.brandBlock}>
-        <Text style={styles.brand}>Cubic</Text>
+        <Text style={styles.brand}>Clyro</Text>
         <Text style={styles.brandHint}>Studio workspace</Text>
       </View>
 
@@ -285,14 +180,13 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
         <Icon name={glyphs.chevronForward} size="search" color={colors.textMuted} decorative />
       </Pressable>
 
-      <Text style={styles.sectionLabel}>Navigate</Text>
-      {primary.map((item) => (
-        <DrawerRow key={item.key} item={item} colors={colors} styles={styles} />
-      ))}
-
-      <Text style={[styles.sectionLabel, styles.sectionSpacer]}>Tools</Text>
-      {tools.map((item) => (
-        <DrawerRow key={item.key} item={item} colors={colors} styles={styles} />
+      {sections.map((section, index) => (
+        <View key={section.title}>
+          <Text style={[styles.sectionLabel, index > 0 && styles.sectionSpacer]}>{section.title}</Text>
+          {section.items.map((item) => (
+            <DrawerRow key={item.key} item={item} colors={colors} styles={styles} />
+          ))}
+        </View>
       ))}
 
       <Pressable

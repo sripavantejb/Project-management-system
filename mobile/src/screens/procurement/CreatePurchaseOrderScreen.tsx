@@ -65,7 +65,7 @@ export function CreatePurchaseOrderScreen({ route, navigation }: Props) {
         />
       }
     >
-      {!params.projectId ? <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} /> : null}
+      <ProjectPicker value={projectId} onChange={(id) => setProjectId(id)} />
       <VendorPicker value={vendor} onChange={setVendor} />
       <Input label="Description (optional)" value={description} onChangeText={setDescription} />
       <Input label="Order value" placeholder="0" keyboardType="numeric" value={value} onChangeText={setValue} />

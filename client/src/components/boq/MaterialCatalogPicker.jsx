@@ -282,7 +282,7 @@ export function NewBoqTypeModal({ open, onClose, onPick, projectType }) {
                   active ? 'border-accent/50 bg-accent/5 ring-2 ring-accent/15' : 'border-border',
                 )}
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f1f5f9] text-[#24b47e]">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f1f5f9] text-[var(--accent-hover)]">
                   <Icon className="h-4 w-4" />
                 </span>
                 <p className="mt-3 text-[14px] font-semibold text-primary">{meta.label}</p>

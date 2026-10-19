@@ -77,7 +77,7 @@ const BADGE_META = {
 }
 
 const FIELD =
-  'h-10 rounded-xl border-black/[0.08] bg-[#fbfbfd] focus:border-[#3ecf8e]/55 focus:bg-white'
+  'h-10 rounded-xl border-black/[0.08] bg-[#fbfbfd] focus:border-[var(--accent)]/55 focus:bg-white'
 
 const CHART_TOOLTIP = {
   background: 'var(--bg-surface)',
@@ -338,7 +338,7 @@ export function ImpactPointsPage() {
                           className={cn(
                             'absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full ring-2 ring-white',
                             badge.earned
-                              ? 'bg-[#3ecf8e] text-white'
+                              ? 'bg-[var(--accent)] text-white'
                               : 'bg-[#ebebed] text-[#86868b]',
                           )}
                         >
@@ -424,12 +424,12 @@ export function ImpactPointsPage() {
                           >
                             <stop
                               offset="0%"
-                              stopColor="#3ecf8e"
+                              stopColor="var(--accent)"
                               stopOpacity={0.28}
                             />
                             <stop
                               offset="100%"
-                              stopColor="#3ecf8e"
+                              stopColor="var(--accent)"
                               stopOpacity={0}
                             />
                           </linearGradient>
@@ -449,7 +449,7 @@ export function ImpactPointsPage() {
                         <Area
                           type="monotone"
                           dataKey="points"
-                          stroke="#3ecf8e"
+                          stroke="var(--accent)"
                           fill="url(#impactFillLight)"
                           strokeWidth={2}
                         />
@@ -504,7 +504,7 @@ export function ImpactPointsPage() {
                             <div
                               className={cn(
                                 'h-full rounded-full',
-                                row.points < 0 ? 'bg-red-400' : 'bg-[#3ecf8e]',
+                                row.points < 0 ? 'bg-red-400' : 'bg-[var(--accent)]',
                               )}
                               style={{ width: `${pct}%` }}
                             />
@@ -786,7 +786,7 @@ function LeaderboardSection({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search people…"
-            className="h-9 w-[200px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] focus:bg-white focus:ring-[#3ecf8e]/40"
+            className="h-9 w-[200px] rounded-full border-0 bg-[#f5f5f7] pl-8 pr-3 text-[12px] outline-none ring-1 ring-black/[0.04] focus:bg-white focus:ring-[var(--accent)]/40"
           />
         </div>
         <select
@@ -826,7 +826,7 @@ function LeaderboardSection({
                   onClick={() => onSelect(String(row.user._id))}
                   className={cn(
                     'flex w-full flex-col gap-3 px-4 py-3.5 text-left transition sm:flex-row sm:items-center sm:px-5',
-                    active ? 'bg-[#3ecf8e]/08' : 'hover:bg-[#fbfbfd]',
+                    active ? 'bg-[var(--accent)]/08' : 'hover:bg-[#fbfbfd]',
                   )}
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -951,7 +951,7 @@ function ChampionRewardCard({ champion, isMe }) {
               </p>
             </div>
             {isMe && (
-              <span className="rounded-full bg-[#3ecf8e]/15 px-2 py-0.5 text-[10px] font-semibold text-[#0d7a4f]">
+              <span className="rounded-full bg-[var(--accent)]/15 px-2 py-0.5 text-[10px] font-semibold text-[#0d7a4f]">
                 You
               </span>
             )}
@@ -1121,7 +1121,7 @@ function RulesPanel({ rules, onSave }) {
                       [rule._id]: { ...draft, points: Number(e.target.value) },
                     }))
                   }
-                  className="mt-1 h-9 w-full rounded-xl border border-black/[0.08] bg-[#fbfbfd] px-2 text-[12px] font-semibold tabular-nums outline-none focus:border-[#3ecf8e]/45"
+                  className="mt-1 h-9 w-full rounded-xl border border-black/[0.08] bg-[#fbfbfd] px-2 text-[12px] font-semibold tabular-nums outline-none focus:border-[var(--accent)]/45"
                 />
               </label>
               <label className="text-[10px] font-semibold uppercase tracking-wide text-[#86868b]">
@@ -1137,7 +1137,7 @@ function RulesPanel({ rules, onSave }) {
                       [rule._id]: { ...draft, weight: Number(e.target.value) },
                     }))
                   }
-                  className="mt-1 h-9 w-full rounded-xl border border-black/[0.08] bg-[#fbfbfd] px-2 text-[12px] font-semibold tabular-nums outline-none focus:border-[#3ecf8e]/45"
+                  className="mt-1 h-9 w-full rounded-xl border border-black/[0.08] bg-[#fbfbfd] px-2 text-[12px] font-semibold tabular-nums outline-none focus:border-[var(--accent)]/45"
                 />
               </label>
               <label className="flex items-end gap-2 pb-1 text-[11px] font-semibold text-[#6e6e73]">

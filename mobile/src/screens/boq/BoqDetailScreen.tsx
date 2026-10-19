@@ -189,7 +189,7 @@ export function BoqDetailScreen({ route, navigation }: Props) {
       if (!lines.length) {
         Alert.alert(
           'Nothing to import',
-          'No priced or measurable rows were found. Check that the sheet has Description / Qty columns, or start from the Cubic template.',
+          'No priced or measurable rows were found. Check that the sheet has Description / Qty columns, or start from the Clyro template.',
         )
         return
       }

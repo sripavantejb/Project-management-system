@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+﻿import { useMemo, useRef, useState } from 'react'
 import {
   Animated,
   Image,
@@ -19,7 +19,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { useQuery } from '@tanstack/react-query'
 import { Ionicons } from '@expo/vector-icons'
 import { Screen } from '../../components/Screen'
-import { AppNavBar, NAV_HERO_BG } from '../../components/AppNavBar'
+import { AppNavBar } from '../../components/AppNavBar'
 import { SectionLabel } from '../../components/SectionLabel'
 import { EmptyState, ErrorState, LoadingState } from '../../components/States'
 import { Avatar } from '../../components/Avatar'
@@ -43,7 +43,7 @@ import type { HomeData, Task } from '../../types/models'
 import type { SiteUpdate, Snag } from '../../types/ops'
 import { timeAgo } from '../../utils/time'
 
-import { HeroSection } from './sections/HeroSection'
+import { OperationsDashboard } from './sections/OperationsDashboard'
 
 const HERO = heroFor('light')
 type Props = {
@@ -61,8 +61,7 @@ function firstName(name?: string) {
 
 function timeGreeting(now = new Date()) {
   const h = now.getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
+  if (h < 17) return 'Bonjour'
   return 'Good evening'
 }
 
@@ -137,12 +136,12 @@ export function HomeScreen({ navigation, route }: Props) {
    * which the native driver can't do at all. So the pin gets the native value
    * and the navbar gets a JS one mirrored from the same event.
    *
-   * Web skips the transform pin entirely — CSS `position: sticky` keeps the
+   * Web skips the transform pin entirely â€” CSS `position: sticky` keeps the
    * hero still without fighting the compositor, which is the shake we saw.
    */
   const scrollYNative = useRef(new Animated.Value(0)).current
   const scrollY = useRef(new Animated.Value(0)).current
-  /** Measured, not assumed — the hero's height varies with role and font scale. */
+  /** Measured, not assumed â€” the hero's height varies with role and font scale. */
   const [heroHeight, setHeroHeight] = useState(0)
 
   const user = useAuthStore((s) => s.user)
@@ -200,12 +199,8 @@ export function HomeScreen({ navigation, route }: Props) {
   const materialsPending = (data?.approvals || []).length
   const issuesOpen = openSnags.length
 
-  const goMore = (screen: string, params?: Record<string, unknown>, fromHome = false) => {
-    if (fromHome) {
-      openMoreScreen(navigation, screen as never, params, { fromHome: true })
-      return
-    }
-    navigation.navigate('More', { screen, params } as never)
+  const goMore = (screen: string, params?: Record<string, unknown>, _fromHome = true) => {
+    openMoreScreen(navigation, screen as never, params, { fromHome: true })
   }
 
   const myTasks = useMemo(() => {
@@ -251,7 +246,7 @@ export function HomeScreen({ navigation, route }: Props) {
         icon: 'warning-outline',
         title: s.title || 'Open snag',
         body: s.assignee?.name ? `Assigned to ${s.assignee.name}` : 'Needs attention on site',
-        meta: `${proj || activeProject?.name || 'Site'} · ${timeAgo(s.createdAt)}`,
+        meta: `${proj || activeProject?.name || 'Site'} Â· ${timeAgo(s.createdAt)}`,
         thumb: s.photo ? assetUrl(s.photo) : null,
         onPress: () => goMore('Snags', activeProjectId ? { projectId: activeProjectId } : undefined),
       })
@@ -264,7 +259,7 @@ export function HomeScreen({ navigation, route }: Props) {
         icon: 'time-outline',
         title: a.title || 'Awaiting approval',
         body: 'Submitted for review',
-        meta: `${projectNameOf(a) || activeProject?.name || 'Project'} · ${timeAgo(a.updatedAt || a.createdAt)}`,
+        meta: `${projectNameOf(a) || activeProject?.name || 'Project'} Â· ${timeAgo(a.updatedAt || a.createdAt)}`,
         onPress: () => navigation.navigate('TaskDetail', { taskId: a._id }),
       })
     }
@@ -335,7 +330,7 @@ export function HomeScreen({ navigation, route }: Props) {
     return (
       <Screen padded={false} edges={['left', 'right']} background={colors.canvas}>
         <AppNavBar variant="hero" />
-        <LoadingState label="Loading your work…" variant="home" />
+        <LoadingState label="Loading your workâ€¦" variant="home" />
       </Screen>
     )
   }
@@ -363,7 +358,7 @@ export function HomeScreen({ navigation, route }: Props) {
    * The hero and the sheet share one scroll, but only the sheet is meant to
    * travel: cancelling the scroll out of the hero one-for-one pins it in place
    * so the sheet slides up over it. The pin stops once the sheet has climbed
-   * the hero's full height — past that the hero is completely covered, so
+   * the hero's full height â€” past that the hero is completely covered, so
    * holding it any longer would just drag an invisible view down the screen.
    *
    * `heroHeight` is 0 for the first frame, before layout has run; the `max`
@@ -376,7 +371,7 @@ export function HomeScreen({ navigation, route }: Props) {
   })
 
   return (
-    <Screen padded={false} edges={['left', 'right']} background={HERO.bg}>
+      <Screen padded={false} edges={['left', 'right']} background={colors.canvas}>
       <AppNavBar variant="hero" scrollY={scrollY} coverRange={coverRange} />
       <View style={styles.root}>
         <Animated.ScrollView
@@ -410,61 +405,20 @@ export function HomeScreen({ navigation, route }: Props) {
                 snags.refetch()
                 projects.refetch()
               }}
-              tintColor={HERO.lime}
-              colors={[HERO.lime]}
+              tintColor={colors.textPrimary}
+              colors={[colors.textPrimary]}
             />
           }
         >
-          {/* Hero lives in the scroll so its CTAs stay tappable, but the scroll
-              is cancelled back out of it so it holds still and the sheet slides
-              up over the top. */}
-          <Animated.View
-            collapsable={false}
-            onLayout={(e) => {
-              const h = Math.round(e.nativeEvent.layout.height)
-              setHeroHeight((prev) => (Math.abs(prev - h) < 1 ? prev : h))
-            }}
-            style={[styles.heroLayer, !isWeb && { transform: [{ translateY: heroPin }] }]}
-          >
-            <HeroSection
-              userName={firstName(user?.name)}
-              heroStat={heroStat}
-              overdueCount={overdueCount}
-              greeting={timeGreeting()}
-              onMyTasks={openMyTasks}
-              onPostUpdate={() =>
-                caps.siteFeed
-                  ? goMore('PostSiteUpdate', activeProjectId ? { projectId: activeProjectId } : undefined)
-                  : navigation.navigate('Projects' as never)
-              }
-              postUpdateLabel={caps.siteFeed ? 'Post update' : 'Projects'}
-              postUpdateIcon={caps.siteFeed ? 'camera-outline' : 'folder-outline'}
-            >
-              {caps.projects ? (
-                <View style={styles.heroPanel}>
-                  <Text style={styles.heroPanelLabel}>Active project</Text>
-                  <Pressable
-                    style={({ pressed }) => [styles.heroProjectRow, pressed && styles.heroCtaPressed]}
-                    onPress={() => setPickerOpen(true)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Select project"
-                  >
-                    <Ionicons name="folder-outline" size={16} color={HERO.lime} />
-                    <Text style={styles.heroProjectName} numberOfLines={1}>
-                      {activeProject?.name || 'All projects'}
-                    </Text>
-                    <Ionicons name="chevron-down" size={16} color={HERO.mute} />
-                  </Pressable>
-                </View>
-              ) : null}
-            </HeroSection>
-          </Animated.View>
-
-          {/* Sheet contains all dashboard widgets and scrolls smoothly */}
           <View style={styles.sheet}>
-            <View style={{ marginBottom: spacing.md }}>
-              <ViewPills value={workView} onChange={setWorkView} />
-            </View>
+            {workView === 'all' ? null : (
+              <View style={{ marginBottom: spacing.md }}>
+                <Pressable onPress={() => setWorkView('all')} accessibilityRole="button">
+                  <Text style={styles.backToDash}>Operations</Text>
+                </Pressable>
+                <ViewPills value={workView} onChange={setWorkView} />
+              </View>
+            )}
 
             {/*
               * A pill selection swaps what the sheet shows, in place. This used
@@ -482,271 +436,27 @@ export function HomeScreen({ navigation, route }: Props) {
                 onOpenCalendar={() => goMore('ProfileHub', { screen: 'GoogleCalendar' })}
               />
             ) : (
-              <>
-          {/* Project health */}
-          <SectionLabel
-            action="View Details ›"
-            onAction={() =>
-              activeProjectId
-                ? openProjectScreen(
+              <OperationsDashboard
+                userName={firstName(user?.name)}
+                greeting={timeGreeting()}
+                projects={projectList}
+                overdueCount={overdueCount}
+                approvalCount={(data?.approvals || []).length}
+                updates={(siteUpdates.data || []) as SiteUpdate[]}
+                canCreate={caps.projects}
+                onOpenProject={(project) =>
+                  openProjectScreen(
                     navigation,
-                    'ProjectOverview',
-                    {
-                      projectId: activeProjectId,
-                      projectName: activeProject?.name,
-                    },
+                    "ProjectOverview",
+                    { projectId: project._id, projectName: project.name },
                     { fromHome: true },
                   )
-                : navigation.navigate('Projects' as never)
-            }
-          >
-            Project health
-          </SectionLabel>
-          <View style={styles.healthRow}>
-            <HealthTile
-              styles={styles}
-              icon="calendar-outline"
-              iconColor={scheduleTone}
-              iconBg={`${scheduleTone}18`}
-              label="Schedule"
-              value={scheduleLabel}
-              valueColor={scheduleTone}
-              onPress={() => (overdueCount > 0 ? openMyTasks() : goProject('ProjectTasks'))}
-            />
-            <HealthTile
-              styles={styles}
-              icon="people-outline"
-              iconColor="#0d9488"
-              iconBg="rgba(13,148,136,0.12)"
-              label="Crews"
-              value={crewCount ? `${crewCount} Active` : '—'}
-              valueColor="#0d9488"
-              onPress={() => goProject('ProjectTeam')}
-            />
-            <HealthTile
-              styles={styles}
-              icon="layers-outline"
-              iconColor={colors.warning}
-              iconBg={colors.warningSoft}
-              label="Materials"
-              value={materialsPending ? 'Pending' : 'Clear'}
-              valueColor={materialsPending ? colors.warning : colors.success}
-              onPress={() =>
-                caps.procurement
-                  ? goMore('PurchaseOrders', activeProjectId ? { projectId: activeProjectId } : undefined, true)
-                  : goProject('ProjectOverview')
-              }
-            />
-            <HealthTile
-              styles={styles}
-              icon="warning-outline"
-              iconColor={colors.danger}
-              iconBg={colors.dangerSoft}
-              label="Issues"
-              value={`${issuesOpen} Open`}
-              valueColor={colors.danger}
-              onPress={() =>
-                caps.siteFeed
-                  ? goMore('Snags', activeProjectId ? { projectId: activeProjectId } : undefined, true)
-                  : goProject('ProjectOverview')
-              }
-            />
-          </View>
-
-          {/* Today's focus */}
-          <SectionLabel>Today&apos;s focus</SectionLabel>
-          {focus ? (
-            <Pressable
-              style={styles.focusCard}
-              onPress={() => navigation.navigate('TaskDetail', { taskId: focus._id })}
-              accessibilityRole="button"
-            >
-              <View style={styles.focusTop}>
-                <View style={[styles.statusPill, { backgroundColor: `${focusStatusColor}22` }]}>
-                  <View style={[styles.statusDot, { backgroundColor: focusStatusColor }]} />
-                  <Text style={[styles.statusPillText, { color: focusStatusColor }]}>
-                    {STATUS_LABELS[focus.status] || focus.status}
-                  </Text>
-                </View>
-                <View style={styles.focusHeroIcon}>
-                  <Ionicons name="construct-outline" size={28} color={colors.accentHover} />
-                </View>
-              </View>
-              <Text style={styles.focusTitle} numberOfLines={2}>
-                {focus.title}
-              </Text>
-              <Text style={styles.focusMeta}>
-                {focus.dueDate ? 'Due today' : 'No due date'} · {progress}% complete
-              </Text>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${progress}%` }]} />
-              </View>
-              <View style={styles.focusFooter}>
-                <Text style={styles.focusRemaining}>
-                  {tasksRemaining} task{tasksRemaining === 1 ? '' : 's'} remaining
-                </Text>
-                <Pressable
-                  style={styles.focusArrow}
-                  onPress={() => navigation.navigate('TaskDetail', { taskId: focus._id })}
-                  accessibilityLabel="Open task"
-                >
-                  <Ionicons name="arrow-forward" size={18} color={colors.ctaText} />
-                </Pressable>
-              </View>
-            </Pressable>
-          ) : (
-            <View style={styles.focusEmpty}>
-              <EmptyState
-                icon="checkmark-done-outline"
-                title="Nothing in focus"
-                body="You’re clear for now — pick up a task when you’re ready."
-              />
-            </View>
-          )}
-
-          {/* Needs your attention */}
-          <SectionLabel
-            count={attentionItems.length > 0 ? attentionItems.length : undefined}
-            action="View All"
-            onAction={() => goMore('Notifications')}
-          >
-            Needs your attention
-          </SectionLabel>
-          <View style={styles.attentionCard}>
-            {attentionItems.length === 0 ? (
-              <Text style={styles.attentionEmpty}>You’re all caught up.</Text>
-            ) : (
-              attentionItems.map((item, idx) => (
-                <Pressable
-                  key={item.key}
-                  style={[styles.attentionRow, idx > 0 && styles.attentionRowBorder]}
-                  onPress={item.onPress}
-                  accessibilityRole="button"
-                >
-                  <View
-                    style={[
-                      styles.attentionIcon,
-                      {
-                        backgroundColor:
-                          item.tone === 'danger'
-                            ? colors.dangerSoft
-                            : item.tone === 'warning'
-                              ? colors.warningSoft
-                              : colors.accentSoft,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={item.icon}
-                      size={18}
-                      color={
-                        item.tone === 'danger'
-                          ? colors.danger
-                          : item.tone === 'warning'
-                            ? colors.warning
-                            : colors.accentHover
-                      }
-                    />
-                  </View>
-                  <View style={styles.attentionCopy}>
-                    <Text style={styles.attentionTitle} numberOfLines={1}>
-                      {item.title}
-                    </Text>
-                    <Text style={styles.attentionBody} numberOfLines={1}>
-                      {item.body}
-                    </Text>
-                    <Text style={styles.attentionMeta} numberOfLines={1}>
-                      {item.meta}
-                    </Text>
-                  </View>
-                  {item.thumb ? (
-                    <Image source={{ uri: item.thumb }} style={styles.attentionThumb} />
-                  ) : null}
-                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-                </Pressable>
-              ))
-            )}
-          </View>
-
-          {/* Quick actions */}
-          <SectionLabel>Quick actions</SectionLabel>
-          <View style={styles.actionsRow}>
-            {quickActions.map((action) => (
-              <Pressable
-                key={action.key}
-                style={styles.actionCard}
-                onPress={action.onPress}
-                accessibilityRole="button"
-                accessibilityLabel={action.label}
-              >
-                <View style={[styles.actionIconWell, { backgroundColor: action.bg }]}>
-                  <Ionicons name={action.icon} size={20} color={action.color} />
-                </View>
-                <Text style={styles.actionLabel} numberOfLines={2}>
-                  {action.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {/* Recent activity */}
-          {caps.siteFeed ? (
-            <>
-              <SectionLabel
-                action="View All"
-                onAction={() =>
-                  goMore('SiteFeed', activeProjectId ? { projectId: activeProjectId } : undefined)
                 }
-              >
-                Recent activity
-              </SectionLabel>
-              {recentUpdate ? (
-                <Pressable
-                  style={styles.activityCard}
-                  onPress={() =>
-                    goMore('SiteFeed', activeProjectId ? { projectId: activeProjectId } : undefined)
-                  }
-                  accessibilityRole="button"
-                >
-                  <Avatar name={recentUpdate.author?.name} uri={recentUpdate.author?.avatar} size={40} />
-                  <View style={styles.activityCopy}>
-                    <Text style={styles.activityProject} numberOfLines={1}>
-                      {updateProject || 'Site update'}
-                    </Text>
-                    <Text style={styles.activityNote} numberOfLines={2}>
-                      {recentUpdate.note}
-                    </Text>
-                    <Text style={styles.activityMeta} numberOfLines={1}>
-                      {recentUpdate.author?.name || 'Teammate'} · {timeAgo(recentUpdate.createdAt)}
-                    </Text>
-                  </View>
-                  {updateThumb ? (
-                    <View style={styles.activityThumbWrap}>
-                      <Image source={{ uri: updateThumb }} style={styles.activityThumb} />
-                      {updatePhotos.length > 1 ? (
-                        <View style={styles.photoBadge}>
-                          <Ionicons name="camera" size={10} color="#fff" />
-                          <Text style={styles.photoBadgeText}>+{updatePhotos.length - 1}</Text>
-                        </View>
-                      ) : null}
-                    </View>
-                  ) : (
-                    <View style={[styles.activityThumb, styles.activityThumbFallback]}>
-                      <Ionicons name="image-outline" size={20} color={colors.textMuted} />
-                    </View>
-                  )}
-                </Pressable>
-              ) : (
-                <View style={styles.activityEmpty}>
-                  <Text style={styles.attentionEmpty}>No site updates yet.</Text>
-                  <Pressable style={styles.postBtn} onPress={() => goMore('PostSiteUpdate')}>
-                    <Text style={styles.postBtnText}>Post update</Text>
-                  </Pressable>
-                </View>
-              )}
-            </>
-          ) : null}
-              </>
+                onNewProject={() => navigation.navigate("Projects", { screen: "CreateProject" } as never)}
+                onOpenDispatch={() => goMore("SiteFeed")}
+                onOpenOverdue={openMyTasks}
+                onOpenApprovals={() => goMore("Approvals", undefined, true)}
+              />
             )}
           </View>
         </Animated.ScrollView>
@@ -798,7 +508,7 @@ export function HomeScreen({ navigation, route }: Props) {
                   </Text>
                   <Text style={styles.attentionEmpty} numberOfLines={1}>
                     {STATUS_LABELS[t.status] || t.status}
-                    {projectNameOf(t) ? ` · ${projectNameOf(t)}` : ''}
+                    {projectNameOf(t) ? ` Â· ${projectNameOf(t)}` : ''}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
@@ -874,7 +584,12 @@ function createStyles(
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: HERO.bg,
+      backgroundColor: c.canvas,
+    },
+    backToDash: {
+      ...typography.captionStrong,
+      color: c.textSecondary,
+      marginBottom: spacing.sm,
     },
     scrollView: {
       flex: 1,
@@ -889,7 +604,7 @@ function createStyles(
      * sheet paints on top on Android, where the elevation on the cards inside
      * it would otherwise decide the order for us.
      *
-     * Web uses sticky instead of a JS translateY pin — mapping scroll to a CSS
+     * Web uses sticky instead of a JS translateY pin â€” mapping scroll to a CSS
      * transform on the same node that is also scrolling is what shook the hero.
      */
     heroLayer: {
@@ -997,12 +712,7 @@ function createStyles(
     },
     sheet: {
       backgroundColor: c.canvas,
-      borderTopLeftRadius: 28,
-      borderTopRightRadius: 28,
-      // Rides over the hero rather than sitting beside it.
       zIndex: 1,
-      paddingHorizontal: pagePadding,
-      paddingTop: spacing.xl,
       paddingBottom: TAB_BAR_CLEARANCE + spacing.xl,
       gap: spacing.md,
       minHeight: Math.max(windowHeight - 100, 520),

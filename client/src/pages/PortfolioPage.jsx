@@ -90,6 +90,14 @@ export function PortfolioPage() {
         isFetching && 'opacity-90',
       )}
     >
+      <header>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-secondary">
+          Operations control
+        </p>
+        <h1 className="mt-1 text-[28px] font-medium tracking-[-0.02em] text-primary">
+          Studio dashboard
+        </h1>
+      </header>
       <PageToolbar
         left={<ToolbarLink to="/projects">All projects</ToolbarLink>}
       />

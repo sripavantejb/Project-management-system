@@ -18,10 +18,16 @@ import { Expense } from '../models/ProcurementFinance.js'
 import { Task } from '../models/Task.js'
 import {
   computeBands,
+  decideApproval,
   listApprovalTypes,
   pickRule,
   resolveApproverUser,
+  stepSummary,
+  stepsOf,
 } from '../lib/approvals.js'
+import { notifyUser } from '../lib/notify.js'
+import { PurchaseOrder } from '../models/ProcurementFinance.js'
+import { Quotation } from '../models/LeadQuotationFile.js'
 
 const router = express.Router()
 
@@ -139,8 +145,10 @@ router.post(
       throw new AppError('Unknown approval type', 400)
     }
 
-    const approverRole = String(req.body.approverRole || '').trim()
-    if (!approverRole) throw new AppError('An approver role is required', 400)
+    const approverRole = String(req.body.approverRole || req.body.steps?.[0]?.approverRole || '').trim()
+    if (!approverRole && !(Array.isArray(req.body.steps) && req.body.steps.length)) {
+      throw new AppError('An approver role is required', 400)
+    }
 
     const minAmount = parseBound(req.body.minAmount) ?? 0
     const maxAmount = parseBound(req.body.maxAmount)
@@ -148,13 +156,20 @@ router.post(
       throw new AppError('The upper limit must be greater than the lower limit', 400)
     }
 
-    let approverUser = null
-    if (req.body.approverUser) {
-      const user = await User.findOne(
-        tenantFilter(req, { _id: req.body.approverUser }),
-      ).select('_id')
-      if (!user) throw new AppError('That approver is not in this workspace', 400)
-      approverUser = user._id
+    const rawSteps = Array.isArray(req.body.steps) && req.body.steps.length
+      ? req.body.steps
+      : [{ approverRole, approverUser: req.body.approverUser || null }]
+    const steps = []
+    for (const step of rawSteps) {
+      const role = String(step.approverRole || '').trim()
+      if (!role && !step.approverUser) throw new AppError('Each step needs a role or a person', 400)
+      let pinned = null
+      if (step.approverUser) {
+        const user = await User.findOne(tenantFilter(req, { _id: step.approverUser })).select('_id role')
+        if (!user) throw new AppError('That approver is not in this workspace', 400)
+        pinned = user._id
+      }
+      steps.push({ approverRole: role || 'owner', approverUser: pinned })
     }
 
     const rule = await ApprovalRule.create(
@@ -162,8 +177,9 @@ router.post(
         entityType,
         minAmount,
         maxAmount,
-        approverRole,
-        approverUser,
+        approverRole: steps[0].approverRole,
+        approverUser: steps[0].approverUser,
+        steps,
         createdBy: req.user._id,
       }),
     )
@@ -258,10 +274,18 @@ router.get(
 
     const flow = types.map((type) => {
       const forType = rules.filter((r) => r.entityType === type.key)
-      const withApprover = forType.map((r) => ({
-        ...r,
-        resolvedApprover: r.approverUser || firstByRole.get(r.approverRole) || null,
-      }))
+      const withApprover = forType.map((r) => {
+        const steps = stepsOf(r).map((step) => ({
+          approverRole: step.approverRole,
+          approverUser: step.approverUser || null,
+          resolvedApprover: step.approverUser || firstByRole.get(step.approverRole) || null,
+        }))
+        return {
+          ...r,
+          steps,
+          resolvedApprover: steps[0]?.resolvedApprover || r.approverUser || firstByRole.get(r.approverRole) || null,
+        }
+      })
       const byId = new Map(withApprover.map((r) => [String(r._id), r]))
 
       // Hand clients the effective bands, not the raw overlapping rules, so
@@ -353,6 +377,26 @@ router.get(
       // sit invisible to everyone but an admin's "All pending" view.
       taskFilter.$or = [{ approver: userId }, { approver: null }]
     }
+    const poFilter = tenantFilter(req, { approvalStatus: 'pending' })
+    if (mineOnly || !isAdmin) poFilter.approver = userId
+    const purchaseOrders = await PurchaseOrder.find(poFilter)
+      .populate('approver', 'name avatar role')
+      .populate('createdBy', 'name avatar')
+      .populate('projectId', 'name')
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean()
+
+    const quoteFilter = tenantFilter(req, { approvalStatus: 'pending' })
+    if (mineOnly || !isAdmin) quoteFilter.approver = userId
+    const quotations = await Quotation.find(quoteFilter)
+      .populate('approver', 'name avatar role')
+      .populate('createdBy', 'name avatar')
+      .populate('projectId', 'name')
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean()
+
     const tasks = await Task.find(taskFilter)
       .populate('approver', 'name avatar role')
       .populate('projectId', 'name code')
@@ -360,8 +404,24 @@ router.get(
       .limit(50)
       .lean()
 
+    const chainFields = (doc) => {
+      const summary = stepSummary(doc)
+      return {
+        step: summary.step,
+        stepTotal: summary.total,
+        stepRole: summary.role,
+        history: (doc.approvalHistory || []).map((h) => ({
+          action: h.action,
+          at: h.at,
+          note: h.note,
+          step: h.step,
+        })),
+      }
+    }
+
     const items = [
       ...files.map((f) => ({
+        ...chainFields(f),
         kind: 'file',
         id: String(f._id),
         title: f.name,
@@ -389,6 +449,37 @@ router.get(
         projectId: e.projectId?._id || e.projectId,
         projectName: e.projectId?.name || '',
         link: '/money?tab=approvals',
+        ...chainFields(e),
+      })),
+      ...purchaseOrders.map((po) => ({
+        kind: 'purchase_order',
+        id: String(po._id),
+        title: po.poNumber || 'Purchase order',
+        subtitle: po.projectId?.name || 'Purchase order',
+        status: po.approvalStatus,
+        amount: po.value,
+        requestedAt: po.createdAt,
+        requestedBy: po.createdBy,
+        approver: po.approver,
+        projectId: po.projectId?._id || po.projectId,
+        projectName: po.projectId?.name || '',
+        link: '/procurement',
+        ...chainFields(po),
+      })),
+      ...quotations.map((q) => ({
+        kind: 'boq',
+        id: String(q._id),
+        title: q.title || 'Quotation',
+        subtitle: q.projectId?.name || 'Quotation',
+        status: q.approvalStatus,
+        amount: q.grandTotal,
+        requestedAt: q.createdAt,
+        requestedBy: q.createdBy,
+        approver: q.approver,
+        projectId: q.projectId?._id || q.projectId,
+        projectName: q.projectId?.name || '',
+        link: '/boq',
+        ...chainFields(q),
       })),
       ...tasks.map((t) => ({
         kind: 'task',
@@ -403,6 +494,7 @@ router.get(
         link: t.projectId
           ? `/projects/${t.projectId._id || t.projectId}/tasks`
           : '/my-work',
+        ...chainFields(t),
       })),
     ].sort(
       (a, b) =>
@@ -417,9 +509,89 @@ router.get(
         files: files.length,
         expenses: expenses.length,
         tasks: tasks.length,
+        purchaseOrders: purchaseOrders.length,
+        quotations: quotations.length,
         total: items.length,
       },
     })
+  }),
+)
+
+const DECIDE_MODELS = {
+  file: ProjectFile,
+  expense: Expense,
+  task: Task,
+  purchase_order: PurchaseOrder,
+  boq: Quotation,
+}
+
+router.post(
+  '/decide',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const kind = String(req.body.kind || '')
+    const Model = DECIDE_MODELS[kind]
+    if (!Model) throw new AppError('Unknown approval kind', 400)
+    const doc = await Model.findById(req.body.id)
+    assertTenantDoc(doc, req, 'Approval')
+    const isAdmin = req.user?.isPlatformAdmin || isCompanyAdminRole(req.user?.role)
+    if (kind === 'expense' && doc.approvalStatus !== 'pending') {
+      const decision = String(req.body.decision || '')
+      const note = String(req.body.note || '').trim()
+      if (!['approved', 'rejected'].includes(decision)) {
+        throw new AppError('decision must be approved or rejected', 400)
+      }
+      if (decision === 'rejected' && !note) throw new AppError('A reason is required to reject', 400)
+      doc.status = decision
+      if (decision === 'approved') doc.approvedBy = req.user._id
+      await doc.save()
+      return res.json({ success: true, finished: true, approvalStatus: doc.approvalStatus })
+    }
+    const result = decideApproval(doc, {
+      user: req.user,
+      isAdmin,
+      decision: req.body.decision,
+      note: req.body.note,
+    })
+    if (kind === 'expense' && result.finished) {
+      doc.status = req.body.decision
+      if (req.body.decision === 'approved') doc.approvedBy = req.user._id
+    }
+    if (kind === 'file' && result.finished) {
+      doc.status = req.body.decision
+      doc.decidedBy = req.user._id
+      doc.decidedAt = new Date()
+      doc.decisionNote = String(req.body.note || '')
+    }
+    if (kind === 'purchase_order' && result.finished && req.body.decision === 'approved') {
+      doc.approvedAt = new Date()
+    }
+    doc.markModified('approvalChain')
+    doc.markModified('approvalHistory')
+    await doc.save()
+
+    const requester = doc.requestedBy || doc.submittedBy || doc.createdBy
+    if (result.finished && requester) {
+      await notifyUser(req, {
+        userId: requester,
+        type: 'approval_decided',
+        title: req.body.decision === 'approved' ? 'Approved' : 'Rejected',
+        body: result.finished && req.body.decision === 'rejected'
+          ? String(req.body.note || 'Rejected')
+          : 'The sign-off is complete',
+        link: '/approvals?tab=inbox',
+      })
+    } else if (result.nextApprover) {
+      await notifyUser(req, {
+        userId: result.nextApprover,
+        type: 'approval_requested',
+        title: 'Approval needed',
+        body: 'A previous approver signed off. This is now with you.',
+        link: '/approvals?tab=inbox',
+      })
+    }
+
+    res.json({ success: true, finished: result.finished, approvalStatus: doc.approvalStatus })
   }),
 )
 
