@@ -9,7 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { radius, spacing, typography, type AppColors } from '../constants/theme'
 import { useColors, useShadows } from '../theme/useColors'
 import { useAuthStore } from '../store/authStore'
-import { capabilitiesForUser } from '../utils/roles'
+import { capabilitiesForUser, canUseAttendance } from '../utils/roles'
+import { confirmSignOut } from '../screens/attendance/signOut'
 import { openTabScreen } from '../navigation/openProject'
 import { Avatar } from './Avatar'
 import { glyphs, type Glyph } from '../icons'
@@ -28,6 +29,7 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
   const insets = useSafeAreaInsets()
   const styles = useMemo(() => createStyles(colors, shadows), [colors, shadows])
   const user = useAuthStore((s) => s.user)
+  const refreshToken = useAuthStore((s) => s.refreshToken)
   const logout = useAuthStore((s) => s.logout)
   const caps = capabilitiesForUser(user)
   const { navigation } = props
@@ -114,6 +116,9 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
     {
       title: 'Studio',
       items: [
+        ...(canUseAttendance(user)
+          ? [{ key: 'attendance', label: 'Attendance', icon: 'time-outline' as const, onPress: () => goTab('More', 'Attendance') }]
+          : []),
         ...(caps.reports
           ? [{ key: 'reports', label: 'Reports', icon: 'bar-chart-outline' as const, onPress: () => goTab('More', 'Reports') }]
           : []),
@@ -193,7 +198,7 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
         style={styles.logout}
         onPress={() => {
           navigation.closeDrawer()
-          logout()
+          confirmSignOut(refreshToken, logout)
         }}
         accessibilityRole="button"
         accessibilityLabel="Sign out"

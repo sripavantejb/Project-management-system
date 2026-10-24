@@ -67,17 +67,16 @@ const eventPrefSchema = new mongoose.Schema(
 function defaultEventPrefs() {
   const out = {}
   for (const e of NOTIFICATION_EVENTS) {
-    const isTaskFlow =
-      e.key === 'task_assigned' ||
-      e.key === 'task_moved' ||
-      e.key === 'deadline'
+    // Status/stage clicks stay quiet — only assignment & deadlines fan out wider
+    const isAssignmentOrDeadline =
+      e.key === 'task_assigned' || e.key === 'deadline'
     out[e.key] = {
       popup: true,
-      email: true,
+      email: e.key !== 'task_moved',
       notifyTarget: true,
-      notifyActor: isTaskFlow,
+      notifyActor: isAssignmentOrDeadline,
       notifyAdmins:
-        isTaskFlow || e.key === 'approval_requested',
+        isAssignmentOrDeadline || e.key === 'approval_requested',
       daysBefore: 1,
     }
   }

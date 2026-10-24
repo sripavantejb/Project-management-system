@@ -53,6 +53,12 @@
             "backgroundColor": "#004838"
           }
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Clyro uses your location only when you punch in or punch out, so your studio can see where the day started and ended."
+        }
       ]
     ],
     "owner": "harshapolin",

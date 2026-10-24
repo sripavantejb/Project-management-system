@@ -1,5 +1,5 @@
 import { io, type Socket } from 'socket.io-client'
-import { API_ORIGIN } from '../constants/env'
+import { API_ORIGIN, isTunneledOrigin } from '../constants/env'
 import { useAuthStore } from '../store/authStore'
 
 let socket: Socket | null = null
@@ -8,17 +8,25 @@ function currentToken() {
   return useAuthStore.getState().accessToken || null
 }
 
-/** Singleton Socket.IO client — JWT auth on every connect. */
+/**
+ * Singleton Socket.IO client.
+ * Public tunnels (Cloudflare / loca.lt / exp.direct) usually cannot upgrade
+ * WebSockets through Metro, so those sessions start on HTTP long-polling.
+ */
 export function getSocket() {
   const token = currentToken()
   if (!token) return null
 
   if (!socket) {
+    const tunneled = isTunneledOrigin()
     socket = io(API_ORIGIN, {
-      transports: ['websocket', 'polling'],
+      transports: tunneled ? ['polling'] : ['websocket', 'polling'],
+      upgrade: !tunneled,
       reconnection: true,
-      reconnectionDelay: 800,
+      reconnectionDelay: 400,
+      reconnectionDelayMax: 4_000,
       reconnectionAttempts: Infinity,
+      timeout: 8_000,
       auth: { token },
     })
 
@@ -55,4 +63,8 @@ export function disconnectSocket() {
     socket.disconnect()
     socket = null
   }
+}
+
+export function isSocketConnected() {
+  return !!socket?.connected
 }

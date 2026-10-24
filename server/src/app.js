@@ -29,6 +29,8 @@ import taxInvoiceRoutes from './routes/taxInvoices.js'
 import procurementFlowRoutes from './routes/procurementFlow.js'
 import mediaRoutes from './routes/media.js'
 import workspaceSettingsRoutes from './routes/workspaceSettings.js'
+import attendanceRoutes from './routes/attendance.js'
+import publicBoqRoutes from './routes/publicBoq.js'
 
 import { registerSocketAuth, registerSocketHandlers } from './lib/socketAuth.js'
 
@@ -61,7 +63,10 @@ export function corsOrigin(origin, callback) {
       }
       if (
         host.endsWith('.editcomedia.com') ||
-        host === 'editcomedia.com'
+        host === 'editcomedia.com' ||
+        host.endsWith('.exp.direct') ||
+        host.endsWith('.loca.lt') ||
+        host.endsWith('.trycloudflare.com')
       ) {
         callback(null, true)
         return
@@ -145,6 +150,8 @@ export function createApp({ enableSockets = true } = {}) {
   // every ordinary app route runs after it.
   app.use('/api/auth', authRoutes)
   app.use('/api/platform', platformRoutes)
+  // Client BOQ approve links resolve by token — no staff session required.
+  app.use('/api/public', publicBoqRoutes)
   app.use('/api', enforceTenantAccessible)
 
   app.use('/api', homeRoutes)
@@ -165,6 +172,7 @@ export function createApp({ enableSockets = true } = {}) {
   app.use('/api', spacesRoutes)
   app.use('/api', channelsRoutes)
   app.use('/api/settings', workspaceSettingsRoutes)
+  app.use('/api', attendanceRoutes)
 
   app.use(errorHandler)
 

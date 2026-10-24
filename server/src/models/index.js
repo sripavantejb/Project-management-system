@@ -38,3 +38,4 @@ export {
 } from './Approval.js'
 export { ImpactRule, ImpactLedger, ImpactScore } from './Impact.js'
 export { InventoryItem, InventoryMovement } from './Inventory.js'
+export { Attendance } from './Attendance.js'

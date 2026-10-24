@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { NestedChrome } from '../../components/NestedChrome'
 import { Avatar } from '../../components/Avatar'
 import { Pill } from '../../components/Badge'
@@ -10,8 +10,8 @@ import { useColors, useThemeMode } from '../../theme/useColors'
 import { useResponsive } from '../../theme/useResponsive'
 import { useUiStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
-import { authApi } from '../../api/auth'
 import { capabilitiesForUser, ROLE_LABELS } from '../../utils/roles'
+import { confirmSignOut } from '../attendance/signOut'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { ProfileStackParamList } from '../../navigation/types'
 
@@ -31,22 +31,7 @@ export function ProfileMainScreen({ navigation }: Props) {
   const caps = capabilitiesForUser(user)
   const showPeople = caps.people || caps.managePeople
 
-  const doLogout = () => {
-    Alert.alert('Log out', 'You’ll need to sign in again to see your work.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await authApi.logout(refreshToken)
-          } finally {
-            logout()
-          }
-        },
-      },
-    ])
-  }
+  const doLogout = () => confirmSignOut(refreshToken, logout)
 
   return (
     <NestedChrome

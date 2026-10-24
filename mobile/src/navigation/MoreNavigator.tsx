@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { MoreMainScreen } from '../screens/more/MoreMainScreen'
+import { AttendanceScreen } from '../screens/attendance/AttendanceScreen'
 import { LeadsScreen } from '../screens/leads/LeadsScreen'
 import { LeadDetailScreen } from '../screens/leads/LeadDetailScreen'
 import { CreateLeadScreen } from '../screens/leads/CreateLeadScreen'
@@ -74,6 +75,7 @@ export function MoreNavigator() {
   return (
     <Stack.Navigator screenOptions={options}>
       <Stack.Screen name="MoreMain" component={MoreMainScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Attendance" component={AttendanceScreen} options={{ headerShown: false, title: 'Attendance' }} />
 
       <Stack.Screen name="Leads" component={LeadsScreen} options={{ headerShown: false, title: 'New enquiries' }} />
       <Stack.Screen name="LeadDetail" component={LeadDetailScreen} options={{ headerShown: false, title: 'Enquiry' }} />

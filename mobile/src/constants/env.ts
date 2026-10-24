@@ -22,8 +22,19 @@ function resolveApiOrigin(): string {
   const hostUri =
     Constants.expoConfig?.hostUri || (Constants as any).manifest2?.extra?.expoClient?.hostUri
   if (hostUri) {
-    const host = hostUri.split(':')[0]
+    const [host, port] = hostUri.split(':')
     if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      // Public tunnels already reach Metro. Metro proxies /api to the local
+      // server, so the phone must not jump to a different host or port 5000.
+      const tunneled =
+        host.endsWith('.exp.direct') ||
+        host.endsWith('.loca.lt') ||
+        host.endsWith('.trycloudflare.com')
+      if (tunneled) {
+        const scheme = host.endsWith('.exp.direct') ? 'http' : 'https'
+        return `${scheme}://${host}`
+      }
+      if (port) return `http://${host}:${port}`
       return `http://${host}:${API_PORT}`
     }
   }
@@ -34,6 +45,20 @@ function resolveApiOrigin(): string {
 
 export const API_ORIGIN = resolveApiOrigin()
 export const API_URL = `${API_ORIGIN}/api`
+
+/** True when the phone reaches Metro/API through a public reverse proxy. */
+export function isTunneledOrigin(origin = API_ORIGIN) {
+  try {
+    const host = new URL(origin).hostname
+    return (
+      host.endsWith('.exp.direct') ||
+      host.endsWith('.loca.lt') ||
+      host.endsWith('.trycloudflare.com')
+    )
+  } catch {
+    return false
+  }
+}
 /**
  * Used only when no workspace was typed and nobody is signed in.
  * Login itself sends the company name from the screen, same as the website.

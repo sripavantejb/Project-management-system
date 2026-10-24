@@ -126,8 +126,9 @@ export function ProjectWorkspace() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#faf9f7] print:h-auto print:overflow-visible">
-      <header className="shrink-0 bg-[#faf9f7] print:hidden">
+    <div className="min-h-full bg-[#faf9f7] print:overflow-visible">
+      {/* Header scrolls with the page (not pinned) */}
+      <header className="bg-[#faf9f7] print:hidden">
         <div className="px-4 pt-4 sm:px-6">
           <div className="rounded-xl bg-[#f4f3f1] p-4 sm:p-5">
             <div className="mb-1 flex items-center justify-between gap-3">
@@ -269,9 +270,7 @@ export function ProjectWorkspace() {
         </nav>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto print:overflow-visible">
-        <Outlet context={{ project, stats: data?.stats }} />
-      </div>
+      <Outlet context={{ project, stats: data?.stats }} />
 
       <Modal
         open={confirmDelete}

@@ -6,6 +6,7 @@ import '../models/index.js'
 import { Task } from '../models/Task.js'
 import { ActivityLog, Notification, Comment } from '../models/Activity.js'
 import { startOfDay, endOfDay } from './dateHelpers.js'
+import { applyStatusAutoTimer, emitTimerUpdated } from '../lib/taskTimer.js'
 
 const router = express.Router()
 
@@ -204,9 +205,26 @@ router.patch(
     const next = order[(order.indexOf(current) + 1) % order.length]
     const prev = current
 
+    const hadTimerRunning = !!task.timeTrackingStartedAt
     task.status = next
     task.progress = progressMap[next] ?? 0
+    await applyStatusAutoTimer(task, {
+      previousStatus: prev,
+      nextStatus: next,
+      userId: req.user._id,
+      Task,
+      tenantFilter: (extra) => tenantFilter(req, extra),
+    })
     await task.save()
+
+    const timerRunning = !!task.timeTrackingStartedAt
+    if (hadTimerRunning !== timerRunning || timerRunning) {
+      emitTimerUpdated(req, req.user._id, {
+        taskId: String(task._id),
+        running: timerRunning,
+        status: task.status,
+      })
+    }
 
     await ActivityLog.create(
       withTenant(req, {

@@ -33,6 +33,7 @@ import { ProjectNotes } from './pages/project/MeetingNotes'
 import { ProjectTasks } from './pages/project/ProjectTasks'
 import { ProjectFiles } from './pages/project/ProjectFiles'
 import { BoqPage } from './pages/BoqPage'
+import { ClientBoqApprovePage } from './pages/ClientBoqApprovePage'
 import {
   ProjectProcurement,
   ProjectSite,
@@ -66,6 +67,7 @@ import {
   InventoryMovementsPage,
 } from './pages/InventoryPages'
 import { PagePad } from './components/layout/PagePad'
+import { AttendancePage } from './pages/AttendancePage'
 import { ToastViewport } from './components/ui'
 import { useAuthStore } from './lib/api'
 import {
@@ -126,6 +128,9 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           </Route>
 
+          {/* Client BOQ approve link from email / WhatsApp — no staff login */}
+          <Route path="/approve/:token" element={<ClientBoqApprovePage />} />
+
           <Route element={<PlatformGuestOnly />}>
             <Route path="/platform/login" element={<PlatformLoginPage />} />
           </Route>
@@ -174,9 +179,11 @@ export default function App() {
               path="/approvals"
               element={
                 <RoleGate roles={COMPANY_ADMIN_ROLES}>
-                  <PagePad>
-                    <ApprovalsPage />
-                  </PagePad>
+                  <CapabilityGate capability="approvals">
+                    <PagePad>
+                      <ApprovalsPage />
+                    </PagePad>
+                  </CapabilityGate>
                 </RoleGate>
               }
             />
@@ -184,9 +191,11 @@ export default function App() {
               path="/company-admin"
               element={
                 <RoleGate roles={COMPANY_ADMIN_ROLES}>
-                  <PagePad>
-                    <CompanyAdminDashboard />
-                  </PagePad>
+                  <CapabilityGate capability="companyAdmin">
+                    <PagePad>
+                      <CompanyAdminDashboard />
+                    </PagePad>
+                  </CapabilityGate>
                 </RoleGate>
               }
             />
@@ -194,9 +203,11 @@ export default function App() {
               path="/inventory"
               element={
                 <RoleGate roles={COMPANY_ADMIN_ROLES}>
-                  <PagePad>
-                    <InventoryStockPage />
-                  </PagePad>
+                  <CapabilityGate capability="inventory">
+                    <PagePad>
+                      <InventoryStockPage />
+                    </PagePad>
+                  </CapabilityGate>
                 </RoleGate>
               }
             />
@@ -204,9 +215,11 @@ export default function App() {
               path="/inventory/movements"
               element={
                 <RoleGate roles={COMPANY_ADMIN_ROLES}>
-                  <PagePad>
-                    <InventoryMovementsPage />
-                  </PagePad>
+                  <CapabilityGate capability="inventory">
+                    <PagePad>
+                      <InventoryMovementsPage />
+                    </PagePad>
+                  </CapabilityGate>
                 </RoleGate>
               }
             />
@@ -215,6 +228,16 @@ export default function App() {
               element={
                 <CapabilityGate capability="people">
                   <AdminPeoplePage />
+                </CapabilityGate>
+              }
+            />
+            <Route
+              path="/attendance"
+              element={
+                <CapabilityGate capability="attendance">
+                  <PagePad>
+                    <AttendancePage />
+                  </PagePad>
                 </CapabilityGate>
               }
             />
@@ -231,7 +254,7 @@ export default function App() {
             <Route
               path="/live-board"
               element={
-                <CapabilityGate capability="myWork">
+                <CapabilityGate capability="liveBoard">
                   <PagePad>
                     <LiveDashboardPage />
                   </PagePad>
@@ -333,6 +356,16 @@ export default function App() {
               }
             />
             <Route
+              path="/procurement/:section"
+              element={
+                <CapabilityGate capability="procurement">
+                  <PagePad>
+                    <MaterialsPage />
+                  </PagePad>
+                </CapabilityGate>
+              }
+            />
+            <Route
               path="/finance"
               element={
                 <CapabilityGate capability="finance">
@@ -345,7 +378,7 @@ export default function App() {
             <Route
               path="/billing"
               element={
-                <CapabilityGate capability="finance">
+                <CapabilityGate capability="billing">
                   <PagePad>
                     <BillingPage />
                   </PagePad>
@@ -355,7 +388,7 @@ export default function App() {
             <Route
               path="/billing/tax-invoices"
               element={
-                <CapabilityGate capability="finance">
+                <CapabilityGate capability="billing">
                   <TaxInvoicesPage />
                 </CapabilityGate>
               }

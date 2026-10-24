@@ -20,9 +20,48 @@ import { INVITE_ROLE_OPTIONS, ROLE_LABELS } from '../../lib/roles'
 import {
   TENANT_FEATURE_KEYS,
   SUBSCRIPTION_PLANS,
+  featureKeysByGroup,
   normalizeTenantFeatures,
 } from '../../lib/tenantFeatures'
 import { cn } from '../../lib/utils'
+
+function PageVisibilityToggle({ item, checked, onChange }) {
+  return (
+    <label
+      className={cn(
+        'flex cursor-pointer items-center justify-between gap-3 rounded-xl border px-3 py-2.5 transition',
+        checked
+          ? 'border-[var(--accent)]/35 bg-[var(--nav-active-bg)]'
+          : 'border-border bg-surface-raised opacity-80',
+      )}
+    >
+      <div className="min-w-0">
+        <p className="text-[13px] font-semibold text-primary">{item.label}</p>
+        <p className="truncate text-[11px] text-secondary">{item.page}</p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={(e) => {
+          e.preventDefault()
+          onChange(!checked)
+        }}
+        className={cn(
+          'relative h-6 w-11 shrink-0 rounded-full transition-colors',
+          checked ? 'bg-[var(--accent)]' : 'bg-[#c7c7c7]',
+        )}
+      >
+        <span
+          className={cn(
+            'absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+            checked && 'translate-x-5',
+          )}
+        />
+      </button>
+    </label>
+  )
+}
 
 function generatePassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#'
@@ -582,42 +621,80 @@ export function CompanyControlPanel({ tenant, expanded, onToggle }) {
             </section>
           </div>
 
-          <section className="mt-6 space-y-3 rounded-xl border border-border bg-surface p-4">
-            <div>
-              <p className="text-sm font-semibold text-primary">Feature access</p>
-              <p className="text-xs text-secondary">
-                Turn modules on or off for this company. Disabled features disappear from
-                their sidebar after save.
-              </p>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {TENANT_FEATURE_KEYS.map(({ key, label }) => (
-                <label
-                  key={key}
-                  className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-surface-raised px-3 py-2.5 text-sm"
+          <section className="mt-6 space-y-4 rounded-xl border border-border bg-surface p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-primary">
+                  Pages visible for this company
+                </p>
+                <p className="text-xs text-secondary">
+                  Toggle which sidebar pages this company can see. Off = hidden for
+                  everyone in the workspace after save.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() =>
+                    setDraft((s) => ({
+                      ...s,
+                      features: Object.fromEntries(
+                        TENANT_FEATURE_KEYS.map(({ key }) => [key, true]),
+                      ),
+                    }))
+                  }
                 >
-                  <input
-                    type="checkbox"
-                    checked={draft.features[key] !== false}
-                    onChange={(e) =>
-                      setDraft((s) => ({
-                        ...s,
-                        features: { ...s.features, [key]: e.target.checked },
-                      }))
-                    }
-                    className="h-4 w-4 rounded border-[#c7c7c7] text-[var(--accent)]"
-                  />
-                  <span className="text-primary">{label}</span>
-                </label>
+                  All on
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() =>
+                    setDraft((s) => ({
+                      ...s,
+                      features: Object.fromEntries(
+                        TENANT_FEATURE_KEYS.map(({ key }) => [key, false]),
+                      ),
+                    }))
+                  }
+                >
+                  All off
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => saveTenant.mutate()}
+                  loading={saveTenant.isPending}
+                >
+                  <Save className="mr-1 h-3.5 w-3.5" />
+                  Save pages
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {featureKeysByGroup().map(({ group, items }) => (
+                <div key={group}>
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-secondary">
+                    {group}
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {items.map((item) => (
+                      <PageVisibilityToggle
+                        key={item.key}
+                        item={item}
+                        checked={draft.features[item.key] !== false}
+                        onChange={(on) =>
+                          setDraft((s) => ({
+                            ...s,
+                            features: { ...s.features, [item.key]: on },
+                          }))
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
-            <Button
-              variant="secondary"
-              onClick={() => saveTenant.mutate()}
-              loading={saveTenant.isPending}
-            >
-              Save feature limits
-            </Button>
           </section>
 
           <section className="mt-6 overflow-hidden rounded-xl border border-border bg-surface">

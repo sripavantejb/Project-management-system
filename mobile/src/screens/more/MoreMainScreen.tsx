@@ -8,7 +8,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react'
-import { Alert, ScrollView } from 'react-native'
+import { ScrollView } from 'react-native'
 import { NestedChrome } from '../../components/NestedChrome'
 import { NavRow, NavSection } from '../../components/NavRow'
 import { SearchField } from '../../components/SearchField'
@@ -19,8 +19,8 @@ import { useColors, useThemeMode } from '../../theme/useColors'
 import { useResponsive } from '../../theme/useResponsive'
 import { useUiStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
-import { authApi } from '../../api/auth'
-import { capabilitiesForUser } from '../../utils/roles'
+import { capabilitiesForUser, canUseAttendance } from '../../utils/roles'
+import { confirmSignOut } from '../attendance/signOut'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { CompositeNavigationProp } from '@react-navigation/native'
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
@@ -131,22 +131,7 @@ export function MoreMainScreen({ navigation }: Props) {
     tabNav.navigate(tab)
   }
 
-  const doLogout = () => {
-    Alert.alert('Log out', 'You’ll need to sign in again to see your work.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await authApi.logout(refreshToken)
-          } finally {
-            logout()
-          }
-        },
-      },
-    ])
-  }
+  const doLogout = () => confirmSignOut(refreshToken, logout)
 
   const sections = (
     <>
@@ -159,6 +144,15 @@ export function MoreMainScreen({ navigation }: Props) {
             tone={0}
             onPress={() => goMore(tabNav, 'ProfileHub')}
           />
+          {canUseAttendance(user) ? (
+            <NavRow
+              icon="time-outline"
+              label="Attendance"
+              hint="Punch in and punch out"
+              tone={1}
+              onPress={() => goMore(tabNav, 'Attendance')}
+            />
+          ) : null}
           {caps.myWork ? (
             <NavRow
               icon="checkbox-outline"

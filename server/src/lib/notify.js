@@ -164,8 +164,10 @@ export async function notifyTaskAssignment(req, {
 }
 
 /**
- * Fan-out when a task moves status/stage or due date changes.
- * Notifies assignee, creator/assigner, and admins (popup + email per prefs).
+ * When a task status / stage / due date changes.
+ * Quiet by design — routine circle clicks must not spam the workspace.
+ * Only the assignee is notified, and only if someone else moved their task.
+ * No self-confirmation, no assigner/creator blast, no admin fan-out.
  */
 export async function notifyTaskMoved(req, {
   task,
@@ -178,57 +180,34 @@ export async function notifyTaskMoved(req, {
   const tenantId = req.tenantId || req.user?.tenantId
   const settings = tenantId ? await getMailSettings(tenantId) : null
   const pref = eventPref(settings, 'task_moved')
+  if (pref.notifyTarget === false) return
+
   const actorId = req.user?._id
   const actorName = req.user?.name || 'Someone'
   const assigneeId = task.assignee?._id || task.assignee || null
-  const creatorId = task.createdBy?._id || task.createdBy || null
+
+  // You moved your own task (or unassigned) — no popup for anyone
+  if (!assigneeId || (actorId && String(assigneeId) === String(actorId))) {
+    return
+  }
+
   const changeLine = changes.join(' · ')
-  const title = `Task updated: ${task.title}`
-  const body = `${actorName} moved this task — ${changeLine}`
-  const projectId = task.projectId?._id || task.projectId
-  const baseMeta = {
-    ...meta,
-    actor: actorSummary(req.user),
-    taskTitle: task.title,
-    taskId: String(task._id),
-    changes,
-  }
-
-  const recipients = new Map()
-
-  if (pref.notifyTarget !== false && assigneeId) {
-    recipients.set(String(assigneeId), 'assignee')
-  }
-  if (pref.notifyActor !== false) {
-    // Person who made the move gets a confirmation
-    if (actorId) recipients.set(String(actorId), 'mover')
-    // Original creator also stays in the loop
-    if (creatorId) recipients.set(String(creatorId), 'creator')
-  }
-  if (pref.notifyAdmins !== false && tenantId) {
-    const admins = await listAdminUserIds(tenantId)
-    for (const admin of admins) {
-      recipients.set(String(admin._id), 'admin')
-    }
-  }
-
-  for (const [userId, role] of recipients) {
-    const isSelf = req.user && String(userId) === String(req.user._id)
-    const payload = {
-      userId,
-      type: 'task_moved',
-      title,
-      body,
-      projectId,
-      link,
-      meta: { ...baseMeta, roleInEvent: role },
-    }
-    if (isSelf) {
-      await notifySelfAllowed(req, payload)
-    } else {
-      await notifyUser(req, payload)
-    }
-  }
+  await notifyUser(req, {
+    userId: assigneeId,
+    type: 'task_moved',
+    title: `Task updated: ${task.title}`,
+    body: `${actorName} moved this task — ${changeLine}`,
+    projectId: task.projectId?._id || task.projectId,
+    link,
+    meta: {
+      ...meta,
+      actor: actorSummary(req.user),
+      taskTitle: task.title,
+      taskId: String(task._id),
+      changes,
+      roleInEvent: 'assignee',
+    },
+  })
 }
 
 /** Like notifyUser but does not skip the current user (for assigner receipts). */

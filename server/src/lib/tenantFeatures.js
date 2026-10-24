@@ -1,15 +1,23 @@
-/** Tenant-level module gates (controlled by Editco platform admin). */
+/** Tenant-level page / module gates (controlled by platform admin per company). */
+
 export const TENANT_FEATURE_KEYS = [
-  { key: 'projects', label: 'Projects & tasks', group: 'Core' },
-  { key: 'boq', label: 'BOQ / Quotes', group: 'Modules' },
-  { key: 'procurement', label: 'Materials / procurement', group: 'Modules' },
-  { key: 'site', label: 'Site updates', group: 'Modules' },
-  { key: 'finance', label: 'Finance / revenue', group: 'Modules' },
-  { key: 'leads', label: 'New enquiries / CRM', group: 'Modules' },
-  { key: 'portfolio', label: 'Dashboard & reports', group: 'Modules' },
-  { key: 'people', label: 'People & invites', group: 'Company' },
-  { key: 'impact', label: 'Impact points', group: 'Modules' },
-  { key: 'inventory', label: 'Inventory', group: 'Modules' },
+  { key: 'companyAdmin', label: 'Company', page: '/company-admin', group: 'Ops' },
+  { key: 'approvals', label: 'Approvals', page: '/approvals', group: 'Ops' },
+  { key: 'portfolio', label: 'Dashboard', page: '/portfolio', group: 'Ops' },
+  { key: 'reports', label: 'Reports', page: '/reports', group: 'Ops' },
+  { key: 'liveBoard', label: 'Live board', page: '/live-board', group: 'Work' },
+  { key: 'projects', label: 'Projects', page: '/projects', group: 'Work' },
+  { key: 'myWork', label: 'My work', page: '/?view=assigned', group: 'Work' },
+  { key: 'attendance', label: 'Attendance', page: '/attendance', group: 'Work' },
+  { key: 'leads', label: 'New enquiries', page: '/leads', group: 'Modules' },
+  { key: 'boq', label: 'BOQ / Quotes', page: '/boq', group: 'Modules' },
+  { key: 'procurement', label: 'Materials', page: '/procurement', group: 'Modules' },
+  { key: 'finance', label: 'Revenue', page: '/finance', group: 'Modules' },
+  { key: 'billing', label: 'Billing', page: '/billing', group: 'Modules' },
+  { key: 'inventory', label: 'Inventory', page: '/inventory', group: 'Modules' },
+  { key: 'site', label: 'Site updates', page: '/site-feed', group: 'Modules' },
+  { key: 'impact', label: 'Impact Points', page: '/impact', group: 'Modules' },
+  { key: 'people', label: 'People & invites', page: '/people', group: 'Company' },
 ]
 
 export const TENANT_FEATURE_KEY_LIST = TENANT_FEATURE_KEYS.map((f) => f.key)
@@ -24,11 +32,29 @@ export function defaultTenantFeatures() {
   return Object.fromEntries(TENANT_FEATURE_KEY_LIST.map((key) => [key, true]))
 }
 
+/** Legacy keys → new page keys when upgrading older tenant.features docs. */
+const LEGACY_FALLBACKS = {
+  billing: 'finance',
+  reports: 'portfolio',
+  liveBoard: null,
+  myWork: null,
+  attendance: null,
+  approvals: null,
+  companyAdmin: null,
+}
+
 export function normalizeTenantFeatures(raw) {
   const base = defaultTenantFeatures()
   if (!raw || typeof raw !== 'object') return base
   for (const key of TENANT_FEATURE_KEY_LIST) {
-    if (typeof raw[key] === 'boolean') base[key] = raw[key]
+    if (typeof raw[key] === 'boolean') {
+      base[key] = raw[key]
+      continue
+    }
+    const legacy = LEGACY_FALLBACKS[key]
+    if (legacy && typeof raw[legacy] === 'boolean') {
+      base[key] = raw[legacy]
+    }
   }
   return base
 }
@@ -59,8 +85,10 @@ const FEATURE_TO_PERMISSIONS = {
   procurement: ['procurement'],
   site: ['site'],
   finance: ['finance'],
+  billing: ['finance'],
   leads: ['leads'],
   portfolio: ['portfolio'],
+  reports: ['portfolio'],
   people: ['people'],
   impact: ['impact'],
   inventory: ['inventory'],

@@ -62,6 +62,15 @@ export function isCompanyAdmin(user: User | null): boolean {
   return !!user && COMPANY_ADMIN_ROLES.includes(user.role)
 }
 
+export function canUseAttendance(user: User | null): boolean {
+  return !!user && user.role !== 'client' && user.role !== 'vendor'
+}
+
+export function canReviewAttendance(user: User | null): boolean {
+  if (!user) return false
+  return !!user.isPlatformAdmin || ADMIN_PORTAL_ROLES.includes(user.role)
+}
+
 export interface Capabilities {
   companyAdmin: boolean
   people: boolean

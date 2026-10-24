@@ -343,6 +343,9 @@ body {
 [data-theme="light"] .bg-\[\#1c1c1c\] .hover\:text-white:hover,
 [data-theme="light"] .bg-\[\#171717\],
 [data-theme="light"] .bg-\[\#171717\] .text-white,
+[data-theme="light"] .bg-\[\#1e2022\],
+[data-theme="light"] .bg-\[\#1e2022\].text-white,
+[data-theme="light"] .bg-\[\#1e2022\] .text-white,
 [data-theme="light"] .bg-\[\#202020\],
 [data-theme="light"] .bg-\[\#202020\].text-white,
 [data-theme="light"] .bg-\[\#202020\] .text-white,
@@ -350,19 +353,39 @@ body {
   color: #ffffff !important;
 }
 
-/* Emerald CTAs use near-black text (DESIGN.md on-primary) */
-[data-theme="light"] .bg-\[\#3ecf8e\],
-[data-theme="light"] .bg-\[\#3ecf8e\].text-white,
-[data-theme="light"] .bg-\[\#3ecf8e\] .text-white,
+/* Primary CTAs: graphite fill must keep light labels (text-white remap breaks them) */
+.btn-create {
+  background-color: var(--create-bg) !important;
+  color: var(--create-fg) !important;
+}
+.btn-create:hover:not(:disabled) {
+  background-color: var(--create-hover) !important;
+  color: var(--create-fg) !important;
+}
+[data-theme="light"] .btn-create,
+[data-theme="light"] .btn-create:hover:not(:disabled),
+[data-theme="light"] .btn-create:disabled,
+[data-theme="light"] .btn-create svg,
+[data-theme="light"] .bg-\[var\(--create-bg\)\],
+[data-theme="light"] .bg-\[var\(--create-bg\)\]:hover,
+[data-theme="light"] .bg-\[var\(--create-bg\)\]:disabled,
+[data-theme="light"] .hover\:bg-\[var\(--create-hover\)\]:hover,
+[data-theme="light"] .bg-\[var\(--create-bg\)\] svg,
+[data-theme="light"] .text-\[var\(--create-fg\)\] {
+  color: #ffffff !important;
+}
+
+/* These fills are remapped onto the graphite accent, so labels stay white. */
 [data-theme="light"] .bg-\[\#3ecf8e\],
 [data-theme="light"] .bg-\[\#3ecf8e\].text-white,
 [data-theme="light"] .bg-\[\#3ecf8e\] .text-white,
 [data-theme="light"] .bg-\[\#24b47e\],
 [data-theme="light"] .bg-\[\#24b47e\].text-white,
 [data-theme="light"] .hover\:bg-\[\#24b47e\]:hover,
-[data-theme="light"] .bg-\[\#24b47e\],
-[data-theme="light"] .bg-accent {
-  color: #171717 !important;
+[data-theme="light"] .bg-accent:not(:disabled),
+[data-theme="light"] .bg-accent:not(:disabled).text-white,
+[data-theme="light"] .bg-accent:not(:disabled) .text-white {
+  color: #ffffff !important;
 }
 
 [data-theme="light"] .bg-\[\#7B68EE\],
@@ -378,8 +401,8 @@ body {
 }
 
 /* Fold legacy blue / violet accents into emerald */
-[data-theme="light"] .bg-\[\#7B68EE\] { background-color: var(--accent) !important; color: #171717 !important; }
-[data-theme="light"] .hover\:bg-\[\#6a58d9\]:hover { background-color: var(--accent-hover) !important; color: #171717 !important; }
+[data-theme="light"] .bg-\[\#7B68EE\] { background-color: var(--accent) !important; color: #ffffff !important; }
+[data-theme="light"] .hover\:bg-\[\#6a58d9\]:hover { background-color: var(--accent-hover) !important; color: #ffffff !important; }
 [data-theme="light"] .border-\[\#7B68EE\] { border-color: var(--accent) !important; }
 [data-theme="light"] .hover\:border-\[\#7B68EE\]:hover { border-color: var(--accent) !important; }
 [data-theme="light"] .border-\[\#5b4fd6\] { border-color: var(--accent-hover) !important; }
@@ -419,13 +442,14 @@ body {
   background-color: var(--create-hover) !important;
 }
 
-[data-theme="light"] .bg-accent,
+[data-theme="light"] .bg-accent:not(:disabled),
 [data-theme="light"] .bg-\[\#3ecf8e\] {
-  color: #171717 !important;
+  color: #ffffff !important;
 }
 [data-theme="light"] .bg-accent .text-\[\#171717\],
+[data-theme="light"] .bg-accent .text-\[\#0E0E10\],
 [data-theme="light"] .bg-\[\#3ecf8e\] .text-\[\#171717\] {
-  color: #171717 !important;
+  color: #ffffff !important;
 }
 
 [data-theme="light"] .placeholder\:text-\[\#6b6b70\]::placeholder {
@@ -1051,8 +1075,78 @@ body {
   }
 }
 
-/* Graphite primary actions stay readable after the Atelier palette swap. */
+/* Light theme remaps .text-white to ink. Dark fills keep white labels. */
+[data-theme="light"] :is(
+  .bg-accent,
+  .bg-\[var\(--accent\)\],
+  .bg-\[var\(--create-bg\)\],
+  .bg-\[\#0b1220\],
+  .bg-\[\#1c1917\],
+  .bg-\[\#1e2022\],
+  .bg-\[\#33373b\],
+  .bg-\[\#3ecf8e\],
+  .bg-\[\#7B68EE\],
+  .bg-black\/40,
+  .bg-black\/45,
+  .bg-black\/50,
+  .bg-black\/55,
+  .bg-black\/60,
+  .bg-black\/70
+):not(:disabled),
+[data-theme="light"] :is(
+  .bg-accent,
+  .bg-\[var\(--accent\)\],
+  .bg-\[var\(--create-bg\)\],
+  .bg-\[\#0b1220\],
+  .bg-\[\#1c1917\],
+  .bg-\[\#1e2022\],
+  .bg-\[\#33373b\],
+  .bg-\[\#3ecf8e\],
+  .bg-\[\#7B68EE\],
+  .bg-black\/40,
+  .bg-black\/45,
+  .bg-black\/50,
+  .bg-black\/55,
+  .bg-black\/60,
+  .bg-black\/70
+):not(:disabled).text-white,
+[data-theme="light"] :is(
+  .bg-accent,
+  .bg-\[var\(--accent\)\],
+  .bg-\[var\(--create-bg\)\],
+  .bg-\[\#0b1220\],
+  .bg-\[\#1c1917\],
+  .bg-\[\#1e2022\],
+  .bg-\[\#33373b\],
+  .bg-black\/40,
+  .bg-black\/45,
+  .bg-black\/50,
+  .bg-black\/55,
+  .bg-black\/60,
+  .bg-black\/70
+) .text-white,
+[data-theme="light"] :is(
+  .bg-accent,
+  .bg-\[var\(--accent\)\],
+  .bg-\[var\(--create-bg\)\],
+  .bg-\[\#0b1220\],
+  .bg-\[\#1e2022\]
+):not(:disabled).text-\[\#f8fafc\],
+[data-theme="light"] :is(
+  .bg-accent,
+  .bg-\[var\(--accent\)\],
+  .bg-\[var\(--create-bg\)\],
+  .bg-\[\#0b1220\],
+  .bg-\[\#1e2022\]
+):not(:disabled).text-\[\#f4efe6\],
+[data-theme="light"] :is(
+  .bg-accent,
+  .bg-\[var\(--accent\)\],
+  .bg-\[var\(--create-bg\)\],
+  .bg-\[\#1e2022\]
+):not(:disabled).text-\[var\(--create-fg\)\],
 .bg-accent.text-\[\#171717\],
+.bg-accent.text-\[\#0E0E10\],
 .bg-\[var\(--accent\)\].text-\[\#171717\],
 .hover\:bg-accent:hover.text-\[\#171717\] {
   color: #ffffff !important;

@@ -10,6 +10,8 @@ import {
   ChevronDown,
   Calendar,
   User,
+  UserCheck,
+  Timer,
 } from 'lucide-react'
 import { api, useAuthStore } from '../../lib/api'
 import { capabilitiesForUser } from '../../lib/roles'
@@ -23,8 +25,10 @@ import {
 } from '../../components/layout/PageToolbar'
 import { ProjectTabBar } from './ProjectPageShell'
 import {
+  formatTrackedSeconds,
   getTaskStatus,
   isLaterDue,
+  liveTrackedSeconds,
   nextTaskStatus,
   openNativeDatePicker,
 } from '../../lib/taskStatus'
@@ -142,6 +146,7 @@ export function ProjectTasks() {
       qc.invalidateQueries({ queryKey: ['tasks', id] })
       qc.invalidateQueries({ queryKey: ['home'] })
       qc.invalidateQueries({ queryKey: ['project', id] })
+      qc.invalidateQueries({ queryKey: ['active-timer'] })
     },
     onError: (e) => toast(e.message, { type: 'error' }),
   })
@@ -382,8 +387,16 @@ export function ProjectTasks() {
   )
 }
 
+function firstName(userOrName) {
+  if (!userOrName) return ''
+  const name =
+    typeof userOrName === 'string' ? userOrName : userOrName.name || ''
+  return name.split(' ')[0] || name
+}
+
 function TaskCard({ task, users, canManage, onOpen, onPatch }) {
   const dueInputRef = useRef(null)
+  const [, setTick] = useState(0)
   const status = task.status || 'todo'
   const statusMeta = getTaskStatus(status)
   const next = nextTaskStatus(status)
@@ -391,9 +404,26 @@ function TaskCard({ task, users, canManage, onOpen, onPatch }) {
   const assigneeId = task.assignee?._id || task.assignee || ''
   const due = dueLabel(task.dueDate)
   const pri = PRIORITY[task.priority] || PRIORITY.medium
-  const assigneeName =
-    users.find((u) => String(u._id) === String(assigneeId))?.name?.split(' ')[0] ||
-    'Anyone'
+  const assigneeUser =
+    users.find((u) => String(u._id) === String(assigneeId)) || task.assignee
+  const assigneeName = firstName(assigneeUser) || 'Anyone'
+  const assignedByUser = task.assignedBy || task.createdBy
+  const assignedByName = firstName(assignedByUser) || '—'
+  const timerRunning = !!task.timeTrackingStartedAt
+
+  useEffect(() => {
+    if (!timerRunning) return undefined
+    const id = window.setInterval(() => setTick((n) => n + 1), 1000)
+    return () => window.clearInterval(id)
+  }, [timerRunning])
+
+  const trackedLabel = timerRunning
+    ? formatTrackedSeconds(
+        liveTrackedSeconds(task.timeSpent, task.timeTrackingStartedAt),
+      )
+    : Number(task.timeSpent) > 0
+      ? formatTrackedSeconds(task.timeSpent)
+      : null
 
   return (
     <div className="px-2.5 py-2 hover:bg-black/[0.02]">
@@ -402,7 +432,13 @@ function TaskCard({ task, users, canManage, onOpen, onPatch }) {
           type="button"
           onClick={() => onPatch({ status: next.value })}
           className="mt-0.5 shrink-0"
-          title={`${statusMeta.shortLabel} → ${next.shortLabel}`}
+          title={
+            status === 'todo'
+              ? 'Start work — timer starts'
+              : status === 'in_progress'
+                ? 'Next step — timer stops'
+                : `${statusMeta.shortLabel} → ${next.shortLabel}`
+          }
           aria-label={`Advance status to ${next.shortLabel}`}
         >
           {done ? (
@@ -423,23 +459,42 @@ function TaskCard({ task, users, canManage, onOpen, onPatch }) {
         </button>
 
         <div className="min-w-0 flex-1 overflow-hidden">
-          <button
-            type="button"
-            onClick={onOpen}
-            className={cn(
-              'block w-full truncate text-left text-[13px] font-semibold leading-snug text-primary hover:text-[#0d7a4f]',
-              done && 'font-medium text-secondary line-through',
-            )}
-          >
-            {task.title}
-          </button>
-
-          {/* One compact row — no horizontal scroll */}
-          <div className="mt-1.5 grid grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,0.85fr)] gap-1">
-            <label
-              className="relative flex min-w-0 items-center gap-0.5 overflow-hidden rounded-md bg-black/[0.04] px-1 py-0.5"
-              title={assigneeName}
+          <div className="flex items-start gap-1.5">
+            <button
+              type="button"
+              onClick={onOpen}
+              className={cn(
+                'min-w-0 flex-1 truncate text-left text-[13px] font-semibold leading-snug text-primary hover:text-[#0d7a4f]',
+                done && 'font-medium text-secondary line-through',
+              )}
             >
+              {task.title}
+            </button>
+            {trackedLabel ? (
+              <span
+                className={cn(
+                  'inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 py-0.5 text-[9px] font-bold tabular-nums',
+                  timerRunning
+                    ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
+                    : 'bg-black/[0.04] text-secondary',
+                )}
+                title={timerRunning ? 'Timer running' : 'Time spent'}
+              >
+                <Timer className="h-2.5 w-2.5" />
+                {trackedLabel}
+              </span>
+            ) : null}
+          </div>
+
+          {/* For / By / Date — clear ownership */}
+          <div className="mt-1.5 grid grid-cols-2 gap-1 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,0.9fr)_auto]">
+            <label
+              className="relative flex min-w-0 items-center gap-1 overflow-hidden rounded-md bg-black/[0.04] px-1.5 py-1"
+              title={`For: ${assigneeName}`}
+            >
+              <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide text-secondary">
+                For
+              </span>
               <User className="h-2.5 w-2.5 shrink-0 text-secondary" />
               <select
                 value={assigneeId}
@@ -447,7 +502,7 @@ function TaskCard({ task, users, canManage, onOpen, onPatch }) {
                 onChange={(e) =>
                   onPatch({ assignee: e.target.value || null })
                 }
-                className="min-w-0 flex-1 appearance-none truncate bg-transparent text-[9px] font-semibold text-primary outline-none"
+                className="min-w-0 flex-1 appearance-none truncate bg-transparent text-[10px] font-semibold text-primary outline-none"
               >
                 <option value="">Anyone</option>
                 {users.map((u) => (
@@ -458,23 +513,39 @@ function TaskCard({ task, users, canManage, onOpen, onPatch }) {
               </select>
             </label>
 
+            <div
+              className="flex min-w-0 items-center gap-1 overflow-hidden rounded-md bg-black/[0.04] px-1.5 py-1"
+              title={`Assigned by: ${assignedByName}`}
+            >
+              <span className="shrink-0 text-[8px] font-bold uppercase tracking-wide text-secondary">
+                By
+              </span>
+              <UserCheck className="h-2.5 w-2.5 shrink-0 text-secondary" />
+              <span className="min-w-0 truncate text-[10px] font-semibold text-primary">
+                {assignedByName}
+              </span>
+            </div>
+
             <button
               type="button"
               disabled={!canManage}
               title={due.text}
               onClick={() => openNativeDatePicker(dueInputRef.current)}
-              className="relative flex min-w-0 cursor-pointer items-center gap-0.5 overflow-hidden rounded-md bg-black/[0.04] px-1 py-0.5 text-left disabled:cursor-not-allowed"
+              className="relative flex min-w-0 cursor-pointer items-center gap-1 overflow-hidden rounded-md bg-black/[0.04] px-1.5 py-1 text-left disabled:cursor-not-allowed"
             >
+              <span className="pointer-events-none shrink-0 text-[8px] font-bold uppercase tracking-wide text-secondary">
+                Date
+              </span>
               <Calendar className="pointer-events-none h-2.5 w-2.5 shrink-0 text-secondary" />
               <span
                 className={cn(
-                  'pointer-events-none min-w-0 flex-1 truncate text-[9px] font-semibold',
+                  'pointer-events-none min-w-0 flex-1 truncate text-[10px] font-semibold',
                   due.className,
                 )}
               >
                 {task.dueDate
                   ? format(new Date(task.dueDate), 'dd MMM')
-                  : 'Date'}
+                  : '—'}
               </span>
               <input
                 ref={dueInputRef}
@@ -503,7 +574,7 @@ function TaskCard({ task, users, canManage, onOpen, onPatch }) {
               onChange={(e) => onPatch({ priority: e.target.value })}
               title="Priority"
               className={cn(
-                'min-w-0 truncate rounded-md px-1 py-0.5 text-[9px] font-bold outline-none',
+                'min-w-0 truncate rounded-md px-1.5 py-1 text-[10px] font-bold outline-none',
                 pri.className,
               )}
             >

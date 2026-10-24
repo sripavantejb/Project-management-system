@@ -64,6 +64,7 @@ const projectSchema = new mongoose.Schema(
     code: { type: String, trim: true },
     clientName: { type: String, required: true },
     clientPhone: { type: String, default: '', trim: true },
+    clientEmail: { type: String, default: '', trim: true, lowercase: true },
     clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     type: { type: String, enum: PROJECT_TYPES, default: 'residential' },
     status: { type: String, enum: PROJECT_STATUSES, default: 'not_started' },

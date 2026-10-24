@@ -19,6 +19,7 @@ import {
   MaterialIssue,
   VendorPayment,
 } from '../models/ProcurementFlow.js'
+import { bumpProjectJourney } from '../lib/projectJourney.js'
 
 const router = express.Router()
 
@@ -273,6 +274,11 @@ router.post(
     if (['ordered', 'approved', 'draft'].includes(po.status)) {
       po.status = 'in_transit'
       await po.save()
+    }
+
+    // Journey bar: first GRN → Site work (materials arriving)
+    if (po.projectId) {
+      await bumpProjectJourney(po.projectId, 'buying_started')
     }
 
     await grn.populate([

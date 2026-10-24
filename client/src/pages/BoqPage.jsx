@@ -7,6 +7,7 @@ import {
   Check,
   ChevronRight,
   Copy,
+  Download,
   FileSpreadsheet,
   History,
   Image as ImageIcon,
@@ -28,12 +29,15 @@ import { api, assetUrl, useAuthStore } from '../lib/api'
 import { formatInr } from '../lib/format'
 import {
   BOQ_UNITS as UNITS,
+  blankImportInstructionsAoa,
+  blankImportTemplateAoa,
   materialMasterAoa,
   normalizeForDedupe,
   rowsToBoqLines,
   unitLabel,
 } from '../lib/boqImport'
 import { CubicQuoteDocument, lineQty } from '../components/boq/CubicQuoteDocument'
+import { SendToClientModal } from '../components/boq/SendToClientModal'
 import {
   MeasurementSheet,
   itemTotal as measureItemTotal,
@@ -637,7 +641,7 @@ function ProjectBoqBoard({ project, projectId, quotes, loading, onBack }) {
           onClick={() =>
             project?.type === 'blank' ? setTypeModalOpen(true) : startDraft()
           }
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 text-[12px] font-semibold text-white shadow-[0_6px_16px_-8px_rgba(37,99,235,0.75)] transition hover:bg-[var(--accent-hover)]"
+          className="btn-create inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold shadow-[0_6px_16px_-8px_rgba(30,32,34,0.35)] transition"
         >
           <Plus className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">New sheet</span>
@@ -721,7 +725,7 @@ function EmptyProject({ onCreate, projectType }) {
         <button
           type="button"
           onClick={onCreate}
-          className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-[13.5px] font-semibold text-white shadow-[0_6px_16px_-6px_rgba(37,99,235,0.6)] transition hover:bg-[var(--accent-hover)]"
+          className="btn-create mt-5 inline-flex h-10 items-center gap-2 rounded-xl px-5 text-[13.5px] font-semibold shadow-[0_6px_16px_-6px_rgba(30,32,34,0.35)] transition"
         >
           <Plus className="h-4 w-4" />
           Open quotation BOQ
@@ -811,6 +815,7 @@ function BoqSheet({
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [preview, setPreview] = useState(null)
+  const [sendOpen, setSendOpen] = useState(false)
 
   const locked = (quotation?.status || 'draft') === 'approved'
   const status = quotation?.status || 'draft'
@@ -1256,7 +1261,10 @@ function BoqSheet({
 
   const unlock = useMutation({
     mutationFn: () =>
-      api(`/quotations/${quotation._id}/unlock`, { method: 'POST', body: {} }),
+      api(`/quotations/${quotation._id}/unlock`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }),
     onSuccess: async (res) => {
       await invalidate()
       toast(
@@ -1264,8 +1272,10 @@ function BoqSheet({
           'Unlocked for edits. Approved copy kept in History.',
         { type: 'success' },
       )
+      // Surface the archived approved copy so History does not look empty.
+      onOpenHistory?.()
     },
-    onError: (e) => toast(e.message, { type: 'error' }),
+    onError: (e) => toast(e.message || 'Could not unlock this BOQ', { type: 'error' }),
   })
 
   useEffect(() => {
@@ -1378,7 +1388,42 @@ function BoqSheet({
     }
   }
 
-  const exportTemplate = async () => {
+  /** Blank Excel with the exact columns Import expects — fill & re-upload. */
+  const downloadImportTemplate = async () => {
+    try {
+      const XLSX = await import('xlsx')
+      const typeLabel = BOQ_TYPE_META[boqType]?.label || 'Residential & Commercial'
+      const dataWs = XLSX.utils.aoa_to_sheet(
+        blankImportTemplateAoa({ label: typeLabel }),
+      )
+      dataWs['!cols'] = [
+        { wch: 8 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 48 },
+        { wch: 12 },
+        { wch: 24 },
+        { wch: 14 },
+        { wch: 10 },
+        { wch: 8 },
+        { wch: 14 },
+        { wch: 14 },
+      ]
+      const helpWs = XLSX.utils.aoa_to_sheet(blankImportInstructionsAoa())
+      helpWs['!cols'] = [{ wch: 28 }, { wch: 56 }]
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, dataWs, 'Material Master')
+      XLSX.utils.book_append_sheet(wb, helpWs, 'Instructions')
+      const safeType = String(typeLabel).replace(/[^\w\- ]+/g, '').trim() || 'BOQ'
+      XLSX.writeFile(wb, `BOQ-Import-Template-${safeType}.xlsx`)
+      toast('Excel import template downloaded', { type: 'success' })
+    } catch (e) {
+      toast(e.message || 'Could not download template', { type: 'error' })
+    }
+  }
+
+  /** Export the current sheet rows (same column layout as the import template). */
+  const exportCurrentSheet = async () => {
     try {
       const XLSX = await import('xlsx')
       const aoa = materialMasterAoa(
@@ -1558,7 +1603,7 @@ function BoqSheet({
         onLoadTemplate={loadMaterialTemplate}
       />
       <div
-        className="relative flex h-full min-h-0 flex-col gap-3.5 overflow-y-auto bg-[#f4f7fb] p-3.5 print:hidden lg:flex-row lg:overflow-visible"
+        className="relative flex h-full min-h-0 flex-col gap-3.5 overflow-y-auto bg-[#f4f7fb] p-3.5 print:hidden min-[1400px]:flex-row min-[1400px]:overflow-hidden"
         onDragOver={(e) => {
           e.preventDefault()
           if (!locked) setDragOver(true)
@@ -1584,7 +1629,7 @@ function BoqSheet({
         )}
 
         {/* Sheet */}
-        <div className="flex min-h-[480px] min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#e2eaf5] bg-surface shadow-[0_2px_4px_rgba(16,24,40,0.03),0_16px_40px_-24px_rgba(16,24,40,0.25)] lg:min-h-0">
+        <div className="flex min-h-[480px] min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#e2eaf5] bg-surface shadow-[0_2px_4px_rgba(16,24,40,0.03),0_16px_40px_-24px_rgba(16,24,40,0.25)] min-[1400px]:min-h-0">
           {/* ── Command bar: what this is, what it's worth, how to save it ── */}
           <header className="flex shrink-0 items-center gap-3 border-b border-[#edf1f7] px-3 py-2.5 sm:px-4">
             <div className="min-w-0 flex-1">
@@ -1636,6 +1681,27 @@ function BoqSheet({
                   {projectQuotes.length || 0}
                 </span>
               </button>
+              <button
+                type="button"
+                onClick={downloadImportTemplate}
+                title="Download blank Excel template that imports correctly"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#c7dbfb] bg-[#eef4ff] px-2.5 text-[12px] font-semibold text-[var(--accent-hover)] transition hover:border-[var(--accent)] hover:bg-[#e0ebff]"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Excel template</span>
+              </button>
+              <button
+                type="button"
+                disabled={locked || importing}
+                onClick={() => excelInputRef.current?.click()}
+                title="Import filled Excel / CSV into this sheet"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#e4eaf3] bg-surface px-2.5 text-[12px] font-semibold text-[#5b6b80] transition hover:border-[#c7dbfb] hover:text-[#0b1220] disabled:opacity-40"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">
+                  {importing ? 'Reading…' : 'Import'}
+                </span>
+              </button>
               <div className="relative">
                 <button
                   type="button"
@@ -1655,15 +1721,20 @@ function BoqSheet({
                     <div className="absolute right-0 top-9 z-30 w-60 overflow-hidden rounded-xl border border-[#e1e8f1] bg-surface py-1 shadow-[0_20px_50px_-20px_rgba(11,18,32,0.35)]">
                       {[
                         {
+                          label: 'Download Excel template',
+                          icon: Download,
+                          run: downloadImportTemplate,
+                        },
+                        {
                           label: importing ? 'Reading…' : 'Import Excel / CSV',
                           icon: Upload,
                           disabled: locked || importing,
                           run: () => excelInputRef.current?.click(),
                         },
                         {
-                          label: 'Download Excel template',
+                          label: 'Export current sheet',
                           icon: FileSpreadsheet,
-                          run: exportTemplate,
+                          run: exportCurrentSheet,
                         },
                         interiorMode && {
                           label: 'Reload Cubic template',
@@ -1828,8 +1899,8 @@ function BoqSheet({
                     className={cn(
                       'inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[12px] font-semibold transition',
                       headerOpen
-                        ? 'border-[#0b1220] bg-[#0b1220] text-[#f8fafc]'
-                        : 'border-[#e4eaf3] bg-surface text-[#5b6b80] hover:border-[#c7dbfb]',
+                        ? 'btn-create border-transparent'
+                        : 'border border-[#e4eaf3] bg-surface text-[#5b6b80] hover:border-[#c7dbfb]',
                     )}
                   >
                     <ImageIcon className="h-3.5 w-3.5" />
@@ -1853,7 +1924,7 @@ function BoqSheet({
                       className={cn(
                         'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold transition disabled:opacity-50',
                         dirty
-                          ? 'bg-[#0b1220] text-[#f8fafc] hover:bg-[#1f2937]'
+                          ? 'btn-create'
                           : 'border border-[#e4eaf3] bg-surface text-[#5b6b80] hover:border-[#c7dbfb]',
                       )}
                     >
@@ -1874,7 +1945,7 @@ function BoqSheet({
                           return
                         save.mutate(payload({ status: 'approved' }))
                       }}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 text-[12px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
+                      className="btn-create inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold transition disabled:opacity-50"
                     >
                       <Check className="h-3.5 w-3.5" />
                       Approve
@@ -2486,7 +2557,7 @@ function BoqSheet({
         {/* Right panel */}
         <aside
           className={cn(
-            'flex w-full shrink-0 flex-col gap-3 overflow-y-auto lg:w-[324px] [&>section]:shrink-0',
+            'flex w-full shrink-0 flex-col gap-3 overflow-y-auto min-[1400px]:w-[324px] [&>section]:shrink-0',
             quoteView && interiorMode && 'hidden',
           )}
         >
@@ -2591,7 +2662,7 @@ function BoqSheet({
                   type="button"
                   disabled={save.isPending}
                   onClick={() => save.mutate(payload())}
-                  className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-[13px] font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.9)] transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
+                  className="btn-create mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13px] font-semibold shadow-[0_8px_18px_-10px_rgba(30,32,34,0.45)] transition disabled:opacity-50"
                 >
                   <Save className="h-4 w-4" />
                   {save.isPending
@@ -2642,10 +2713,10 @@ function BoqSheet({
               </div>
 
               <div className="mt-3 space-y-1.5">
-                {status === 'draft' && (
+                {(status === 'draft' || status === 'sent' || status === 'viewed') && (
                   <button
                     type="button"
-                    disabled={save.isPending}
+                    disabled={save.isPending || !quotation?._id}
                     onClick={() => {
                       if (dirty) {
                         toast('Save the sheet first, then mark sent', {
@@ -2653,12 +2724,20 @@ function BoqSheet({
                         })
                         return
                       }
-                      save.mutate(payload({ status: 'sent' }))
+                      if (!quotation?._id) {
+                        toast('Save the sheet first, then mark sent', {
+                          type: 'info',
+                        })
+                        return
+                      }
+                      setSendOpen(true)
                     }}
                     className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-[#d7e5fc] bg-[#eef4ff] text-[12.5px] font-semibold text-[var(--accent-hover)] transition hover:bg-[#e0ebff] disabled:opacity-40"
                   >
                     <Send className="h-3.5 w-3.5" />
-                    Mark sent to client
+                    {status === 'draft'
+                      ? 'Mark sent to client'
+                      : 'Resend to client'}
                   </button>
                 )}
 
@@ -2826,6 +2905,19 @@ function BoqSheet({
           )}
         </aside>
       </div>
+
+      <SendToClientModal
+        open={sendOpen}
+        onClose={() => setSendOpen(false)}
+        quotationId={quotation?._id}
+        project={project}
+        docMeta={docMeta}
+        grandTotal={grand}
+        title={title}
+        onSent={async () => {
+          await invalidate()
+        }}
+      />
 
       {preview && (
         <div
@@ -3523,7 +3615,7 @@ function BoqHistoryPanel({ quotes = [], activeId, onClose, onSelect }) {
                               'mt-2.5 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg text-[12px] font-semibold transition',
                               active
                                 ? 'border border-[#c7dbfb] bg-white text-[var(--accent-hover)]'
-                                : 'bg-[#0b1220] text-white hover:bg-[#1f2937]',
+                                : 'btn-create',
                             )}
                           >
                             {active ? 'Close · keep viewing' : 'Open this version'}

@@ -29,5 +29,8 @@ const messageSchema = new mongoose.Schema(
 )
 
 messageSchema.index({ from: 1, to: 1, createdAt: -1 })
+messageSchema.index({ tenantId: 1, from: 1, createdAt: -1 })
+messageSchema.index({ tenantId: 1, to: 1, createdAt: -1 })
+messageSchema.index({ tenantId: 1, to: 1, readAt: 1 })
 
 export const Message = mongoose.model('Message', messageSchema)

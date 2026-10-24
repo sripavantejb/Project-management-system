@@ -475,42 +475,42 @@ function CompanyMail({
 
       {composeOpen && (
         <motion.div
-          className="absolute inset-0 z-20 flex items-start justify-center bg-black/50 p-4 pt-16"
+          className="absolute inset-0 z-20 flex items-start justify-center bg-black/40 p-4 pt-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div
-            className="flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-[#2e2e32] bg-[#1c1c1e] shadow-2xl"
+            className="flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-border bg-surface text-primary shadow-2xl"
             initial={{ opacity: 0, y: 4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="flex items-center justify-between border-b border-[#2e2e32] px-4 py-3">
-              <p className="text-[14px] font-semibold text-white">New message</p>
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <p className="text-[14px] font-semibold text-primary">New message</p>
               <button
                 type="button"
                 onClick={onComposeClose}
-                className="rounded-md px-2 py-1 text-[12px] text-[#8b8b90] hover:bg-[#252528] hover:text-white"
+                className="rounded-md px-2 py-1 text-[12px] font-medium text-secondary hover:bg-surface-raised hover:text-primary"
               >
                 Cancel
               </button>
             </div>
-            <div className="border-b border-[#2e2e32] p-3">
+            <div className="border-b border-border p-3">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#6b6b70]" />
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-secondary" />
                 <input
                   autoFocus
                   value={pickerQuery}
                   onChange={(e) => setPickerQuery(e.target.value)}
                   placeholder="Search teammates…"
-                  className="h-9 w-full rounded-md border border-[#2e2e32] bg-[#161618] pl-8 pr-2 text-[13px] outline-none placeholder:text-[#6b6b70]"
+                  className="h-9 w-full rounded-md border border-border bg-surface-raised pl-8 pr-2 text-[13px] text-primary outline-none placeholder:text-secondary focus:border-accent"
                 />
               </div>
             </div>
             <div className="max-h-[360px] overflow-y-auto">
               {dirLoading && (
-                <p className="px-4 py-6 text-center text-[12px] text-[#6b6b70]">
+                <p className="px-4 py-6 text-center text-[12px] text-secondary">
                   Loading people…
                 </p>
               )}
@@ -526,7 +526,7 @@ function CompanyMail({
                   />
                 ))}
               {!dirLoading && pickerPeople.length === 0 && (
-                <p className="px-4 py-6 text-center text-[12px] text-[#6b6b70]">
+                <p className="px-4 py-6 text-center text-[12px] text-secondary">
                   No teammates found. Invite people or seed demo users.
                 </p>
               )}
@@ -545,20 +545,29 @@ function PersonRow({ user, preview, unread, active, onClick }) {
       onClick={onClick}
       className={cn(
         'flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-[background-color,transform] duration-150 ease-out active:scale-[0.99]',
-        active ? 'bg-[#2a2a2e]' : 'hover:bg-[#1c1c1e]',
+        active
+          ? 'bg-[var(--nav-active-bg)] ring-1 ring-inset ring-[var(--accent)]/25'
+          : 'hover:bg-surface-raised',
       )}
     >
       <Avatar src={user.avatar} name={user.name} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="truncate text-[13px] font-medium">{user.name}</p>
+          <p
+            className={cn(
+              'truncate text-[13px] font-medium text-primary',
+              active && 'font-semibold',
+            )}
+          >
+            {user.name}
+          </p>
           {unread > 0 && (
             <span className="rounded-full bg-accent px-1.5 text-[10px] font-bold text-[#0E0E10]">
               {unread}
             </span>
           )}
         </div>
-        <p className="truncate text-[11px] text-[#6b6b70]">
+        <p className="truncate text-[11px] text-secondary">
           {preview ||
             `${(user.role || '').replace(/_/g, ' ')}${user.title ? ` · ${user.title}` : ''}`}
         </p>

@@ -44,6 +44,8 @@ const taskSchema = new mongoose.Schema(
       default: 'medium',
     },
     assignee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    /** Who assigned the task to the current assignee (falls back to createdBy in UI). */
+    assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     dueDate: Date,

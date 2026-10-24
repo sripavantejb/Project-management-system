@@ -38,6 +38,7 @@ import { useUiStore } from '../../store/uiStore'
 import { toast } from '../ui'
 import { cn } from '../../lib/utils'
 import { capabilitiesForUser, canInviteUsers } from '../../lib/roles'
+import { signOutWithAttendance } from '../../lib/attendanceSignOut'
 import {
   formatTrackedSeconds,
   liveTrackedSeconds,
@@ -57,6 +58,7 @@ import {
 } from '../CreateModals'
 import { LiveNotificationCenter } from '../notifications/LiveNotificationCenter'
 import { ComposeEmailModal } from '../ComposeEmailModal'
+import { WorkStatusBar } from './WorkStatusBar'
 import { syncSocketAuth, disconnectSocket } from '../../lib/socket'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -71,7 +73,7 @@ const ALL_PRIMARY_NAV = [
     to: '/approvals',
     label: 'Approvals',
     icon: ShieldCheck,
-    capability: 'companyAdmin',
+    capability: 'approvals',
   },
   {
     to: '/portfolio',
@@ -83,7 +85,7 @@ const ALL_PRIMARY_NAV = [
     to: '/live-board',
     label: 'Live board',
     icon: Activity,
-    capability: 'myWork',
+    capability: 'liveBoard',
   },
   {
     to: '/projects',
@@ -104,13 +106,19 @@ const ALL_PRIMARY_NAV = [
     capability: 'myWork',
   },
   {
+    to: '/attendance',
+    label: 'Attendance',
+    icon: Clock,
+    capability: 'attendance',
+  },
+  {
     to: '/boq',
     label: 'BOQ / Quotes',
     icon: FileSpreadsheet,
     capability: 'boq',
   },
   {
-    to: '/procurement',
+    to: '/procurement/dashboard',
     label: 'Materials',
     icon: Truck,
     capability: 'procurement',
@@ -125,7 +133,7 @@ const ALL_PRIMARY_NAV = [
     to: '/billing',
     label: 'Billing',
     icon: Receipt,
-    capability: 'finance',
+    capability: 'billing',
   },
   {
     to: '/inventory',
@@ -165,6 +173,9 @@ function navActive(pathname, search, to) {
     return (
       pathname === '/inventory' || pathname.startsWith('/inventory/')
     )
+  }
+  if (to === '/procurement' || to.startsWith('/procurement/')) {
+    return pathname === '/procurement' || pathname.startsWith('/procurement/')
   }
   return pathname === to || pathname.startsWith(`${to}/`)
 }
@@ -692,8 +703,7 @@ export function AppShell({ children }) {
                       className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] text-secondary transition-colors duration-150 hover:bg-surface-raised hover:text-primary"
                       onClick={() => {
                         setProfileMenuOpen(false)
-                        logout()
-                        navigate('/login')
+                        void signOutWithAttendance({ logout, navigate })
                       }}
                     >
                       <LogOut className="h-4 w-4" />
@@ -705,6 +715,9 @@ export function AppShell({ children }) {
             </div>
           </div>
         </header>
+
+        {/* Harvest / Linear-style focus strip — backend timer, every screen */}
+        <WorkStatusBar userId={user?.id || user?._id} />
 
         <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pb-[calc(3.75rem+env(safe-area-inset-bottom))] print:overflow-visible print:pb-0 lg:pb-0">
           {children}

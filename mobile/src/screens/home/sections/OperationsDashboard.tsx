@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { Avatar } from '../../../components/Avatar'
 import { stageLabel, typography, type AppColors } from '../../../constants/theme'
 import { useColors } from '../../../theme/useColors'
 import { assetUrl } from '../../../constants/env'
@@ -33,28 +32,11 @@ type Props = {
   onOpenDispatch: () => void
   onOpenOverdue: () => void
   onOpenApprovals: () => void
+  actions: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void }[]
 }
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
-}
-
-function shortDate(iso?: string) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })
-}
-
-function daySpan(project: Project) {
-  if (!project.startDate || !project.endDate) return null
-  const start = new Date(project.startDate).getTime()
-  const end = new Date(project.endDate).getTime()
-  if (!start || !end || end <= start) return null
-  const now = Date.now()
-  const total = Math.max(1, Math.round((end - start) / 86400000))
-  const day = Math.min(total, Math.max(1, Math.round((now - start) / 86400000)))
-  return `Day ${day} / ${total}`
 }
 
 function toneFor(project: Project) {
@@ -83,6 +65,7 @@ export function OperationsDashboard({
   onOpenDispatch,
   onOpenOverdue,
   onOpenApprovals,
+  actions,
 }: Props) {
   const colors = useColors()
   const { width } = useWindowDimensions()
@@ -201,26 +184,21 @@ export function OperationsDashboard({
         </ScrollView>
       ) : null}
 
-      <View style={styles.dispatchHead}>
-        <Text style={styles.dispatchTitle}>All projects</Text>
-        <Text style={styles.spotHint}>
-          {visible.length} of {projects.length}
-        </Text>
-      </View>
-      {visible.length === 0 ? (
-        <Text style={styles.empty}>No projects in this view.</Text>
-      ) : (
-        visible.map((project, index) => (
-          <ProjectCard
-            key={project._id}
-            project={project}
-            index={index}
-            styles={styles}
-            colors={colors}
-            onPress={() => onOpenProject(project)}
-          />
-        ))
-      )}
+      {actions.length > 0 ? (
+        <View>
+          <Text style={styles.dispatchTitle}>Quick actions</Text>
+          <View style={styles.actionGrid}>
+            {actions.map((action) => (
+              <Pressable key={action.key} style={styles.action} onPress={action.onPress} accessibilityRole="button">
+                <View style={styles.actionIcon}>
+                  <Ionicons name={action.icon} size={18} color="#1e2022" />
+                </View>
+                <Text style={styles.actionLabel}>{action.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <View style={styles.dispatchHead}>
         <Text style={styles.dispatchTitle}>Daily site dispatch</Text>
@@ -359,63 +337,6 @@ const spot = StyleSheet.create({
   mark: { color: '#e7d3c1', fontSize: 42, fontWeight: '500', letterSpacing: 1 },
 })
 
-function ProjectCard({
-  project,
-  index,
-  styles,
-  colors,
-  onPress,
-}: {
-  project: Project
-  index: number
-  styles: ReturnType<typeof createStyles>
-  colors: AppColors
-  onPress: () => void
-}) {
-  const tone = toneFor(project)
-  const progress = Math.max(0, Math.min(100, Math.round(project.progress || 0)))
-  const pm = project.projectManager?.name
-  const due = shortDate(project.endDate)
-  const span = daySpan(project)
-
-  return (
-    <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
-      <Cover project={project} style={styles.banner} markStyle={styles.bannerMark} />
-      <View style={styles.cardBody}>
-        <View style={styles.cardTop}>
-          <Text style={[styles.badge, { color: tone.color, backgroundColor: tone.bg }]}>{tone.label}</Text>
-          <Text style={styles.index}>{pad(index + 1)}</Text>
-        </View>
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {project.name}
-        </Text>
-        <Text style={styles.cardMeta} numberOfLines={1}>
-          {[project.clientName, project.location].filter(Boolean).join(' · ') || 'Interior project'}
-        </Text>
-        <Text style={styles.stage}>
-          {stageLabel(project.currentStage) || 'In studio'}
-          {span ? `  ·  ${span}` : ''}
-        </Text>
-        <View style={styles.progressRow}>
-          <View style={styles.track}>
-            <View style={[styles.fill, { width: `${progress}%`, backgroundColor: progress > 0 ? colors.accent : 'transparent' }]} />
-          </View>
-          <Text style={styles.pct}>{progress}%</Text>
-        </View>
-        <View style={styles.cardFoot}>
-          <View style={styles.pm}>
-            <Avatar name={pm || project.clientName} size={22} />
-            <Text style={styles.pmName} numberOfLines={1}>
-              {pm || 'Unassigned'}
-            </Text>
-          </View>
-          {due ? <Text style={styles.due}>Due {due}</Text> : null}
-        </View>
-      </View>
-    </Pressable>
-  )
-}
-
 function createStyles(c: AppColors) {
   return StyleSheet.create({
     wrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 120, gap: 12 },
@@ -528,6 +449,28 @@ function createStyles(c: AppColors) {
       marginTop: 8,
     },
     dispatchTitle: { fontSize: 18, fontWeight: '500', color: c.textPrimary },
+    actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
+    action: {
+      width: '48%',
+      flexGrow: 1,
+      flexBasis: '46%',
+      backgroundColor: '#ffffff',
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: 14,
+      gap: 10,
+      minHeight: 88,
+    },
+    actionIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      backgroundColor: '#f4f3f1',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    actionLabel: { fontSize: 15, fontWeight: '500', color: c.textPrimary },
     dispatchLink: { ...typography.micro, color: c.textMuted, letterSpacing: 0.6, textTransform: 'uppercase' },
     dispatchRow: { flexDirection: 'row', gap: 10, paddingVertical: 8 },
     dispatchDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#1e2022', marginTop: 6 },

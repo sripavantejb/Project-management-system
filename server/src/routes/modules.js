@@ -13,6 +13,17 @@ import {
 } from '../lib/projectScope.js'
 import { notifyUser, actorSummary } from '../lib/notify.js'
 import {
+  mintClientApproveToken,
+  clientApproveExpiresAt,
+  clientApproveUrl,
+  sendBoqApprovalEmail,
+  buildBoqWhatsappMessage,
+  whatsappWebUrl,
+  applyQuotationApproved,
+} from '../lib/boqClientApproval.js'
+import { bumpProjectJourney } from '../lib/projectJourney.js'
+import { getMailSettings } from '../lib/mailer.js'
+import {
   canManageEmployeeAccess,
   requirePermission,
   resolvePermissions,
@@ -661,6 +672,10 @@ router.post(
         projectId: quotation.projectId,
       })
     }
+    // Journey bar: first real BOQ → Quote & planning (automatic)
+    if (quotation.projectId) {
+      await bumpProjectJourney(quotation.projectId, 'boq_started')
+    }
     res.status(201).json({ success: true, quotation })
   }),
 )
@@ -764,20 +779,10 @@ router.patch(
         }
       }
       quotation.approvedAt = new Date()
-      if (quotation.projectId) {
-        const project = await Project.findById(quotation.projectId)
-        assertTenantDoc(project, req, 'Project')
-        const updates = { budget: quotation.grandTotal }
-        // Move journey forward into buying materials when still in early stages
-        if (
-          !project.currentStage ||
-          project.currentStage === 'design' ||
-          project.currentStage === 'planning'
-        ) {
-          updates.currentStage = 'procurement'
-        }
-        await Project.findByIdAndUpdate(quotation.projectId, updates)
-      }
+      // Sets budget + moves journey to Buying materials (automatic)
+      await applyQuotationApproved(quotation, {
+        note: 'Approved in workspace',
+      })
     }
     if (req.body.status === 'draft') {
       quotation.sentAt = undefined
@@ -786,6 +791,149 @@ router.patch(
 
     await quotation.save()
     res.json({ success: true, quotation })
+  }),
+)
+
+/**
+ * Share a BOQ with the client for approval via Email (SMTP) or WhatsApp.
+ * Mints a one-click approve token and marks the sheet as sent.
+ */
+router.post(
+  '/quotations/:id/send-to-client',
+  requireAuth,
+  requirePermission('boq'),
+  asyncHandler(async (req, res) => {
+    const quotation = await Quotation.findById(req.params.id)
+    assertTenantDoc(quotation, req, 'Quotation')
+
+    if (quotation.status === 'approved') {
+      throw new AppError('This BOQ is already approved. Unlock it first to resend.', 409)
+    }
+    if (
+      quotation.approvalStatus === 'pending' ||
+      quotation.approvalStatus === 'rejected'
+    ) {
+      throw new AppError('This quotation still needs its internal approval', 409)
+    }
+
+    const channel = String(req.body?.channel || '').toLowerCase()
+    if (channel !== 'email' && channel !== 'whatsapp') {
+      throw new AppError('Choose email or whatsapp', 400)
+    }
+
+    const project = quotation.projectId
+      ? await Project.findById(quotation.projectId)
+      : null
+    if (project) assertTenantDoc(project, req, 'Project')
+
+    let lead = null
+    if (project?.leadId) {
+      lead = await Lead.findById(project.leadId).select('email phone clientName contactName').lean()
+    } else if (quotation.leadId) {
+      lead = await Lead.findById(quotation.leadId).select('email phone clientName contactName').lean()
+    }
+
+    const tenant = await Tenant.findById(req.tenantId).select('name').lean()
+    const companyName = tenant?.name || 'Cubic'
+    const clientName =
+      project?.clientName ||
+      quotation.docMeta?.customerName ||
+      lead?.contactName ||
+      lead?.clientName ||
+      'Client'
+
+    const token = mintClientApproveToken()
+    const approveUrl = clientApproveUrl(token)
+    const emailTo = String(
+      req.body?.email ||
+        project?.clientEmail ||
+        quotation.docMeta?.emailId ||
+        lead?.email ||
+        '',
+    )
+      .trim()
+      .toLowerCase()
+    const phoneTo = String(
+      req.body?.phone ||
+        project?.clientPhone ||
+        quotation.docMeta?.contactNo ||
+        lead?.phone ||
+        '',
+    ).trim()
+
+    const payload = {
+      clientName,
+      projectName: project?.name || '',
+      quotationTitle: quotation.title,
+      grandTotal: quotation.grandTotal,
+      companyName,
+      approveUrl,
+      itemCount: Array.isArray(quotation.items) ? quotation.items.length : 0,
+    }
+
+    let mailResult = null
+    let whatsappUrl = ''
+    let whatsappMessage = ''
+
+    if (channel === 'email') {
+      if (!emailTo || !emailTo.includes('@')) {
+        throw new AppError('Enter a valid client email address', 400)
+      }
+      const settings = await getMailSettings(req.tenantId)
+      if (!settings?.enabled || !settings.user || !settings.pass) {
+        throw new AppError(
+          'Workspace email is not configured. Open Settings → Mail & alerts to add SMTP, then try again.',
+          400,
+        )
+      }
+      mailResult = await sendBoqApprovalEmail(req.tenantId, {
+        to: emailTo,
+        ...payload,
+      })
+      if (!mailResult?.info) {
+        throw new AppError('Could not send the email. Check SMTP settings and try again.', 502)
+      }
+      if (project && !project.clientEmail) {
+        project.clientEmail = emailTo
+        await project.save()
+      }
+    } else {
+      if (!phoneTo.replace(/\D/g, '')) {
+        throw new AppError('Enter a valid client WhatsApp number', 400)
+      }
+      whatsappMessage = buildBoqWhatsappMessage(payload)
+      whatsappUrl = whatsappWebUrl(phoneTo, whatsappMessage)
+      if (!whatsappUrl) {
+        throw new AppError('Enter a valid client WhatsApp number', 400)
+      }
+      if (project && !project.clientPhone) {
+        project.clientPhone = phoneTo
+        await project.save()
+      }
+    }
+
+    quotation.status = 'sent'
+    quotation.sentAt = new Date()
+    quotation.sentVia = channel
+    quotation.clientApproveToken = token
+    quotation.clientApproveTokenExpiresAt = clientApproveExpiresAt()
+    quotation.clientRejectedAt = undefined
+    quotation.clientApprovedAt = undefined
+    await quotation.save()
+
+    res.json({
+      success: true,
+      quotation,
+      channel,
+      approveUrl,
+      sentTo: channel === 'email' ? emailTo : phoneTo,
+      whatsappUrl: whatsappUrl || undefined,
+      whatsappMessage: whatsappMessage || undefined,
+      message:
+        channel === 'email'
+          ? `Quotation emailed to ${emailTo}`
+          : 'WhatsApp message ready — confirm send in WhatsApp',
+    })
   }),
 )
 
@@ -807,50 +955,57 @@ router.post(
     }
 
     const stamp = new Date()
+    const snap = quotation.toObject()
     const archiveLabel =
-      `${quotation.versionLabel || 'Standard'} · approved ` +
+      `${snap.versionLabel || 'Standard'} · approved ` +
       stamp.toISOString().slice(0, 10)
 
+    // Clone the signed-off sheet into its own document so History keeps the
+    // exact approved snapshot while this row reopens as a draft.
     const archive = await Quotation.create(
       withTenant(req, {
-        projectId: quotation.projectId,
-        leadId: quotation.leadId,
-        title: `${quotation.title} (locked)`,
+        projectId: snap.projectId,
+        leadId: snap.leadId,
+        title: `${snap.title} (approved)`,
         versionLabel: archiveLabel,
-        boqType: quotation.boqType,
+        boqType: snap.boqType,
         status: 'approved',
-        items: quotation.items,
-        spaces: quotation.spaces,
-        measurements: quotation.measurements,
-        docMeta: quotation.docMeta,
-        attachments: quotation.attachments,
-        subtotal: quotation.subtotal,
-        chargesPercent: quotation.chargesPercent,
-        chargesLabel: quotation.chargesLabel,
-        gstPercent: quotation.gstPercent,
-        discount: quotation.discount,
-        grandTotal: quotation.grandTotal,
-        createdBy: req.user._id,
-        approvedAt: quotation.approvedAt || stamp,
-        approvalStatus: quotation.approvalStatus || 'approved',
-        approver: quotation.approver,
-        approvalRule: quotation.approvalRule,
+        items: snap.items || [],
+        spaces: snap.spaces || [],
+        measurements: snap.measurements || [],
+        docMeta: snap.docMeta || {},
+        attachments: snap.attachments || [],
+        subtotal: snap.subtotal || 0,
+        chargesPercent: snap.chargesPercent || 0,
+        chargesLabel: snap.chargesLabel || '',
+        gstPercent: snap.gstPercent ?? 18,
+        discount: snap.discount || 0,
+        grandTotal: snap.grandTotal || 0,
+        createdBy: snap.createdBy || req.user._id,
+        approvedAt: snap.approvedAt || stamp,
+        approvalStatus: snap.approvalStatus || 'approved',
+        approver: snap.approver || null,
+        approvalRule: snap.approvalRule || null,
+        approvalStep: snap.approvalStep || 0,
+        approvalChain: snap.approvalChain || [],
+        approvalHistory: snap.approvalHistory || [],
       }),
     )
 
     quotation.status = 'draft'
     quotation.approvedAt = undefined
     quotation.sentAt = undefined
+    quotation.approvalStatus = 'none'
     quotation.versionLabel =
-      req.body.versionLabel ||
-      `${quotation.versionLabel || 'Standard'} · revision`
+      (req.body && req.body.versionLabel) ||
+      `${snap.versionLabel || 'Standard'} · revision`
     await quotation.save()
 
     res.json({
       success: true,
       quotation,
       archive,
-      message: 'BOQ unlocked. Approved copy kept in history.',
+      message: 'BOQ unlocked. Approved copy kept in History.',
     })
   }),
 )
@@ -1695,6 +1850,9 @@ router.post(
       }),
     )
 
+    // Journey bar: first site log → Site work (automatic)
+    await bumpProjectJourney(update.projectId, 'site_started')
+
     res.status(201).json({ success: true, update })
   }),
 )
@@ -1733,6 +1891,19 @@ router.patch(
     Object.assign(snag, req.body)
     await snag.save()
     await snag.populate('assignee', 'name avatar')
+
+    // Journey bar: all snags verified → Handover (automatic)
+    if (snag.projectId && snag.status === 'verified') {
+      const openLeft = await Snag.countDocuments(
+        tenantFilter(req, {
+          projectId: snag.projectId,
+          status: { $nin: ['verified'] },
+        }),
+      )
+      if (openLeft === 0) {
+        await bumpProjectJourney(snag.projectId, 'handover_ready')
+      }
+    }
 
     if (req.body.convertToTask && snag.status === 'open') {
       const task = await Task.create(

@@ -44,6 +44,7 @@ import type { SiteUpdate, Snag } from '../../types/ops'
 import { timeAgo } from '../../utils/time'
 
 import { OperationsDashboard } from './sections/OperationsDashboard'
+import { AttendanceStrip } from '../attendance/AttendanceStrip'
 
 const HERO = heroFor('light')
 type Props = {
@@ -158,7 +159,9 @@ export function HomeScreen({ navigation, route }: Props) {
   const alerts = useQuery({
     queryKey: ['notifications'],
     queryFn: notificationsApi.list,
-    refetchInterval: 20_000,
+    staleTime: 30_000,
+    // Live sync owns unread badges; avoid a 20s home refresh loop.
+    refetchInterval: false,
   })
   const projects = useQuery({
     queryKey: ['projects'],
@@ -312,7 +315,7 @@ export function HomeScreen({ navigation, route }: Props) {
         bg: colors.warningSoft,
         visible: caps.procurement,
         onPress: () =>
-          goMore('CreatePurchaseOrder', activeProjectId ? { projectId: activeProjectId } : undefined),
+          goMore('CreateMaterialRequest', activeProjectId ? { projectId: activeProjectId } : undefined),
       },
       {
         key: 'photos',
@@ -322,6 +325,24 @@ export function HomeScreen({ navigation, route }: Props) {
         bg: colors.accentSoft,
         visible: caps.siteFeed,
         onPress: () => goMore('SiteFeed', activeProjectId ? { projectId: activeProjectId } : undefined),
+      },
+      {
+        key: 'expense',
+        label: 'Log Expense',
+        icon: 'wallet-outline' as const,
+        color: colors.warning,
+        bg: colors.warningSoft,
+        visible: caps.finance,
+        onPress: () => goMore('CreateExpense', activeProjectId ? { projectId: activeProjectId } : undefined),
+      },
+      {
+        key: 'task',
+        label: 'New Task',
+        icon: 'checkbox-outline' as const,
+        color: colors.textPrimary,
+        bg: colors.surfaceRaised,
+        visible: caps.createTask,
+        onPress: () => navigation.navigate('CreateTask', { projectId: activeProjectId, isPersonal: !activeProjectId }),
       },
     ] as const
   ).filter((a) => a.visible)
@@ -411,6 +432,7 @@ export function HomeScreen({ navigation, route }: Props) {
           }
         >
           <View style={styles.sheet}>
+            <AttendanceStrip onOpen={() => goMore('Attendance')} />
             {workView === 'all' ? null : (
               <View style={{ marginBottom: spacing.md }}>
                 <Pressable onPress={() => setWorkView('all')} accessibilityRole="button">
@@ -456,6 +478,12 @@ export function HomeScreen({ navigation, route }: Props) {
                 onOpenDispatch={() => goMore("SiteFeed")}
                 onOpenOverdue={openMyTasks}
                 onOpenApprovals={() => goMore("Approvals", undefined, true)}
+                actions={quickActions.map((action) => ({
+                  key: action.key,
+                  label: action.label,
+                  icon: action.icon,
+                  onPress: action.onPress,
+                }))}
               />
             )}
           </View>

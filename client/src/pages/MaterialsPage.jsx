@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import {
@@ -38,10 +38,14 @@ import {
   MaterialRequestsTab,
   PaymentsTab,
   ProcurementDashboard,
-  ProcurementTabBar,
   QcTab,
-  useProcurementTab,
 } from '../components/procurement/ProcurementTabs'
+import {
+  ProcurementSideNav,
+  isProcurementSection,
+  procurementPath,
+} from '../components/procurement/ProcurementSideNav'
+import { TransitLiveBoard } from '../components/procurement/TransitLiveBoard'
 import { PILL_ACTIVE, PILL_IDLE, PILL_TRACK } from '../components/layout/PageToolbar'
 import { cn } from '../lib/utils'
 import {
@@ -82,7 +86,28 @@ function statusLabel(status) {
 
 export function MaterialsPage() {
   const qc = useQueryClient()
-  const [tab, setTab] = useProcurementTab()
+  const navigate = useNavigate()
+  const { section: sectionParam } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Legacy /procurement?tab=vendors → /procurement/vendors
+  const legacyTab = searchParams.get('tab')
+  useEffect(() => {
+    if (!legacyTab || !isProcurementSection(legacyTab)) return
+    const next = new URLSearchParams(searchParams)
+    next.delete('tab')
+    navigate(
+      {
+        pathname: procurementPath(legacyTab),
+        search: next.toString() ? `?${next}` : '',
+      },
+      { replace: true },
+    )
+  }, [legacyTab, navigate, searchParams])
+
+  const tab = isProcurementSection(sectionParam) ? sectionParam : 'dashboard'
+  const setTab = (key) => navigate(procurementPath(key))
+
   const [poSearch, setPoSearch] = useState('')
   const [poStatus, setPoStatus] = useState('all')
   const [vendorSearch, setVendorSearch] = useState('')
@@ -92,6 +117,28 @@ export function MaterialsPage() {
   const [editVendor, setEditVendor] = useState(null)
   const [deleteVendor, setDeleteVendor] = useState(null)
   const [compareOpen, setCompareOpen] = useState(false)
+  const [grnCreateKey, setGrnCreateKey] = useState(0)
+  const [requestCreateKey, setRequestCreateKey] = useState(0)
+
+  // Sidebar "+" → open create on that section
+  useEffect(() => {
+    if (searchParams.get('new') !== '1') return
+    if (tab === 'vendors') setAddVendorOpen(true)
+    if (tab === 'grn') setGrnCreateKey((k) => k + 1)
+    if (tab === 'requests') setRequestCreateKey((k) => k + 1)
+    if (tab === 'orders') {
+      toast('Open a project → Procurement to raise a new purchase order', {
+        type: 'info',
+      })
+    }
+    const next = new URLSearchParams(searchParams)
+    next.delete('new')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams, tab])
+
+  const handleNavCreate = (key) => {
+    navigate(`${procurementPath(key)}?new=1`)
+  }
 
   const {
     data: posData,
@@ -103,6 +150,7 @@ export function MaterialsPage() {
   } = useQuery({
     queryKey: ['all-pos'],
     queryFn: () => api('/purchase-orders'),
+    refetchInterval: tab === 'transit' ? 20_000 : false,
   })
 
   // Every project's RFQs, so the sidebar Materials page shows the stage before
@@ -256,21 +304,25 @@ export function MaterialsPage() {
     })
   }, [vendorList, vendorSearch, category])
 
-  if (isLoading && ['rfqs', 'orders', 'vendors'].includes(tab)) {
+  if (!sectionParam || !isProcurementSection(sectionParam)) {
+    return <Navigate to={procurementPath('dashboard')} replace />
+  }
+
+  if (isLoading && ['rfqs', 'orders', 'vendors', 'transit'].includes(tab)) {
     return (
-      <div className="mx-auto w-full max-w-[1500px] space-y-4 pb-10">
-        <SkeletonCard className="h-16" />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <SkeletonCard key={i} className="h-24" />
-          ))}
+      <div className="mx-auto flex w-full max-w-[1500px] gap-6 pb-10">
+        <div className="hidden sm:block sm:w-[220px]">
+          <SkeletonCard className="h-[420px]" />
         </div>
-        <SkeletonCard className="h-80" />
+        <div className="min-w-0 flex-1 space-y-4">
+          <SkeletonCard className="h-16" />
+          <SkeletonCard className="h-80" />
+        </div>
       </div>
     )
   }
 
-  if (isError && ['rfqs', 'orders', 'vendors'].includes(tab)) {
+  if (isError && ['rfqs', 'orders', 'vendors', 'transit'].includes(tab)) {
     return (
       <EmptyState
         icon={AlertCircle}
@@ -289,127 +341,174 @@ export function MaterialsPage() {
     )
   }
 
+  const sectionTitle =
+    {
+      dashboard: 'Dashboard',
+      inventory: 'Product Master',
+      boq: 'BOQ control',
+      vendors: 'Vendors',
+      requests: 'Purchase Request',
+      rfqs: 'RFQs',
+      orders: 'Purchase Order',
+      invoices: 'Purchase Invoice',
+      grn: 'GRN',
+      qc: 'QC',
+      transit: 'Transit',
+      debit: 'Debit notes',
+      issues: 'Issues',
+      payments: 'Payments',
+    }[tab] || 'Materials'
+
   return (
     <div
       className={cn(
-        'mx-auto w-full max-w-[1500px] space-y-5 pb-10 transition-opacity',
+        'mx-auto w-full max-w-[1500px] pb-10 transition-opacity',
         isFetching && 'opacity-90',
       )}
     >
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-[28px] font-medium tracking-[-0.02em] text-primary">
-              Materials pipeline
-            </h1>
-            <p className="mt-0.5 text-[13px] text-secondary">
-              Requests, vendor quotes, purchase orders, goods received, and bills.
-            </p>
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+        <ProcurementSideNav section={tab} onCreate={handleNavCreate} />
+
+        <div className="min-w-0 flex-1 space-y-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-secondary">
+                Materials · Procurement
+              </p>
+              <h1 className="mt-0.5 text-[24px] font-medium tracking-[-0.02em] text-primary sm:text-[28px]">
+                {sectionTitle}
+              </h1>
+              {tab === 'transit' ? (
+                <p className="mt-1 text-[12.5px] text-secondary">
+                  Auto board — shipments appear when POs are Ordered or In
+                  transit. ETA and days on road update themselves.
+                </p>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {tab === 'vendors' && vendorList.length >= 2 ? (
+                <Button variant="secondary" onClick={() => setCompareOpen(true)}>
+                  <ArrowLeftRight className="h-4 w-4" />
+                  Compare
+                </Button>
+              ) : null}
+              {tab === 'vendors' ? (
+                <Button onClick={() => setAddVendorOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  Add vendor
+                </Button>
+              ) : null}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {vendorList.length >= 2 ? (
-              <Button variant="secondary" onClick={() => setCompareOpen(true)}>
-                <ArrowLeftRight className="h-4 w-4" />
-                Compare
-              </Button>
-            ) : null}
-            <Button
-              onClick={() => {
-                setTab('vendors')
-                setAddVendorOpen(true)
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Add vendor
-            </Button>
-          </div>
+
+          {(tab === 'orders' || tab === 'rfqs') && (
+            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <Kpi
+                label="PO value"
+                value={formatInr(stats.totalPoValue)}
+                foot={`${purchaseOrders.length} orders`}
+              />
+              <Kpi
+                label="In pipeline"
+                value={stats.open}
+                accent
+                foot={
+                  stats.inTransit
+                    ? `${stats.inTransit} in transit`
+                    : 'Draft → delivery'
+                }
+              />
+              <Kpi label="Delivered" value={stats.delivered} />
+              <Kpi
+                label="Vendors"
+                value={stats.vendors}
+                foot="Active directory"
+                onClick={() => setTab('vendors')}
+              />
+            </section>
+          )}
+
+          {tab === 'dashboard' ? (
+            <ProcurementDashboard onGo={setTab} />
+          ) : tab === 'boq' ? (
+            <BoqControlTab />
+          ) : tab === 'rfqs' ? (
+            <AllRfqsPanel rfqs={rfqs} loading={rfqsLoading} />
+          ) : tab === 'orders' ? (
+            <OrdersPanel
+              orders={filteredPos}
+              total={purchaseOrders.length}
+              search={poSearch}
+              setSearch={setPoSearch}
+              status={poStatus}
+              setStatus={setPoStatus}
+              onOpen={setSelectedPo}
+            />
+          ) : tab === 'transit' ? (
+            <div className="space-y-4">
+              <div className="relative max-w-sm">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-secondary" />
+                <input
+                  value={poSearch}
+                  onChange={(e) => setPoSearch(e.target.value)}
+                  placeholder="Search shipments…"
+                  className="h-9 w-full rounded-[10px] border border-border bg-surface pl-8 pr-3 text-[12px] text-primary outline-none placeholder:text-secondary focus:border-accent/40"
+                />
+              </div>
+              <TransitLiveBoard
+                purchaseOrders={purchaseOrders}
+                search={poSearch}
+                onOpen={setSelectedPo}
+                advancingId={
+                  patchPo.isPending ? patchPo.variables?.id : null
+                }
+                onMarkDelivered={(po) => {
+                  if (
+                    !window.confirm(
+                      `Mark ${po.poNumber} as arrived at site?\n\nStatus becomes Delivered — next step is GRN.`,
+                    )
+                  )
+                    return
+                  patchPo.mutate({
+                    id: po._id,
+                    body: { status: 'delivered' },
+                  })
+                }}
+              />
+            </div>
+          ) : tab === 'grn' ? (
+            <GrnTab key={grnCreateKey} />
+          ) : tab === 'qc' ? (
+            <QcTab />
+          ) : tab === 'debit' ? (
+            <DebitNotesTab />
+          ) : tab === 'inventory' ? (
+            <InventoryEmbedTab />
+          ) : tab === 'requests' ? (
+            <MaterialRequestsTab key={requestCreateKey} />
+          ) : tab === 'issues' ? (
+            <MaterialIssuesTab />
+          ) : tab === 'invoices' ? (
+            <InvoicesEmbedTab />
+          ) : tab === 'payments' ? (
+            <PaymentsTab />
+          ) : (
+            <VendorsPanel
+              vendors={filteredVendors}
+              total={vendorList.length}
+              search={vendorSearch}
+              setSearch={setVendorSearch}
+              category={category}
+              setCategory={setCategory}
+              categories={categories}
+              onAdd={() => setAddVendorOpen(true)}
+              onEdit={setEditVendor}
+              onDelete={setDeleteVendor}
+              onCompare={() => setCompareOpen(true)}
+            />
+          )}
         </div>
-        <ProcurementTabBar tab={tab} setTab={setTab} />
       </div>
-
-      {tab === 'dashboard' ||
-      tab === 'boq' ||
-      tab === 'grn' ||
-      tab === 'qc' ||
-      tab === 'debit' ||
-      tab === 'inventory' ||
-      tab === 'requests' ||
-      tab === 'issues' ||
-      tab === 'invoices' ||
-      tab === 'payments' ? null : (
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Kpi
-            label="PO value"
-            value={formatInr(stats.totalPoValue)}
-            foot={`${purchaseOrders.length} orders`}
-          />
-          <Kpi
-            label="In pipeline"
-            value={stats.open}
-            accent
-            foot={
-              stats.inTransit
-                ? `${stats.inTransit} in transit`
-                : 'Draft → delivery'
-            }
-          />
-          <Kpi label="Delivered" value={stats.delivered} />
-          <Kpi
-            label="Vendors"
-            value={stats.vendors}
-            foot="Active directory"
-            onClick={() => setTab('vendors')}
-          />
-        </section>
-      )}
-
-      {tab === 'dashboard' ? (
-        <ProcurementDashboard onGo={setTab} />
-      ) : tab === 'boq' ? (
-        <BoqControlTab />
-      ) : tab === 'rfqs' ? (
-        <AllRfqsPanel rfqs={rfqs} loading={rfqsLoading} />
-      ) : tab === 'orders' ? (
-        <OrdersPanel
-          orders={filteredPos}
-          total={purchaseOrders.length}
-          search={poSearch}
-          setSearch={setPoSearch}
-          status={poStatus}
-          setStatus={setPoStatus}
-          onOpen={setSelectedPo}
-        />
-      ) : tab === 'grn' ? (
-        <GrnTab />
-      ) : tab === 'qc' ? (
-        <QcTab />
-      ) : tab === 'debit' ? (
-        <DebitNotesTab />
-      ) : tab === 'inventory' ? (
-        <InventoryEmbedTab />
-      ) : tab === 'requests' ? (
-        <MaterialRequestsTab />
-      ) : tab === 'issues' ? (
-        <MaterialIssuesTab />
-      ) : tab === 'invoices' ? (
-        <InvoicesEmbedTab />
-      ) : tab === 'payments' ? (
-        <PaymentsTab />
-      ) : (
-        <VendorsPanel
-          vendors={filteredVendors}
-          total={vendorList.length}
-          search={vendorSearch}
-          setSearch={setVendorSearch}
-          category={category}
-          setCategory={setCategory}
-          categories={categories}
-          onAdd={() => setAddVendorOpen(true)}
-          onEdit={setEditVendor}
-          onDelete={setDeleteVendor}
-          onCompare={() => setCompareOpen(true)}
-        />
-      )}
 
       <Drawer
         open={!!selectedPo}
@@ -534,6 +633,7 @@ function OrdersPanel({
   status,
   setStatus,
   onOpen,
+  transitOnly = false,
 }) {
   return (
     <section className="overflow-hidden rounded-[12px] border border-border bg-surface">
@@ -541,10 +641,12 @@ function OrdersPanel({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-[13.5px] font-medium text-primary">
-              Purchase orders
+              {transitOnly ? 'Orders in transit' : 'Purchase orders'}
             </h2>
             <p className="mt-0.5 text-[11px] text-secondary">
-              Open a row for line items, status, and WhatsApp send
+              {transitOnly
+                ? 'Shipments on the way — open a row for line items and status'
+                : 'Open a row for line items, status, and WhatsApp send'}
             </p>
           </div>
           <div className="relative shrink-0">
@@ -558,32 +660,42 @@ function OrdersPanel({
           </div>
         </div>
 
-        <div className={cn(PILL_TRACK, 'w-fit max-w-full flex-wrap')}>
-          {PO_STATUSES.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => setStatus(s.key)}
-              className={cn(
-                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition',
-                status === s.key ? PILL_ACTIVE : PILL_IDLE,
-              )}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+        {!transitOnly && (
+          <div className={cn(PILL_TRACK, 'w-fit max-w-full flex-wrap')}>
+            {PO_STATUSES.map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setStatus(s.key)}
+                className={cn(
+                  'rounded-full px-2.5 py-1 text-[11px] font-semibold transition',
+                  status === s.key ? PILL_ACTIVE : PILL_IDLE,
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {orders.length === 0 ? (
         <div className="px-4 py-14 text-center">
           <EmptyState
             icon={Package}
-            title={total === 0 ? 'No purchase orders yet' : 'Nothing matches'}
+            title={
+              transitOnly
+                ? 'Nothing in transit'
+                : total === 0
+                  ? 'No purchase orders yet'
+                  : 'Nothing matches'
+            }
             description={
-              total === 0
-                ? 'Create orders from a project Materials tab when you buy from BOQ.'
-                : 'Try another status or search.'
+              transitOnly
+                ? 'When a PO moves to In transit, it shows up here.'
+                : total === 0
+                  ? 'Create orders from a project Materials tab when you buy from BOQ.'
+                  : 'Try another status or search.'
             }
           />
         </div>

@@ -80,6 +80,7 @@ export type PlatformStackParamList = {
 
 export type MoreStackParamList = SharedOpsParamList & {
   MoreMain: undefined
+  Attendance: undefined
   Leads: undefined
   LeadDetail: { leadId: string }
   CreateLead: undefined

@@ -596,13 +596,19 @@ export function TaskDetailPanel({
                 )}
               </AttrRow>
 
-              {!isCreate && task?.createdBy && (
+              {!isCreate && (task?.assignedBy || task?.createdBy) && (
                 <AttrRow label="Assigned by" icon={UserCheck}>
                   <div className="flex items-center gap-1.5 text-[13px] text-primary">
-                    <Avatar name={task.createdBy?.name} size="xs" />
+                    <Avatar
+                      name={(task.assignedBy || task.createdBy)?.name}
+                      size="xs"
+                    />
                     <span>
-                      {task.createdBy?.name || 'Unknown'}
-                      {task.createdBy?._id === task.assignee?._id ? ' (self-assigned)' : ''}
+                      {(task.assignedBy || task.createdBy)?.name || 'Unknown'}
+                      {(task.assignedBy || task.createdBy)?._id ===
+                      task.assignee?._id
+                        ? ' (self-assigned)'
+                        : ''}
                     </span>
                   </div>
                 </AttrRow>

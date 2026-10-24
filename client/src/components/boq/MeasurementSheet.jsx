@@ -45,7 +45,7 @@ const nf = (n) => {
 
 /* ─────────────────────────── space filter ─────────────────────────── */
 
-function SpacePopover({ spaces, selected, onApply, onClose }) {
+function SpacePanel({ spaces, selected, onApply, onClose }) {
   const [picked, setPicked] = useState(() => new Set(selected))
   const [q, setQ] = useState('')
   const shown = spaces.filter((s) =>
@@ -53,7 +53,7 @@ function SpacePopover({ spaces, selected, onApply, onClose }) {
   )
 
   return (
-    <div className="absolute right-0 top-9 z-30 w-[min(420px,88vw)] rounded-2xl border border-[#e1e8f1] bg-surface p-3 shadow-[0_20px_50px_-20px_rgba(11,18,32,0.35)]">
+      <div className="flex h-full w-[min(320px,42vw)] shrink-0 flex-col border-l border-[#e5dfd7] bg-white p-3">
       <div className="flex items-center gap-2">
         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#5b6b80]">
           Spaces in this office
@@ -81,7 +81,7 @@ function SpacePopover({ spaces, selected, onApply, onClose }) {
         />
       </div>
 
-      <div className="mt-2 max-h-[46vh] overflow-y-auto pr-0.5">
+      <div className="mt-2 min-h-0 flex-1 overflow-y-auto pr-0.5">
         {shown.map((s) => {
           const on = picked.has(s.name)
           return (
@@ -102,9 +102,10 @@ function SpacePopover({ spaces, selected, onApply, onClose }) {
                 className={cn(
                   'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
                   on
-                    ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
-                    : 'border-[#d7e0ec] bg-surface',
+                    ? 'border-[#1e2022] bg-[#1e2022]'
+                    : 'border-[#d6cebe] bg-white',
                 )}
+                style={on ? { color: '#faf9f7' } : undefined}
               >
                 {on ? <Check className="h-3 w-3" /> : null}
               </span>
@@ -137,12 +138,13 @@ function SpacePopover({ spaces, selected, onApply, onClose }) {
           type="button"
           disabled={!picked.size}
           onClick={() => onApply([...picked])}
-          className="ml-auto h-7 rounded-lg bg-[var(--accent)] px-3 text-[11.5px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
+          className="ml-auto h-7 rounded-lg bg-[#1e2022] px-3 text-[11.5px] font-semibold disabled:opacity-50"
+          style={{ color: '#faf9f7' }}
         >
           Apply
         </button>
       </div>
-    </div>
+      </div>
   )
 }
 
@@ -292,22 +294,12 @@ export function MeasurementSheet({
           >
             Apply to BOQ
           </button>
-          {spacesOpen ? (
-            <SpacePopover
-              spaces={spaces}
-              selected={selectedSpaces.length ? selectedSpaces : spaces.map((s) => s.name)}
-              onApply={(picked) => {
-                onPickSpaces(picked)
-                setSpacesOpen(false)
-              }}
-              onClose={() => setSpacesOpen(false)}
-            />
-          ) : null}
         </div>
       </div>
 
+      <div className="flex min-h-0 flex-1">
       {/* grid */}
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="min-h-0 min-w-0 flex-1 overflow-auto">
         <table className="w-full min-w-[720px] border-collapse">
           <thead className="sticky top-0 z-[6]">
             <tr className="bg-[#f4f7fb] text-[10px] font-bold uppercase tracking-[0.08em] text-[#7c8ba0] [&>th]:border-b [&>th]:border-[#dbe3ee] [&>th]:px-2 [&>th]:py-1.5">
@@ -526,6 +518,18 @@ export function MeasurementSheet({
             })}
           </tbody>
         </table>
+      </div>
+      {spacesOpen ? (
+        <SpacePanel
+          spaces={spaces}
+          selected={selectedSpaces.length ? selectedSpaces : spaces.map((s) => s.name)}
+          onApply={(picked) => {
+            onPickSpaces(picked)
+            setSpacesOpen(false)
+          }}
+          onClose={() => setSpacesOpen(false)}
+        />
+      ) : null}
       </div>
     </div>
   )

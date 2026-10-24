@@ -22,6 +22,7 @@ import { spacing } from '../../constants/theme'
 import type { InboxStackParamList } from '../../navigation/types'
 import type { AppNotification } from '../../types/ops'
 import { pushConversation } from '../../navigation/openProject'
+import { useSocketConnected } from '../../hooks/useSocketConnected'
 
 type Props = NativeStackScreenProps<InboxStackParamList, 'InboxHub'>
 
@@ -66,18 +67,23 @@ export function InboxHubScreen({ navigation, route }: Props) {
   const [tab, setTab] = useState<InboxTab>(route.params?.tab || 'mail')
   const [search, setSearch] = useState('')
   const qc = useQueryClient()
+  const live = useSocketConnected()
 
   const notificationsQuery = useQuery({
     queryKey: ['notifications'],
     queryFn: notificationsApi.list,
     enabled: tab !== 'mail',
+    staleTime: 20_000,
+    // Socket pushes notification:new; poll only as a safety net.
+    refetchInterval: tab !== 'mail' && !live ? 12_000 : false,
   })
 
   const threadsQuery = useQuery({
     queryKey: ['mail-threads'],
     queryFn: mailApi.threads,
     enabled: tab === 'mail',
-    refetchInterval: tab === 'mail' ? 20_000 : false,
+    staleTime: 15_000,
+    refetchInterval: tab === 'mail' && !live ? 4_000 : false,
   })
 
   const readMut = useMutation({
@@ -222,6 +228,10 @@ export function InboxHubScreen({ navigation, route }: Props) {
           data={threads}
           keyExtractor={(t) => t.user._id}
           automaticallyAdjustKeyboardInsets
+          initialNumToRender={14}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          removeClippedSubviews
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.accent} />
           }
@@ -264,6 +274,10 @@ export function InboxHubScreen({ navigation, route }: Props) {
           data={filteredNotifications}
           keyExtractor={(item) => item._id}
           automaticallyAdjustKeyboardInsets
+          initialNumToRender={14}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          removeClippedSubviews
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.accent} />
           }

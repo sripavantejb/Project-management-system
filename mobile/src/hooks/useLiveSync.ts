@@ -4,10 +4,13 @@ import { authApi } from '../api/auth'
 import { syncSocketAuth, disconnectSocket } from '../lib/socket'
 import { useAuthStore } from '../store/authStore'
 import { useToastStore } from '../store/toastStore'
-import type { Message, Notification } from '../types/models'
+import { mailUserId, isCurrentUser } from '../utils/chatUtils'
+import type { MailThread, Message, Notification } from '../types/models'
 
 /**
- * Real-time sync: notifications, mail, permissions — mirrors the web AppShell socket wiring.
+ * Real-time sync: notifications, mail, permissions.
+ * Prefer surgical cache updates over broad invalidation so Home and Inbox
+ * do not re-fetch everything on every message.
  */
 export function useLiveSync() {
   const user = useAuthStore((s) => s.user)
@@ -26,13 +29,8 @@ export function useLiveSync() {
     const socket = syncSocketAuth()
     if (!socket) return undefined
 
-    const invalidateNotifications = () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      queryClient.invalidateQueries({ queryKey: ['home'] })
-    }
-
     const onNotification = (payload: Partial<Notification> & { title?: string; body?: string; type?: string }) => {
-      invalidateNotifications()
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
       if (payload?.title) {
         pushToast({
           title: payload.title,
@@ -43,12 +41,47 @@ export function useLiveSync() {
     }
 
     const onMail = (payload: { message?: Message; from?: { name?: string } }) => {
-      queryClient.invalidateQueries({ queryKey: ['mail-threads'] })
-      invalidateNotifications()
-      const fromName = payload?.from?.name || payload?.message?.from?.name || 'Someone'
+      const message = payload?.message
+      if (!message) return
+
+      const peerId = isCurrentUser(message.from, userId)
+        ? mailUserId(message.to)
+        : mailUserId(message.from)
+      if (!peerId) return
+
+      queryClient.setQueryData<{ other: MailThread['user']; messages: Message[] }>(
+        ['mail-conversation', peerId],
+        (old) => {
+          if (!old) return old
+          if (old.messages.some((m) => m._id === message._id)) return old
+          return { ...old, messages: [...old.messages, message] }
+        },
+      )
+
+      queryClient.setQueryData<MailThread[]>(['mail-threads'], (old) => {
+        if (!old) {
+          queryClient.invalidateQueries({ queryKey: ['mail-threads'] })
+          return old
+        }
+        const idx = old.findIndex((t) => String(t.user._id) === String(peerId))
+        const incoming = !isCurrentUser(message.from, userId)
+        if (idx === -1) {
+          queryClient.invalidateQueries({ queryKey: ['mail-threads'] })
+          return old
+        }
+        const current = old[idx]
+        const next: MailThread = {
+          ...current,
+          lastMessage: message,
+          unread: incoming ? (current.unread || 0) + 1 : current.unread || 0,
+        }
+        return [next, ...old.slice(0, idx), ...old.slice(idx + 1)]
+      })
+
+      const fromName = payload?.from?.name || message.from?.name || 'Someone'
       pushToast({
         title: `${fromName} sent a message`,
-        body: payload?.message?.body?.slice(0, 120),
+        body: message.body?.slice(0, 120),
         type: 'mail',
       })
     }

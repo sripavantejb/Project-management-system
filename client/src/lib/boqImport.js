@@ -423,3 +423,103 @@ export function materialMasterAoa(items = []) {
   })
   return aoa
 }
+
+/**
+ * Blank Excel layout that matches `rowsToBoqLines` exactly — download this,
+ * fill rows, then Import. Header row must keep these column titles.
+ */
+export function blankImportTemplateAoa({ label = 'Residential & Commercial' } = {}) {
+  const header = [
+    ...MATERIAL_TEMPLATE_HEADERS,
+    'Rate (optional)',
+    'Amount (optional)',
+  ]
+  return [
+    ['BOQ — EXCEL IMPORT TEMPLATE'],
+    [`For ${label} material lines · use these columns for a clean import`],
+    [
+      'Keep the header row as-is. Add a section name in column A alone (e.g. INTERIOR / JOINERY), then fill item rows under it. Qty may be 0 until take-off.',
+    ],
+    [],
+    header,
+    ['INTERIOR / JOINERY'],
+    [
+      1,
+      'Plywood',
+      'Plywood',
+      'BWR / Boiling Water Resistant – IS 303',
+      '18 mm',
+      'Approved make / equivalent',
+      "8' × 4'",
+      'Sheet',
+      0,
+      '',
+      '',
+    ],
+    [
+      2,
+      'Laminate',
+      'Laminate',
+      '1 mm decorative laminate',
+      '1 mm',
+      'Approved make / equivalent',
+      "8' × 4'",
+      'Sheet',
+      0,
+      '',
+      '',
+    ],
+    [
+      3,
+      'Hardware',
+      'Hinges',
+      'Soft-close hinge – full overlay',
+      '',
+      'Approved make / equivalent',
+      '',
+      "No's",
+      0,
+      '',
+      '',
+    ],
+    [],
+    ['Notes:'],
+    [
+      'Unit must be one of: Sheet, Sq.ft, Rft, No\'s, LS, Load, Sq.mtr, Rmtr (or sheet/sft/rft/nos/ls/load/sqm/rmt).',
+    ],
+    [
+      'Do not put GST %, handling %, or grand totals in the item table — stop before a Notes block if you add one.',
+    ],
+    [
+      'Delete the sample rows and add your own. Re-importing skips descriptions already on the sheet.',
+    ],
+  ]
+}
+
+export function blankImportInstructionsAoa() {
+  return [
+    ['How to import into BOQ'],
+    [],
+    ['1. Download this template from BOQ → Excel template'],
+    ['2. Fill Material Family, Material Name, Grade, Thickness, Brand, Size, Unit, Qty'],
+    ['3. Optional: Rate and Amount columns'],
+    ['4. Save as .xlsx or .csv'],
+    ['5. In the app: Import Excel / CSV and pick this file'],
+    [],
+    ['Required columns (header names)'],
+    ['S.No.', 'Optional serial number'],
+    ['Material Family', 'e.g. Plywood, Laminate, Hardware'],
+    ['Material Name', 'Item name shown on the quotation'],
+    ['Grade / Specification', 'Spec / grade text'],
+    ['Thickness', 'e.g. 18 mm'],
+    ['Brand / Make', 'Approved make / brand'],
+    ['Size / Dimensions', "e.g. 8' × 4'"],
+    ['Unit', 'Sheet | Sq.ft | Rft | No\'s | LS | Load | Sq.mtr | Rmtr'],
+    ['Qty', 'Number (0 allowed until take-off)'],
+    [],
+    ['Section rows'],
+    [
+      'Put only the room / section title in column A (no other cells) to group lines — e.g. INTERIOR / JOINERY',
+    ],
+  ]
+}

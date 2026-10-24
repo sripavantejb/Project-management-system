@@ -53,6 +53,8 @@ export function ProjectProcurement() {
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState(() => new Set())
   const [rfqOpen, setRfqOpen] = useState(false)
+  const [showAllMaterials, setShowAllMaterials] = useState(false)
+  const MATERIAL_PREVIEW = 8
 
   const create = useMutation({
     mutationFn: (body) =>
@@ -114,6 +116,13 @@ export function ProjectProcurement() {
 
   const pendingRows = materialRows.filter((r) => !r.ordered)
   const selectedItems = materialRows.filter((r) => selected.has(r._key))
+  const visibleMaterialRows = showAllMaterials
+    ? materialRows
+    : materialRows.slice(0, MATERIAL_PREVIEW)
+  const hiddenMaterialCount = Math.max(
+    0,
+    materialRows.length - MATERIAL_PREVIEW,
+  )
 
   const totalValue = pos.reduce((s, p) => s + (Number(p.value) || 0), 0)
   const delivered = pos.filter((p) => p.status === 'delivered').length
@@ -211,7 +220,15 @@ export function ProjectProcurement() {
               </p>
               <p className="text-[11px] text-secondary">
                 {approvedQuote
-                  ? `${approvedQuote.title || 'Quote'} · ${formatInr(approvedQuote.grandTotal)}`
+                  ? `${approvedQuote.title || 'Quote'} · ${formatInr(approvedQuote.grandTotal)}${
+                      materialRows.length
+                        ? ` · ${
+                            showAllMaterials || hiddenMaterialCount === 0
+                              ? `${materialRows.length} lines`
+                              : `showing ${visibleMaterialRows.length} of ${materialRows.length}`
+                          }`
+                        : ''
+                    }`
                   : 'Approve a quote first — items appear here to buy'}
               </p>
             </div>
@@ -278,7 +295,7 @@ export function ProjectProcurement() {
                 </tr>
               </thead>
               <tbody>
-                {materialRows.map((it) => {
+                {visibleMaterialRows.map((it) => {
                   const isSelected = selected.has(it._key)
                   return (
                     <tr
@@ -315,9 +332,11 @@ export function ProjectProcurement() {
                       </td>
                       <td
                         className={cn(
-                          'px-3 py-2 text-primary',
+                          'max-w-[280px] px-3 py-2 text-primary',
                           it.ordered && 'line-through',
+                          !showAllMaterials && 'line-clamp-2',
                         )}
+                        title={it.description || undefined}
                       >
                         {it.description || '—'}
                       </td>
@@ -347,6 +366,19 @@ export function ProjectProcurement() {
                 })}
               </tbody>
             </table>
+            {hiddenMaterialCount > 0 && (
+              <div className="border-t border-border px-4 py-3 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowAllMaterials((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#e5dfd7] bg-[#faf9f7] px-4 py-2 text-[12.5px] font-semibold text-[#1e2022] transition hover:border-[#c4b8a8] hover:bg-white"
+                >
+                  {showAllMaterials
+                    ? 'Show less'
+                    : `Show more materials (${hiddenMaterialCount} more)`}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </Card>

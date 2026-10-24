@@ -15,6 +15,11 @@ import { hasPermission } from '../lib/permissions.js'
 import { assertProjectAccess } from '../lib/projectScope.js'
 import { scoreTaskCompletion } from '../lib/impactEngine.js'
 import { resolveApproval, approvalStamp } from '../lib/approvals.js'
+import {
+  applyStatusAutoTimer,
+  emitTimerUpdated,
+  stopOtherTimersForUser,
+} from '../lib/taskTimer.js'
 
 function taskLink(task) {
   const projectId = task.projectId?._id || task.projectId
@@ -306,6 +311,7 @@ router.get(
 
     const tasks = await Task.find(filter)
       .populate('assignee', 'name avatar')
+      .populate('assignedBy', 'name avatar')
       .populate('createdBy', 'name avatar')
       .populate('projectId', 'name')
       .sort({ dueDate: 1, createdAt: -1 })
@@ -331,11 +337,19 @@ router.get(
     )
       .populate('projectId', 'name')
       .select(
-        'title timeSpent timeTrackingStartedAt timeTrackingUserId projectId isPersonal',
+        'title status timeSpent timeTrackingStartedAt timeTrackingUserId projectId isPersonal assignee',
       )
       .sort({ timeTrackingStartedAt: -1 })
 
-    res.json({ success: true, task: task || null })
+    res.json({
+      success: true,
+      task: task
+        ? {
+            ...task.toObject(),
+            workLabel: 'Working on it',
+          }
+        : null,
+    })
   }),
 )
 
@@ -359,10 +373,11 @@ router.get(
     const [openTasks, people] = await Promise.all([
       Task.find(openFilter)
         .populate('assignee', 'name avatar role title')
+        .populate('assignedBy', 'name avatar')
         .populate('createdBy', 'name avatar')
         .populate('projectId', 'name')
         .select(
-          'title status priority assignee createdBy projectId dueDate updatedAt stage',
+          'title status priority assignee assignedBy createdBy projectId dueDate updatedAt stage',
         )
         .lean(),
       User.find(
@@ -489,13 +504,12 @@ router.get(
                 avatar: t.assignee.avatar,
               }
             : null,
-          assignedBy: t.createdBy
-            ? {
-                _id: t.createdBy._id,
-                name: t.createdBy.name,
-                avatar: t.createdBy.avatar,
-              }
-            : null,
+          assignedBy: (() => {
+            const by = t.assignedBy || t.createdBy
+            return by
+              ? { _id: by._id, name: by.name, avatar: by.avatar }
+              : null
+          })(),
           link: t.projectId?._id
             ? `/projects/${t.projectId._id}/tasks?task=${t._id}`
             : '/?view=assigned',
@@ -511,6 +525,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const task = await Task.findById(req.params.id)
       .populate('assignee', 'name avatar email')
+      .populate('assignedBy', 'name avatar')
       .populate('createdBy', 'name avatar')
       .populate('projectId', 'name')
       .populate('dependsOn', 'title status')
@@ -553,12 +568,14 @@ router.post(
       await assertProjectAccess(req, req.body.projectId)
     }
 
+    const assigneeId = req.body.assignee || req.user._id
     const payload = {
       ...req.body,
       isPersonal,
       projectId: isPersonal ? undefined : req.body.projectId,
       createdBy: req.user._id,
-      assignee: req.body.assignee || req.user._id,
+      assignedBy: req.body.assignedBy || req.user._id,
+      assignee: assigneeId,
       tags: Array.isArray(req.body.tags) ? req.body.tags : [],
       timeEstimate:
         req.body.timeEstimate == null || req.body.timeEstimate === ''
@@ -579,6 +596,8 @@ router.post(
 
     const task = await Task.create(withTenant(req, payload))
     await task.populate('assignee', 'name avatar')
+    await task.populate('assignedBy', 'name avatar')
+    await task.populate('createdBy', 'name avatar')
     if (task.approver) await task.populate('approver', 'name email avatar role')
     if (task.approver && task.approvalStatus === 'pending') {
       await notifyUser(req, {
@@ -627,6 +646,7 @@ router.patch(
     const previousStatus = task.status
     const previousStage = task.stage
     const previousDue = task.dueDate ? new Date(task.dueDate).getTime() : null
+    const hadTimerRunning = !!task.timeTrackingStartedAt
     const canManage = hasPermission(req.user, 'tasks.manage')
     if (!canManage && !isTaskWorker(task, req.user)) {
       throw new AppError('Task not found', 404)
@@ -668,6 +688,7 @@ router.patch(
       'status',
       'priority',
       'assignee',
+      'assignedBy',
       'participants',
       'dueDate',
       'startDate',
@@ -693,7 +714,8 @@ router.patch(
           (key === 'timeTrackingStartedAt' ||
             key === 'dueDate' ||
             key === 'startDate' ||
-            key === 'timeTrackingUserId') &&
+            key === 'timeTrackingUserId' ||
+            key === 'assignedBy') &&
           (val === '' || val === null)
         ) {
           val = null
@@ -705,29 +727,23 @@ router.patch(
       }
     }
 
+    // Re-assign → remember who assigned (for “Assigned by” on the card)
+    if (
+      req.body.assignee !== undefined &&
+      String(task.assignee || '') !== String(prevAssigneeId || '')
+    ) {
+      task.assignedBy = req.user._id
+    }
+
     // Starting a timer: attribute to current user and stop their other timers
     if (req.body.timeTrackingStartedAt) {
       task.timeTrackingUserId = req.user._id
-      const others = await Task.find(
-        tenantFilter(req, {
-          _id: { $ne: task._id },
-          timeTrackingUserId: req.user._id,
-          timeTrackingStartedAt: { $ne: null },
-        }),
-      )
-      for (const other of others) {
-        const started = other.timeTrackingStartedAt
-          ? new Date(other.timeTrackingStartedAt).getTime()
-          : null
-        const base = Number(other.timeSpent) || 0
-        if (started) {
-          other.timeSpent =
-            base + Math.max(0, Math.floor((Date.now() - started) / 1000))
-        }
-        other.timeTrackingStartedAt = null
-        other.timeTrackingUserId = null
-        await other.save()
-      }
+      await stopOtherTimersForUser({
+        Task,
+        tenantFilter: (extra) => tenantFilter(req, extra),
+        userId: req.user._id,
+        exceptTaskId: task._id,
+      })
     }
 
     if (
@@ -735,6 +751,22 @@ router.patch(
       req.body.timeTrackingStartedAt === ''
     ) {
       task.timeTrackingUserId = null
+    }
+
+    // Status advance from the circle checkbox: start timer on “Working on it”,
+    // stop when moving to Needs check / Finished (or back to Not started).
+    if (
+      req.body.status !== undefined &&
+      String(task.status) !== String(previousStatus) &&
+      req.body.timeTrackingStartedAt === undefined
+    ) {
+      await applyStatusAutoTimer(task, {
+        previousStatus,
+        nextStatus: task.status,
+        userId: req.user._id,
+        Task,
+        tenantFilter: (extra) => tenantFilter(req, extra),
+      })
     }
 
     if (req.body.customFields && typeof req.body.customFields === 'object') {
@@ -752,7 +784,19 @@ router.patch(
     }
     await task.save()
     await task.populate('assignee', 'name avatar')
+    await task.populate('assignedBy', 'name avatar')
+    await task.populate('createdBy', 'name avatar')
     if (task.projectId) await task.populate('projectId', 'name')
+
+    // Live focus bar on every screen — refresh when timer starts or stops
+    const timerRunning = !!task.timeTrackingStartedAt
+    if (hadTimerRunning !== timerRunning || timerRunning) {
+      emitTimerUpdated(req, req.user._id, {
+        taskId: String(task._id),
+        running: timerRunning,
+        status: task.status,
+      })
+    }
 
     try {
       await scoreTaskCompletion({

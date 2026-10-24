@@ -35,7 +35,8 @@ export function resolveTenantSlug(explicit?: string | null): string {
 
 export const http = axios.create({
   baseURL: API_URL,
-  timeout: 20000,
+  // Fail fast so a stuck request cannot freeze chat / screens for 20s.
+  timeout: 12000,
 })
 
 http.interceptors.request.use((config) => {

@@ -152,6 +152,11 @@ export const useAuthStore = create(
         try {
           // Dynamic to avoid circular import at module load
           import('./socket.js').then((m) => m.disconnectSocket()).catch(() => {})
+          import('./workSession.js').then((m) => {
+            m.clearCachedWorkSession()
+            m.restoreBaseTitle()
+            m.setWorkSessionBadge(false)
+          }).catch(() => {})
         } catch {
           /* ignore */
         }
@@ -325,6 +330,18 @@ export async function api(path, options = {}) {
   // Whatever's still too big for one request (videos, large PDFs, etc.) goes
   // through chunked upload instead of failing outright.
   if (isFormData) body = await uploadOversizedFields(body)
+  // Plain objects must be stringified — fetch otherwise serializes them as the
+  // useless literal "[object Object]", and Express then rejects the body as
+  // invalid JSON (seen on BOQ unlock and any other caller that forgot stringify).
+  if (
+    body != null &&
+    typeof body === 'object' &&
+    !isFormData &&
+    !(typeof Blob !== 'undefined' && body instanceof Blob) &&
+    !(typeof ArrayBuffer !== 'undefined' && body instanceof ArrayBuffer)
+  ) {
+    body = JSON.stringify(body)
+  }
   const requestInit = { ...options, body, headers }
 
   let res = await fetch(`${API_URL}${path}`, requestInit)

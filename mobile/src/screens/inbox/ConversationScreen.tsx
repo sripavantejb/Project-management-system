@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Avatar } from '../../components/Avatar'
@@ -11,10 +11,11 @@ import { useChatColors } from '../../theme/useChatColors'
 import { useResponsive } from '../../theme/useResponsive'
 import { formatDayLabel, formatMsgTime, isCurrentUser, mailUserId, sameMessageDay } from '../../utils/chatUtils'
 import { getSocket } from '../../lib/socket'
+import { useSocketConnected } from '../../hooks/useSocketConnected'
 import { mailApi } from '../../api/mail'
 import { isApiError } from '../../api/client'
 import { useAuthStore } from '../../store/authStore'
-import type { Message } from '../../types/models'
+import type { MailThread, Message } from '../../types/models'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { InboxStackParamList } from '../../navigation/types'
 
@@ -24,17 +25,60 @@ type ConversationData = Awaited<ReturnType<typeof mailApi.conversation>>
 /** Within this many px of the newest message still counts as "following along". */
 const AT_LATEST_THRESHOLD = 80
 
-export function ConversationScreen({ route, navigation }: Props) {
+const MessageBubble = memo(function MessageBubble({
+  item,
+  mine,
+  pending,
+  showDate,
+  showAvatar,
+  styles,
+}: {
+  item: Message
+  mine: boolean
+  pending: boolean
+  showDate: boolean
+  showAvatar: boolean
+  styles: ReturnType<typeof createStyles>
+}) {
+  return (
+    <View>
+      {showDate ? (
+        <View style={styles.dateRow}>
+          <View style={styles.datePill}>
+            <Text style={styles.dateText}>{formatDayLabel(item.createdAt)}</Text>
+          </View>
+        </View>
+      ) : null}
+      <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : styles.bubbleRowTheirs]}>
+        {!mine && showAvatar ? (
+          <Avatar name={item.from.name} uri={item.from.avatar} size={28} />
+        ) : !mine ? (
+          <View style={styles.avatarSpacer} />
+        ) : null}
+        <View
+          style={[
+            styles.bubble,
+            mine ? styles.bubbleMine : styles.bubbleTheirs,
+            pending && styles.bubblePending,
+          ]}
+        >
+          <Text style={[styles.bubbleText, mine && styles.bubbleTextMine]}>{item.body}</Text>
+          <Text style={[styles.bubbleTime, mine && styles.bubbleTimeMine]}>
+            {formatMsgTime(item.createdAt)}
+            {pending ? ' · Sending' : ''}
+          </Text>
+        </View>
+      </View>
+    </View>
+  )
+})
+
+export function ConversationScreen({ route }: Props) {
   const colors = useColors()
   const chat = useChatColors()
   const { pagePadding } = useResponsive()
   const styles = useMemo(() => createStyles(colors, chat, pagePadding), [colors, chat, pagePadding])
   const listRef = useRef<FlatList<Message>>(null)
-  /**
-   * Whether the newest message is on screen. The list is inverted, so offset 0
-   * *is* the bottom of the conversation. Tracked in a ref rather than state so
-   * scrolling never re-renders the thread.
-   */
   const atLatestRef = useRef(true)
   const scrollToLatest = (animated = true) =>
     listRef.current?.scrollToOffset({ offset: 0, animated })
@@ -42,6 +86,7 @@ export function ConversationScreen({ route, navigation }: Props) {
   const { userId, userName: routeName } = route.params
   const me = useAuthStore((s) => s.user)
   const queryClient = useQueryClient()
+  const live = useSocketConnected()
   const [body, setBody] = useState('')
 
   const queryKey = ['mail-conversation', userId] as const
@@ -49,7 +94,9 @@ export function ConversationScreen({ route, navigation }: Props) {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey,
     queryFn: () => mailApi.conversation(userId),
-    staleTime: 15_000,
+    staleTime: 60_000,
+    // Live socket carries new messages; poll only when the socket is down.
+    refetchInterval: live ? false : 3_000,
   })
 
   useEffect(() => {
@@ -73,7 +120,7 @@ export function ConversationScreen({ route, navigation }: Props) {
     return () => {
       socket.off('mail:new', onMail)
     }
-  }, [me?.id, queryClient, queryKey, userId])
+  }, [me?.id, queryClient, userId])
 
   const sendMutation = useMutation({
     mutationFn: (text: string) => mailApi.send({ to: userId, body: text }),
@@ -115,11 +162,20 @@ export function ConversationScreen({ route, navigation }: Props) {
         }
         return { ...old, messages: [...withoutTemp, message] }
       })
-      queryClient.invalidateQueries({ queryKey: ['mail-threads'] })
+      queryClient.setQueryData<MailThread[]>(['mail-threads'], (old) => {
+        if (!old) return old
+        const idx = old.findIndex((t) => String(t.user._id) === String(userId))
+        if (idx === -1) {
+          queryClient.invalidateQueries({ queryKey: ['mail-threads'] })
+          return old
+        }
+        const current = old[idx]
+        const next = { ...current, lastMessage: message, unread: 0 }
+        return [next, ...old.slice(0, idx), ...old.slice(idx + 1)]
+      })
     },
   })
 
-  /** Sending is an explicit act — always show the result, wherever they were. */
   const sendAndScroll = (text: string) => {
     atLatestRef.current = true
     sendMutation.mutate(text)
@@ -134,6 +190,12 @@ export function ConversationScreen({ route, navigation }: Props) {
     subtitle: other?.email || (other ? 'Direct message' : undefined),
     right: other ? <Avatar name={other.name} uri={other.avatar} size={32} /> : undefined,
   }
+
+  /** Newest first for inverted list — memoized so typing does not rebuild the array. */
+  const messages = useMemo(
+    () => (data?.messages ? [...data.messages].reverse() : []),
+    [data?.messages],
+  )
 
   if (isLoading) {
     return (
@@ -150,9 +212,6 @@ export function ConversationScreen({ route, navigation }: Props) {
     )
   }
 
-  /** Newest first for inverted list (newest at bottom). */
-  const messages = [...data.messages].reverse()
-
   const send = () => {
     const text = body.trim()
     if (text && !sendMutation.isPending) sendAndScroll(text)
@@ -161,93 +220,59 @@ export function ConversationScreen({ route, navigation }: Props) {
   return (
     <NestedChrome {...chromeProps} background={chat.listBg} keyboardAvoiding compactHeader>
       <FlatList
-          ref={listRef}
-          data={messages}
-          inverted={messages.length > 0}
-          /**
-           * No `automaticallyAdjustKeyboardInsets`: the chrome around this list
-           * is already a KeyboardAwareView that shrinks the whole container by
-           * the keyboard height. Letting the list add the same inset again
-           * double-counted it, which is what pushed the composer into the
-           * keyboard instead of resting on top of it.
-           */
-          keyExtractor={(m) => m._id}
-          contentContainerStyle={[
-            styles.listContent,
-            messages.length === 0 && styles.listEmpty,
-          ]}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          scrollEventThrottle={16}
-          onScroll={(e) => {
-            atLatestRef.current = e.nativeEvent.contentOffset.y <= AT_LATEST_THRESHOLD
-          }}
-          /**
-           * Opening the keyboard changes the content size, so an unconditional
-           * scroll-to-newest here yanked anyone reading history back to the
-           * bottom. Follow the conversation only for people already at it.
-           */
-          onContentSizeChange={() => {
-            if (messages.length > 0 && atLatestRef.current) scrollToLatest()
-          }}
-          renderItem={({ item, index }) => {
-            const mine = isCurrentUser(item.from, me?.id)
-            const pending = String(item._id).startsWith('temp-')
-            const older = messages[index + 1]
-            const showDate =
-              index === messages.length - 1 ||
-              (older && !sameMessageDay(item.createdAt, older.createdAt))
-            const showAvatar = !mine && (!older || mailUserId(older.from) !== mailUserId(item.from))
+        ref={listRef}
+        data={messages}
+        inverted={messages.length > 0}
+        keyExtractor={(m) => m._id}
+        contentContainerStyle={[styles.listContent, messages.length === 0 && styles.listEmpty]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        scrollEventThrottle={16}
+        initialNumToRender={18}
+        maxToRenderPerBatch={12}
+        windowSize={7}
+        removeClippedSubviews
+        onScroll={(e) => {
+          atLatestRef.current = e.nativeEvent.contentOffset.y <= AT_LATEST_THRESHOLD
+        }}
+        onContentSizeChange={() => {
+          if (messages.length > 0 && atLatestRef.current) scrollToLatest(false)
+        }}
+        renderItem={({ item, index }) => {
+          const mine = isCurrentUser(item.from, me?.id)
+          const pending = String(item._id).startsWith('temp-')
+          const older = messages[index + 1]
+          const showDate =
+            index === messages.length - 1 ||
+            (older && !sameMessageDay(item.createdAt, older.createdAt))
+          const showAvatar = !mine && (!older || mailUserId(older.from) !== mailUserId(item.from))
 
-            return (
-              <View>
-                {showDate ? (
-                  <View style={styles.dateRow}>
-                    <View style={[styles.datePill, { backgroundColor: colors.surfaceRaised }]}>
-                      <Text style={[styles.dateText, { color: colors.textMuted }]}>
-                        {formatDayLabel(item.createdAt)}
-                      </Text>
-                    </View>
-                  </View>
-                ) : null}
-                <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : styles.bubbleRowTheirs]}>
-                  {!mine && showAvatar ? (
-                    <Avatar name={item.from.name} uri={item.from.avatar} size={28} />
-                  ) : !mine ? (
-                    <View style={styles.avatarSpacer} />
-                  ) : null}
-                  <View
-                    style={[
-                      styles.bubble,
-                      mine ? styles.bubbleMine : styles.bubbleTheirs,
-                      pending && styles.bubblePending,
-                    ]}
-                  >
-                    <Text style={[styles.bubbleText, mine && styles.bubbleTextMine]}>{item.body}</Text>
-                    <Text style={[styles.bubbleTime, mine && styles.bubbleTimeMine]}>
-                      {formatMsgTime(item.createdAt)}
-                      {pending ? ' · Sending' : ''}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )
-          }}
-          ListEmptyComponent={
-            <EmptyState
-              icon="chatbubble-ellipses-outline"
-              title="Start the conversation"
-              body={`Send the first message to ${firstName}.`}
+          return (
+            <MessageBubble
+              item={item}
+              mine={mine}
+              pending={pending}
+              showDate={!!showDate}
+              showAvatar={!!showAvatar}
+              styles={styles}
             />
-          }
-        />
-        <ChatComposer
-          value={body}
-          onChangeText={setBody}
-          onSend={send}
-          sending={sendMutation.isPending}
-          placeholder={`Message ${firstName}…`}
-        />
+          )
+        }}
+        ListEmptyComponent={
+          <EmptyState
+            icon="chatbubble-ellipses-outline"
+            title="Start the conversation"
+            body={`Send the first message to ${firstName}.`}
+          />
+        }
+      />
+      <ChatComposer
+        value={body}
+        onChangeText={setBody}
+        onSend={send}
+        sending={sendMutation.isPending}
+        placeholder={`Message ${firstName}…`}
+      />
     </NestedChrome>
   )
 }

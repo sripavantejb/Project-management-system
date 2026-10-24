@@ -158,10 +158,12 @@ export function capabilitiesForUser(user, tenant = null) {
   if (!user) {
     return {
       companyAdmin: false,
+      approvals: false,
       people: false,
       portfolio: false,
       leads: false,
       finance: false,
+      billing: false,
       procurement: false,
       reports: false,
       siteFeed: false,
@@ -169,6 +171,8 @@ export function capabilitiesForUser(user, tenant = null) {
       inventory: false,
       projects: false,
       myWork: false,
+      liveBoard: false,
+      attendance: false,
       inbox: false,
       settings: false,
       mobile: false,
@@ -190,22 +194,27 @@ export function capabilitiesForUser(user, tenant = null) {
   const permissions = permissionsForUser(user, tenant)
   const employee = EMPLOYEE_ROLES.includes(role)
   const isClientOrVendor = role === 'client' || role === 'vendor'
+  const staffWork = !isClientOrVendor
 
   const base = {
     companyAdmin: companyAdmin || !!user.isPlatformAdmin,
+    approvals: companyAdmin || !!user.isPlatformAdmin,
     people: !!permissions.people,
     managePeople:
       !!user.isPlatformAdmin || ['admin', 'owner'].includes(user.role),
     portfolio: !!permissions.portfolio,
     leads: !!permissions.leads,
     finance: !!permissions.finance,
+    billing: !!permissions.finance,
     procurement: !!permissions.procurement,
     reports: !!permissions.portfolio,
     siteFeed: !!permissions.site,
     impact: !!permissions.impact,
     inventory: companyAdmin || !!user.isPlatformAdmin,
     projects: true,
-    myWork: !isClientOrVendor,
+    myWork: staffWork,
+    liveBoard: staffWork,
+    attendance: staffWork,
     inbox: true,
     settings: true,
     mobile: !!permissions.site,

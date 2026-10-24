@@ -188,6 +188,18 @@ const quotationSchema = new mongoose.Schema(
     sentAt: Date,
     viewedAt: Date,
     approvedAt: Date,
+    /** How the sheet was shared with the client for approval. */
+    sentVia: {
+      type: String,
+      enum: ['email', 'whatsapp', 'manual', ''],
+      default: '',
+    },
+    /** Opaque token in the client approve link (email / WhatsApp). */
+    clientApproveToken: { type: String, index: true, sparse: true, default: null },
+    clientApproveTokenExpiresAt: Date,
+    clientApprovedAt: Date,
+    clientRejectedAt: Date,
+    clientDecisionNote: { type: String, default: '' },
     /* Internal sign-off routing, distinct from the client-facing `status`. */
     approvalStatus: {
       type: String,
