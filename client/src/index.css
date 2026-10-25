@@ -1075,7 +1075,8 @@ body {
   }
 }
 
-/* Light theme remaps .text-white to ink. Dark fills keep white labels. */
+/* Light theme remaps .text-white to ink. Dark fills keep white labels —
+   including :disabled (otherwise CTAs look like blank grey blocks). */
 [data-theme="light"] :is(
   .bg-accent,
   .bg-\[var\(--accent\)\],
@@ -1092,7 +1093,7 @@ body {
   .bg-black\/55,
   .bg-black\/60,
   .bg-black\/70
-):not(:disabled),
+),
 [data-theme="light"] :is(
   .bg-accent,
   .bg-\[var\(--accent\)\],
@@ -1109,7 +1110,7 @@ body {
   .bg-black\/55,
   .bg-black\/60,
   .bg-black\/70
-):not(:disabled).text-white,
+).text-white,
 [data-theme="light"] :is(
   .bg-accent,
   .bg-\[var\(--accent\)\],
@@ -1131,20 +1132,20 @@ body {
   .bg-\[var\(--create-bg\)\],
   .bg-\[\#0b1220\],
   .bg-\[\#1e2022\]
-):not(:disabled).text-\[\#f8fafc\],
+).text-\[\#f8fafc\],
 [data-theme="light"] :is(
   .bg-accent,
   .bg-\[var\(--accent\)\],
   .bg-\[var\(--create-bg\)\],
   .bg-\[\#0b1220\],
   .bg-\[\#1e2022\]
-):not(:disabled).text-\[\#f4efe6\],
+).text-\[\#f4efe6\],
 [data-theme="light"] :is(
   .bg-accent,
   .bg-\[var\(--accent\)\],
   .bg-\[var\(--create-bg\)\],
   .bg-\[\#1e2022\]
-):not(:disabled).text-\[var\(--create-fg\)\],
+).text-\[var\(--create-fg\)\],
 .bg-accent.text-\[\#171717\],
 .bg-accent.text-\[\#0E0E10\],
 .bg-\[var\(--accent\)\].text-\[\#171717\],

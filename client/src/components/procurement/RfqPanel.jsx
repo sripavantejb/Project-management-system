@@ -932,7 +932,7 @@ export function RfqPanel({
               ? `Raise an RFQ for ${selectedItems.length} selected item(s)`
               : 'Select approved BOQ items above first'
           }
-          className="ml-auto inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-[var(--accent)] px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-40"
+          className="btn-create ml-auto inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-[12.5px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-55"
         >
           <Plus className="h-4 w-4" />
           Raise RFQ

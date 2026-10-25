@@ -234,11 +234,11 @@ export function ProjectProcurement() {
             </div>
           </div>
           {pendingRows.length > 0 && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={selectAllPending}
-                className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold text-secondary hover:bg-surface-raised"
+                className="rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-primary hover:bg-surface-raised"
               >
                 Select all pending
               </button>
@@ -246,9 +246,15 @@ export function ProjectProcurement() {
                 type="button"
                 onClick={() => setRfqOpen(true)}
                 disabled={!selectedItems.length}
-                className="rounded-lg bg-[var(--accent)] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[var(--accent-hover)] disabled:opacity-40"
+                title={
+                  selectedItems.length
+                    ? `Raise RFQ for ${selectedItems.length} item(s)`
+                    : 'Select materials below first'
+                }
+                className="btn-create rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-55"
               >
                 Raise RFQ from selected
+                {selectedItems.length ? ` · ${selectedItems.length}` : ''}
               </button>
             </div>
           )}
@@ -281,17 +287,17 @@ export function ProjectProcurement() {
 
         {materialRows.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-[13px]">
+            <table className="w-full min-w-[720px] border-collapse text-[13px]">
               <thead>
                 <tr className="border-b border-border bg-surface-raised text-left text-[10px] font-bold uppercase tracking-wide text-secondary">
                   <th className="w-10 px-3 py-2" />
-                  <th className="px-3 py-2">Room</th>
-                  <th className="px-3 py-2">Item</th>
-                  <th className="px-3 py-2">Unit</th>
-                  <th className="px-3 py-2 text-right">Qty</th>
-                  <th className="px-3 py-2 text-right">Rate</th>
-                  <th className="px-3 py-2 text-right">Amount</th>
-                  <th className="px-3 py-2">Buy status</th>
+                  <th className="w-[110px] px-3 py-2">Room</th>
+                  <th className="min-w-[240px] px-3 py-2">Item</th>
+                  <th className="w-16 px-3 py-2">Unit</th>
+                  <th className="w-16 px-3 py-2 text-right">Qty</th>
+                  <th className="w-24 px-3 py-2 text-right">Rate</th>
+                  <th className="w-28 px-3 py-2 text-right">Amount</th>
+                  <th className="w-[88px] px-3 py-2">Buy status</th>
                 </tr>
               </thead>
               <tbody>
@@ -301,7 +307,7 @@ export function ProjectProcurement() {
                     <tr
                       key={it._key}
                       className={cn(
-                        'border-b border-border',
+                        'border-b border-border align-top',
                         it.ordered
                           ? 'bg-surface-raised text-secondary'
                           : isSelected
@@ -309,7 +315,7 @@ export function ProjectProcurement() {
                             : 'hover:bg-surface-raised',
                       )}
                     >
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2.5">
                         {!it.ordered ? (
                           <button
                             type="button"
@@ -327,30 +333,33 @@ export function ProjectProcurement() {
                           <CheckSquare className="h-4 w-4 text-emerald-500" />
                         )}
                       </td>
-                      <td className="px-3 py-2 font-medium text-primary">
+                      <td className="px-3 py-2.5 font-medium text-primary">
                         {it.room || 'General'}
                       </td>
                       <td
                         className={cn(
-                          'max-w-[280px] px-3 py-2 text-primary',
+                          'max-w-[360px] px-3 py-2.5 text-primary',
                           it.ordered && 'line-through',
-                          !showAllMaterials && 'line-clamp-2',
                         )}
-                        title={it.description || undefined}
                       >
-                        {it.description || '—'}
+                        <div
+                          className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words pr-1 text-[12.5px] leading-snug [scrollbar-width:thin]"
+                          title={it.description || undefined}
+                        >
+                          {it.description || '—'}
+                        </div>
                       </td>
-                      <td className="px-3 py-2 text-secondary">{it.unit}</td>
-                      <td className="px-3 py-2 text-right tabular-nums">
+                      <td className="px-3 py-2.5 text-secondary">{it.unit}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
                         {it.qty}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums">
+                      <td className="px-3 py-2.5 text-right tabular-nums">
                         {formatInr(it.rate)}
                       </td>
-                      <td className="px-3 py-2 text-right font-semibold tabular-nums text-primary">
+                      <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-primary">
                         {formatInr(it.amount)}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2.5">
                         {it.ordered ? (
                           <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
                             On a PO
