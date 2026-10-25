@@ -253,6 +253,9 @@ export function AppShell({ children }) {
   }, [profileMenuOpen])
 
   useEffect(() => {
+    // Keep permissions/tenant in sync, but do not hammer /auth/me every few
+    // seconds — that used to burn through access tokens and surface "Invalid
+    // or expired token" errors mid-session.
     const refreshAccess = () => {
       api('/auth/me')
         .then((result) => {
@@ -263,7 +266,7 @@ export function AppShell({ children }) {
     }
 
     refreshAccess()
-    const id = window.setInterval(refreshAccess, 8_000)
+    const id = window.setInterval(refreshAccess, 5 * 60_000)
     const onVisible = () => {
       if (document.visibilityState === 'visible') refreshAccess()
     }

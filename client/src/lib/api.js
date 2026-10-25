@@ -198,6 +198,11 @@ function tenantHeaders() {
  * fail with 401 at the same time — they must all share ONE refresh call,
  * otherwise the second call sends an already-rotated token and the server
  * rejects it, which used to log the user out.
+ *
+ * Returns:
+ *   { ok: true, accessToken }
+ *   { ok: false, reason: 'auth' }  — refresh rejected; session cleared
+ *   { ok: false, reason: 'network' } — keep session; caller should Retry
  */
 let refreshInFlight = null
 
@@ -206,7 +211,10 @@ function refreshAccessToken() {
 
   refreshInFlight = (async () => {
     const { refreshToken, setAuth, logout } = useAuthStore.getState()
-    if (!refreshToken) return null
+    if (!refreshToken) {
+      logout()
+      return { ok: false, reason: 'auth' }
+    }
     try {
       const res = await fetch(`${API_URL}/auth/refresh`, {
         method: 'POST',
@@ -230,15 +238,18 @@ function refreshAccessToken() {
         } catch {
           /* ignore */
         }
-        return data.accessToken
+        return { ok: true, accessToken: data.accessToken }
       }
       // Only end the session when the server explicitly rejects the token.
       // Transient failures (5xx, server restarting) should not log out.
-      if (res.status === 401 || res.status === 403) logout()
-      return null
+      if (res.status === 401 || res.status === 403) {
+        logout()
+        return { ok: false, reason: 'auth' }
+      }
+      return { ok: false, reason: 'network' }
     } catch {
       // Network hiccup — keep the session, the next request will retry.
-      return null
+      return { ok: false, reason: 'network' }
     } finally {
       refreshInFlight = null
     }
@@ -309,7 +320,7 @@ async function uploadOversizedFields(formData) {
 }
 
 export async function api(path, options = {}) {
-  const { accessToken, refreshToken } = useAuthStore.getState()
+  const { accessToken } = useAuthStore.getState()
   const isFormData =
     typeof FormData !== 'undefined' && options.body instanceof FormData
 
@@ -346,11 +357,39 @@ export async function api(path, options = {}) {
 
   let res = await fetch(`${API_URL}${path}`, requestInit)
 
-  if (res.status === 401 && refreshToken) {
-    const newToken = await refreshAccessToken()
-    if (newToken) {
-      headers.Authorization = `Bearer ${newToken}`
+  // Credential endpoints return 401 for bad password etc. — never treat those
+  // as "session expired" or they wipe the store / rewrite the error message.
+  const isCredentialAuth =
+    path.startsWith('/auth/login') ||
+    path.startsWith('/auth/register') ||
+    path.startsWith('/auth/forgot') ||
+    path.startsWith('/auth/reset')
+
+  // Access JWT expired. Try refresh once; if the refresh token is also dead,
+  // clear the session so RequireAuth sends them to /login instead of leaving
+  // a "Retry" empty-state on the current page.
+  if (res.status === 401 && accessToken && !isCredentialAuth) {
+    const refreshed = await refreshAccessToken()
+    if (refreshed.ok) {
+      headers.Authorization = `Bearer ${refreshed.accessToken}`
       res = await fetch(`${API_URL}${path}`, requestInit)
+      // Still unauthorized after a fresh access token → session is unusable.
+      if (res.status === 401) {
+        useAuthStore.getState().logout()
+        const err = new Error('Session expired — please sign in again')
+        err.status = 401
+        throw err
+      }
+    } else if (refreshed.reason === 'auth') {
+      // logout() already ran inside refreshAccessToken
+      const err = new Error('Session expired — please sign in again')
+      err.status = 401
+      throw err
+    } else {
+      // Network / 5xx on refresh — keep tokens; Retry is appropriate.
+      const err = new Error('Could not reach the server — try again')
+      err.status = 503
+      throw err
     }
   }
 

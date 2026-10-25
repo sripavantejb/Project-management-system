@@ -12,7 +12,9 @@ export function signAccessToken(user) {
       isPlatformAdmin: !!user.isPlatformAdmin,
     },
     process.env.JWT_ACCESS_SECRET,
-    { expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m' },
+    // Long-lived access token so normal use does not force a refresh every
+    // few minutes. Session end is driven by refresh expiry / explicit logout.
+    { expiresIn: process.env.JWT_ACCESS_EXPIRES || '7d' },
   )
 }
 
