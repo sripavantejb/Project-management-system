@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { api, assetUrl, useAuthStore } from '../../lib/api'
+import { asUploadableImage } from '../../lib/compressImage'
 import { formatInr } from '../../lib/format'
 import { COUNTRY_CODES, buildPhone } from '../../lib/phone'
 import { SendPoButton } from '../../components/VendorBits'
@@ -871,34 +872,41 @@ export function ProjectSite() {
     }
   }, [searchParams, setSearchParams])
 
-  /** Site photos ride on the shared /files upload, filed under the site folder. */
+  /** Site photos ride on the shared /files upload, filed under Site photos. */
   const uploadPhotos = async (fileList) => {
-    const files = Array.from(fileList || []).filter((f) =>
-      f.type.startsWith('image/'),
-    )
-    if (!files.length) return
+    const incoming = Array.from(fileList || [])
+    const files = incoming.map(asUploadableImage).filter(Boolean)
+    if (!files.length) {
+      if (incoming.length) {
+        toast('Use a photo — JPG, PNG, WebP, or HEIC', { type: 'error' })
+      }
+      return
+    }
     setUploading(true)
-    let failed = 0
+    const reasons = []
     for (const file of files) {
       try {
         const fd = new FormData()
         fd.append('file', file)
         fd.append('projectId', id)
-        fd.append('folder', 'site')
+        fd.append('folder', 'site_photos')
         fd.append('name', file.name)
         const res = await api('/files', { method: 'POST', body: fd })
         const url = res?.file?.versions?.[0]?.url
         if (url) setPhotos((p) => [...p, { url }])
-        else failed += 1
-      } catch {
-        failed += 1
+        else reasons.push(`${file.name}: the server did not return a photo link`)
+      } catch (err) {
+        reasons.push(`${file.name}: ${err?.message || 'upload failed'}`)
       }
     }
     setUploading(false)
-    if (failed) {
-      toast(`${failed} photo${failed > 1 ? 's' : ''} failed to upload`, {
-        type: 'error',
-      })
+    if (reasons.length) {
+      toast(
+        reasons.length === 1
+          ? reasons[0]
+          : `${reasons.length} photos failed — ${reasons[0]}`,
+        { type: 'error' },
+      )
     }
   }
 
@@ -951,7 +959,7 @@ export function ProjectSite() {
   const openSnags = snags.filter((s) => s.status === 'open').length
   const verifiedSnags = snags.filter((s) => s.status === 'verified').length
   const lastUpdate = updates[0]
-  const canPost = !!note.trim() && !uploading
+  const canPost = (!!note.trim() || photos.length > 0) && !uploading
 
   const submit = () => {
     const pct = Number(progress)

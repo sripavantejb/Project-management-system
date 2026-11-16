@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import { api, assetUrl } from '../lib/api'
+import { asUploadableImage } from '../lib/compressImage'
 import {
   PageToolbar,
   ToolbarPills,
@@ -179,6 +180,7 @@ export function SiteFeedPage() {
       if (compose.projectId) {
         qc.invalidateQueries({ queryKey: ['site', compose.projectId] })
         qc.invalidateQueries({ queryKey: ['project', compose.projectId] })
+        qc.invalidateQueries({ queryKey: ['files', compose.projectId] })
       }
       setComposeOpen(false)
       setCompose({ projectId: '', note: '', progress: '' })
@@ -193,30 +195,39 @@ export function SiteFeedPage() {
       toast('Pick a project first', { type: 'error' })
       return
     }
-    const files = Array.from(fileList || []).filter((f) =>
-      f.type.startsWith('image/'),
-    )
-    if (!files.length) return
+    const incoming = Array.from(fileList || [])
+    const files = incoming.map(asUploadableImage).filter(Boolean)
+    if (!files.length) {
+      if (incoming.length) {
+        toast('Use a photo — JPG, PNG, WebP, or HEIC', { type: 'error' })
+      }
+      return
+    }
     setUploading(true)
-    let failed = 0
+    const reasons = []
     for (const file of files) {
       try {
         const fd = new FormData()
         fd.append('file', file)
         fd.append('projectId', compose.projectId)
-        fd.append('folder', 'site')
+        fd.append('folder', 'site_photos')
         fd.append('name', file.name)
         const res = await api('/files', { method: 'POST', body: fd })
         const url = res?.file?.versions?.[0]?.url
         if (url) setPhotos((p) => [...p, { url }])
-        else failed += 1
-      } catch {
-        failed += 1
+        else reasons.push(`${file.name}: the server did not return a photo link`)
+      } catch (err) {
+        reasons.push(`${file.name}: ${err?.message || 'upload failed'}`)
       }
     }
     setUploading(false)
-    if (failed) {
-      toast(`${failed} photo${failed > 1 ? 's' : ''} failed`, { type: 'error' })
+    if (reasons.length) {
+      toast(
+        reasons.length === 1
+          ? reasons[0]
+          : `${reasons.length} photos failed — ${reasons[0]}`,
+        { type: 'error' },
+      )
     }
   }
 

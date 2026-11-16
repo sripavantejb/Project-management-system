@@ -18,7 +18,87 @@ const QUALITY = 0.72
 
 const SKIP_IMAGE_TYPES = new Set(['image/gif', 'image/svg+xml'])
 
+const IMAGE_EXT_MIME = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  bmp: 'image/bmp',
+  avif: 'image/avif',
+}
+
+/** Drawing formats used in the Drawings folder. Never re-encode these. */
+const CAD_MIME = {
+  dwg: 'application/acad',
+  dxf: 'application/dxf',
+  dwf: 'model/vnd.dwf',
+  dwt: 'application/acad',
+  dws: 'application/acad',
+  dgn: 'application/x-dgn',
+  rvt: 'application/vnd.autodesk.revit',
+  rfa: 'application/vnd.autodesk.revit',
+  rte: 'application/vnd.autodesk.revit',
+  ifc: 'application/x-step',
+  skp: 'application/vnd.sketchup.skp',
+  '3dm': 'application/x-3dm',
+  plt: 'application/vnd.hp-hpgl',
+  stl: 'model/stl',
+  obj: 'model/obj',
+  step: 'application/step',
+  stp: 'application/step',
+  iges: 'model/iges',
+  igs: 'model/iges',
+}
+
+function fileExt(name) {
+  return String(name || '').split('.').pop()?.toLowerCase() || ''
+}
+
+export function isCadFile(file) {
+  return Object.prototype.hasOwnProperty.call(CAD_MIME, fileExt(file?.name))
+}
+
+/** Browsers often leave DWG/DXF type blank, or mislabel them as images. */
+export function tagCadFile(file) {
+  const mime = CAD_MIME[fileExt(file?.name)]
+  if (!mime || !file) return file
+  if (String(file.type || '').toLowerCase() === mime) return file
+  try {
+    return new File([file], file.name, {
+      type: mime,
+      lastModified: file.lastModified || Date.now(),
+    })
+  } catch {
+    return file
+  }
+}
+
+/**
+ * Keep real photos even when the browser leaves `file.type` blank
+ * (common for HEIC and some camera dumps). Returns null for non-images.
+ */
+export function asUploadableImage(file) {
+  if (!file) return null
+  const type = String(file.type || '').toLowerCase()
+  if (type.startsWith('image/')) return file
+  const ext = String(file.name || '').split('.').pop()?.toLowerCase()
+  const mime = IMAGE_EXT_MIME[ext]
+  if (!mime) return null
+  try {
+    return new File([file], file.name || `photo.${ext}`, {
+      type: mime,
+      lastModified: file.lastModified || Date.now(),
+    })
+  } catch {
+    return file
+  }
+}
+
 function isCompressibleImage(file) {
+  if (isCadFile(file)) return false
   const type = String(file?.type || '').toLowerCase()
   return type.startsWith('image/') && !SKIP_IMAGE_TYPES.has(type)
 }
@@ -139,16 +219,19 @@ export async function compressFormDataUploads(formData) {
   const entries = [...formData.entries()]
   const needsWork = entries.some(
     ([, value]) =>
-      value instanceof File && (isCompressibleImage(value) || isPdf(value)),
+      value instanceof File &&
+      (isCadFile(value) || isCompressibleImage(value) || isPdf(value)),
   )
   if (!needsWork) return formData
 
   const next = new FormData()
   for (const [key, value] of entries) {
-    next.append(
-      key,
-      value instanceof File ? await compressUploadFile(value) : value,
-    )
+    if (!(value instanceof File)) {
+      next.append(key, value)
+      continue
+    }
+    const tagged = tagCadFile(value)
+    next.append(key, isCadFile(tagged) ? tagged : await compressUploadFile(tagged))
   }
   return next
 }

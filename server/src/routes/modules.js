@@ -25,6 +25,7 @@ import { bumpProjectJourney } from '../lib/projectJourney.js'
 import { getMailSettings } from '../lib/mailer.js'
 import {
   canManageEmployeeAccess,
+  hasPermission,
   requirePermission,
   resolvePermissions,
   sanitizePermissionOverrides,
@@ -1072,14 +1073,38 @@ router.get(
   }),
 )
 
+const FILE_FOLDERS = ['concepts', 'drawings', 'renders', 'approvals', 'site_photos']
+
+/** Site updates used to send folder "site", which is not a ProjectFile enum value. */
+function normalizeFileFolder(value) {
+  const raw = String(value || 'concepts').trim().toLowerCase()
+  if (raw === 'site' || raw === 'site-photos' || raw === 'site photos') return 'site_photos'
+  if (!FILE_FOLDERS.includes(raw)) {
+    throw new AppError(
+      'That folder is not available. Use Concepts, Drawings, 3D Renders, Approvals, or Site photos.',
+      400,
+    )
+  }
+  return raw
+}
+
 router.post(
   '/files',
   requireAuth,
-  requirePermission('files.manage'),
   ...withChunkedUpload('file', upload.single('file')),
   asyncHandler(async (req, res) => {
     const projectId = req.body.projectId
-    const folder = req.body.folder || 'concepts'
+    const folder = normalizeFileFolder(req.body.folder)
+    const canManageFiles = hasPermission(req.user, 'files.manage', req.tenant)
+    // Site staff post photos from the site feed. They do not need the drawings permission.
+    const canPostSitePhoto =
+      folder === 'site_photos' && hasPermission(req.user, 'site', req.tenant)
+    if (!canManageFiles && !canPostSitePhoto) {
+      throw new AppError('Insufficient permissions', 403)
+    }
+    if (!canManageFiles) {
+      await assertProjectAccess(req, projectId)
+    }
     const clientVisible =
       req.body.clientVisible === true || req.body.clientVisible === 'true'
 
@@ -1089,13 +1114,13 @@ router.post(
 
     if (req.file) {
       name = name || req.file.originalname
-      mime = req.file.mimetype || mime
       const saved = await storeFileBuffer(req.file, {
         tenantId: req.tenantId || req.user.tenantId,
         uploadedBy: req.user._id,
         kind: 'project-file',
       })
       url = saved.url
+      mime = saved.mime || req.file.mimetype || mime
     }
 
     if (!projectId || !name || !url) {

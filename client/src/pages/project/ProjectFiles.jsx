@@ -38,11 +38,10 @@ const FOLDERS = [
 ]
 
 /**
- * Serverless functions cap the request body at 4.5 MB, so a larger file fails
- * at the platform before any of our code runs — the person just sees a generic
- * failure. Catch it here and say so plainly.
+ * Files larger than ~4.5 MB are uploaded in chunks by api(). This cap only
+ * stops a drawing so big it should not land in the database.
  */
-const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+const MAX_UPLOAD_BYTES = 80 * 1024 * 1024
 const mb = (bytes) => (bytes / (1024 * 1024)).toFixed(1)
 
 function approvalChip(file) {
@@ -114,7 +113,7 @@ export function ProjectFiles() {
         if (file.size > MAX_UPLOAD_BYTES) {
           failures.push({
             name: file.name,
-            reason: `${mb(file.size)} MB — too large. The hosting limit is ${mb(MAX_UPLOAD_BYTES)} MB per file.`,
+            reason: `${mb(file.size)} MB — too large. Drawings can be up to ${mb(MAX_UPLOAD_BYTES)} MB.`,
           })
           continue
         }
@@ -225,6 +224,9 @@ export function ProjectFiles() {
           <p className="text-[13px] text-secondary">
             Upload plans, then optionally send them for admin approval. Routing
             is set on the Approvals page.
+            {folder === 'drawings'
+              ? ' CAD files belong here: DWG, DXF, DWF, DGN, RVT, SKP, and IFC.'
+              : ''}
           </p>
         </div>
         {canManage && (
@@ -299,7 +301,9 @@ export function ProjectFiles() {
             title={`No files in ${folderLabel}`}
             description={
               canManage
-                ? 'Drag files here or click Upload — then send for approval when ready.'
+                ? folder === 'drawings'
+                  ? 'Drag a CAD drawing here (DWG, DXF, and the other drawing types) or click Upload. Large files upload in parts.'
+                  : 'Drag files here or click Upload — then send for approval when ready.'
                 : 'No files have been shared in this folder.'
             }
             actionLabel={canManage ? 'Upload files' : undefined}

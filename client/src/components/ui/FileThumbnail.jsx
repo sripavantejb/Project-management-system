@@ -1,10 +1,20 @@
 import { useState } from 'react'
-import { FileText, Image as ImageIcon, Film, File } from 'lucide-react'
+import { DraftingCompass, FileText, Image as ImageIcon, Film, File } from 'lucide-react'
 import { assetUrl } from '../../lib/api'
 import { cn } from '../../lib/utils'
 import { StatusChip } from './StatusChip'
 
+const CAD_NAME = /\.(dwg|dxf|dwf|dwt|dws|dgn|rvt|rfa|rte|ifc|skp|3dm|plt)$/i
+
+function isCad(name = '', mime = '') {
+  return (
+    CAD_NAME.test(name) ||
+    /acad|autocad|dwg|dxf|sketchup|revit/i.test(mime)
+  )
+}
+
 function pickIcon(mime = '', name = '') {
+  if (isCad(name, mime)) return DraftingCompass
   if (mime.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(name)) return ImageIcon
   if (mime.startsWith('video/') || /\.(mp4|mov|webm)$/i.test(name)) return Film
   if (/\.(pdf|doc|docx)$/i.test(name)) return FileText
@@ -21,7 +31,9 @@ export function FileThumbnail({
   onClick,
 }) {
   const Icon = pickIcon(mime, name)
-  const isImage = mime?.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(name || '')
+  const isImage =
+    !isCad(name, mime) &&
+    (mime?.startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(name || ''))
   const resolved = assetUrl(url)
   // Files uploaded before the GridFS migration (or otherwise missing from
   // storage) 404 forever — fall back to the type icon instead of a

@@ -29,8 +29,12 @@ const QUALITY = 0.72
  */
 const SKIP_TYPES = ['image/gif', 'image/svg+xml']
 
-function isCompressibleImage(mimeType?: string) {
+const CAD_EXT = /\.(dwg|dxf|dwf|dwt|dws|dgn|rvt|rfa|rte|ifc|skp|3dm|plt)$/i
+
+function isCompressibleImage(mimeType?: string, name?: string) {
+  if (CAD_EXT.test(name || '')) return false
   const mime = String(mimeType || '').toLowerCase()
+  if (/acad|autocad|dwg|dxf/.test(mime)) return false
   if (!mime.startsWith('image/')) return false
   return !SKIP_TYPES.includes(mime)
 }
@@ -61,7 +65,7 @@ function jpegName(name: string) {
  * make a file smaller must never mean failing to upload it.
  */
 export async function compressImageAsset(asset: UploadAsset): Promise<UploadAsset> {
-  if (!isCompressibleImage(asset.mimeType)) return asset
+  if (!isCompressibleImage(asset.mimeType, asset.name)) return asset
 
   try {
     const before = fileSize(asset.uri)
