@@ -478,6 +478,11 @@ function addDays(value, days) {
   return date
 }
 
+function startOfMonth(value) {
+  const date = dayStart(value)
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
 function place(date, min, max) {
   const span = max.getTime() - min.getTime() || 1
   return Math.min(100, Math.max(0, ((date.getTime() - min.getTime()) / span) * 100))
@@ -548,12 +553,15 @@ function StudioGantt({ rows }) {
   const maxDate = dated.length
     ? dayStart(Math.max(...dated.map((row) => new Date(row.endDate || row.startDate))))
     : addDays(now, 70)
-  const min = addDays(minDate > now ? addDays(now, -7) : minDate, -5)
-  const max = addDays(maxDate < now ? addDays(now, 14) : maxDate, 8)
+  const paddedMin = addDays(minDate > now ? addDays(now, -7) : minDate, -5)
+  const paddedMax = addDays(maxDate < now ? addDays(now, 14) : maxDate, 8)
+  // Start and end on month boundaries. Otherwise January is clamped to the
+  // left edge and February, a few days later, is drawn on top of it.
+  const min = startOfMonth(paddedMin)
+  const max = new Date(paddedMax.getFullYear(), paddedMax.getMonth() + 1, 1)
   const months = []
-  const cursor = new Date(min.getFullYear(), min.getMonth(), 1)
-  const lastMonth = new Date(max.getFullYear(), max.getMonth(), 1)
-  while (cursor <= lastMonth) {
+  const cursor = new Date(min)
+  while (cursor < max) {
     months.push(new Date(cursor))
     cursor.setMonth(cursor.getMonth() + 1)
   }
@@ -569,19 +577,25 @@ function StudioGantt({ rows }) {
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[760px]">
+      <div style={{ minWidth: 240 + months.length * 72 }}>
         <div className="grid grid-cols-[200px_1fr] items-end pb-2 sm:grid-cols-[240px_1fr]">
           <span className="px-2 text-[11px] font-medium text-[#8a847c]">Project</span>
           <div className="relative h-6">
-            {months.map((month) => (
-              <span
-                key={month.toISOString()}
-                className="absolute top-0 -translate-x-0 text-[11px] font-medium text-[#8a847c]"
-                style={{ left: `${place(month, min, max)}%` }}
-              >
-                {month.toLocaleDateString('en-IN', { month: 'short' })}
-              </span>
-            ))}
+            {months.map((month, index) => {
+              const left = place(month, min, max)
+              const next = months[index + 1]
+              const nextLeft = next ? place(next, min, max) : 100
+              if (nextLeft - left < 4) return null
+              return (
+                <span
+                  key={month.toISOString()}
+                  className="absolute top-0 whitespace-nowrap text-[11px] font-medium text-[#8a847c]"
+                  style={{ left: `${left}%` }}
+                >
+                  {month.toLocaleDateString('en-IN', { month: 'short' })}
+                </span>
+              )
+            })}
           </div>
         </div>
         <ul>
