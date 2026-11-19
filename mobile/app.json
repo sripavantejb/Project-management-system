@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "studio.cubic.mobile",
-      "versionCode": 8,
+      "versionCode": 9,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#004838",

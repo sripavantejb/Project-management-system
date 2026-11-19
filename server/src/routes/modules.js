@@ -22,6 +22,10 @@ import {
   applyQuotationApproved,
 } from '../lib/boqClientApproval.js'
 import { bumpProjectJourney } from '../lib/projectJourney.js'
+import {
+  budgetByProjectId,
+  quotationTotalsFromItems,
+} from '../lib/projectBudget.js'
 import { getMailSettings } from '../lib/mailer.js'
 import {
   canManageEmployeeAccess,
@@ -605,18 +609,7 @@ router.get(
  * Cubic quotation sheets total in.
  */
 function quotationTotals({ items = [], chargesPercent = 0, gstPercent = 18, discount = 0 }) {
-  const subtotal = items.reduce(
-    (s, i) =>
-      s + (Number(i.amount) || (Number(i.qty) || 0) * (Number(i.rate) || 0) || 0),
-    0,
-  )
-  const charges = (subtotal * (Number(chargesPercent) || 0)) / 100
-  const taxable = subtotal + charges
-  const gst = (taxable * (Number(gstPercent) || 0)) / 100
-  return {
-    subtotal,
-    grandTotal: taxable + gst - (Number(discount) || 0),
-  }
+  return quotationTotalsFromItems({ items, chargesPercent, gstPercent, discount })
 }
 
 router.post(
@@ -1776,10 +1769,17 @@ router.get(
     const pendingByProject = sumByProject(pendingExpenses, 'amount')
     const committedByProject = sumByProject(committedOrders, 'value')
 
-    const totalBudget = projects.reduce((s, p) => s + (p.budget || 0), 0)
+    const quotations = await Quotation.find(tenantFilter(req, { status: 'approved' }))
+      .select(
+        'projectId status grandTotal subtotal items chargesPercent gstPercent discount approvedAt updatedAt createdAt title versionLabel',
+      )
+      .lean()
+    const budgets = budgetByProjectId(projects, quotations)
+
+    const totalBudget = projects.reduce((s, p) => s + (budgets.get(String(p._id)) || 0), 0)
     const pnl = projects.map((p) => {
       const id = String(p._id)
-      const quoted = Number(p.budget) || 0
+      const quoted = budgets.get(id) || 0
       const recordedCosts = Number(p.spent) || 0
       const approvedExpensesTotal = approvedByProject.get(id) || 0
       const costs = recordedCosts + approvedExpensesTotal
@@ -2082,6 +2082,14 @@ router.get(
     const tasks = await Task.find(tenantFilter(req, {}))
     const leads = await Lead.find(tenantFilter(req, {}))
     const pos = await PurchaseOrder.find(tenantFilter(req, {}))
+    const approvedQuotations = await Quotation.find(
+      tenantFilter(req, { status: 'approved' }),
+    )
+      .select(
+        'projectId status grandTotal items chargesPercent gstPercent discount approvedAt updatedAt createdAt title versionLabel',
+      )
+      .lean()
+    const budgets = budgetByProjectId(projects, approvedQuotations)
 
     const onTime = projects.filter(
       (p) => !p.isDelayed && p.status !== 'delayed',
@@ -2163,12 +2171,13 @@ router.get(
             task.dueDate &&
             new Date(task.dueDate) < now,
         ).length
+        const id = String(project._id)
         return {
           _id: project._id,
           name: project.name,
           status: project.status,
           isDelayed: !!project.isDelayed || project.status === 'delayed',
-          budget: Number(project.budget) || 0,
+          budget: budgets.get(id) || 0,
           spent: Number(project.spent) || 0,
           totalTasks: projectTasks.length,
           done,
@@ -2190,7 +2199,7 @@ router.get(
           onTimePct,
         },
         budgetVariance: projects.reduce(
-          (s, p) => s + ((p.budget || 0) - (p.spent || 0)),
+          (s, p) => s + ((budgets.get(String(p._id)) || 0) - (p.spent || 0)),
           0,
         ),
         crmPipelineValue: pipelineValue,

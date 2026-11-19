@@ -98,7 +98,7 @@ const FIELD_ALIASES = [
 ]
 
 const SKIP_ROW_RE =
-  /material\s*master|clarity\s*edition|note\s*to\s*user|qty\s*=\s*0|complete interior hardware|brands are reference|approved make list|sub[\s-]?total/i
+  /material\s*master|clarity\s*edition|note\s*to\s*user|qty\s*=\s*0|complete interior hardware|brands are reference|approved make list|sub[\s-]?total|grand\s*total|design\s*(and|&|\/)?\s*handling|gst\s*@|cgst|sgst|igst/i
 
 function normalizeHeader(value) {
   return String(value ?? '')

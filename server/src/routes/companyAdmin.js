@@ -11,6 +11,7 @@ import {
   PurchaseOrder,
   Expense,
 } from '../models/index.js'
+import { budgetByProjectId } from '../lib/projectBudget.js'
 
 const router = express.Router()
 
@@ -66,7 +67,9 @@ router.get(
         .lean(),
       Lead.find(tenantFilter(req, {})).select('stage estimatedValue createdAt').lean(),
       Quotation.find(tenantFilter(req, {}))
-        .select('status items grandTotal projectId createdAt')
+        .select(
+          'status items grandTotal subtotal chargesPercent gstPercent discount projectId createdAt updatedAt approvedAt title versionLabel',
+        )
         .lean(),
       Expense.find(tenantFilter(req, { status: 'approved' }))
         .select('projectId amount createdAt updatedAt')
@@ -265,11 +268,15 @@ router.get(
         deliveryRate: v.poCount > 0 ? Math.round((v.delivered / v.poCount) * 100) : null,
       }))
 
+    // Prefer the latest approved BOQ total. Stale project.budget values
+    // (left after unlock/revision) were blowing the studio figure into crores.
+    const budgets = budgetByProjectId(projects, quotations)
+
     // Spend = project.spent field when set; otherwise fall back to approved expenses
     // (avoids double-counting if spent was already rolled up from expenses).
     const budgetRows = projects.map((p) => {
       const id = String(p._id)
-      const budget = Number(p.budget) || 0
+      const budget = budgets.get(id) || 0
       const recorded = Number(p.spent) || 0
       const approved = approvedByProject.get(id) || 0
       const spent = recorded > 0 ? recorded : approved
@@ -309,7 +316,7 @@ router.get(
 
     const timeline = projects.map((p) => {
       const id = String(p._id)
-      const budget = Number(p.budget) || 0
+      const budget = budgets.get(id) || 0
       const recorded = Number(p.spent) || 0
       const approved = approvedByProject.get(id) || 0
       const spent = recorded > 0 ? recorded : approved

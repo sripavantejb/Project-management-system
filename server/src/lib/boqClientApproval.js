@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { Project } from '../models/Project.js'
 import { sendTenantMail } from './mailer.js'
 import { applyStageForward } from './projectJourney.js'
+import { quotationTotalsFromItems } from './projectBudget.js'
 
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
@@ -46,10 +47,21 @@ export async function applyQuotationApproved(quotation, { note = '' } = {}) {
   quotation.approvedAt = new Date()
   if (note) quotation.clientDecisionNote = String(note).slice(0, 500)
 
+  // Always recompute from line items so a stale client-sent grandTotal, or an
+  // imported "Grand Total" summary row, cannot set a fantasy project budget.
+  const totals = quotationTotalsFromItems({
+    items: quotation.items || [],
+    chargesPercent: quotation.chargesPercent,
+    gstPercent: quotation.gstPercent,
+    discount: quotation.discount,
+  })
+  quotation.subtotal = totals.subtotal
+  quotation.grandTotal = totals.grandTotal
+
   if (quotation.projectId) {
     const project = await Project.findById(quotation.projectId)
     if (project && String(project.tenantId) === String(quotation.tenantId)) {
-      project.budget = quotation.grandTotal
+      project.budget = totals.grandTotal
       // Journey bar: approved BOQ → Buying materials (automatic)
       applyStageForward(project, 'procurement')
       await project.save()
