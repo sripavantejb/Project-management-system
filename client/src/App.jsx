@@ -69,6 +69,7 @@ import {
 import { PagePad } from './components/layout/PagePad'
 import { AttendancePage } from './pages/AttendancePage'
 import { DeleteAccountPage } from './pages/DeleteAccountPage'
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage'
 import { ToastViewport } from './components/ui'
 import { useAuthStore } from './lib/api'
 import {
@@ -134,6 +135,7 @@ export default function App() {
 
           {/* Public — Google Play / App Store account deletion URL */}
           <Route path="/delete-account" element={<DeleteAccountPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
           <Route element={<PlatformGuestOnly />}>
             <Route path="/platform/login" element={<PlatformLoginPage />} />
