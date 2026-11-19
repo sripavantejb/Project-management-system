@@ -516,36 +516,32 @@ function NewProjectModal({ open, onClose, onSubmit, loading }) {
           onChange={(e) => setForm({ ...form, clientName: e.target.value })}
           required
         />
-        <div className="flex gap-2">
-          <div className="w-[110px] shrink-0">
-            <Select
-              label="Code"
-              value={form.phoneCode}
-              onChange={(e) => setForm({ ...form, phoneCode: e.target.value })}
-              options={COUNTRY_CODES.map((c) => ({
-                value: c.code,
-                label: c.code,
-              }))}
-            />
-          </div>
-          <div className="flex-1">
-            <Input
-              label="Client phone"
-              type="tel"
-              inputMode="numeric"
-              placeholder="98765 43210"
-              value={form.phone}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  phone: e.target.value.replace(/[^\d\s-]/g, ''),
-                })
-              }
-            />
-          </div>
+        <div className="grid grid-cols-[6.75rem_minmax(0,1fr)] items-end gap-2">
+          <Select
+            label="Code"
+            value={form.phoneCode}
+            onChange={(e) => setForm({ ...form, phoneCode: e.target.value })}
+            options={COUNTRY_CODES.map((c) => ({
+              value: c.code,
+              label: c.code,
+            }))}
+          />
+          <Input
+            label="Client phone"
+            type="tel"
+            inputMode="numeric"
+            placeholder="98765 43210"
+            value={form.phone}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                phone: e.target.value.replace(/[^\d\s-]/g, ''),
+              })
+            }
+          />
         </div>
         <div>
-          <p className="mb-1.5 text-[12px] font-medium text-primary">Property type</p>
+          <p className="mb-2 text-xs font-semibold text-primary">Property type</p>
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: 'residential', label: 'Residential', hint: 'Home interiors' },
@@ -557,11 +553,12 @@ function NewProjectModal({ open, onClose, onSubmit, loading }) {
                 key={opt.value}
                 type="button"
                 onClick={() => setForm({ ...form, type: opt.value })}
-                className={
+                className={cn(
+                  'rounded-[10px] border px-3 py-2.5 text-left transition-colors',
                   form.type === opt.value
-                    ? 'rounded-[10px] border border-accent bg-accent/10 px-3 py-2.5 text-left'
-                    : 'rounded-[10px] border border-border bg-surface-raised px-3 py-2.5 text-left hover:border-accent/40'
-                }
+                    ? 'border-accent bg-accent/15'
+                    : 'border-border bg-surface-raised hover:border-accent/40',
+                )}
               >
                 <p className="text-[13px] font-semibold text-primary">{opt.label}</p>
                 <p className="mt-0.5 text-[11px] text-secondary">{opt.hint}</p>
@@ -581,7 +578,7 @@ function NewProjectModal({ open, onClose, onSubmit, loading }) {
           onChange={(e) => setForm({ ...form, budget: e.target.value })}
         />
         <div>
-          <p className="mb-1.5 text-[12px] font-medium text-primary">Cover photo</p>
+          <p className="mb-2 text-xs font-semibold text-primary">Cover photo</p>
           <input
             ref={coverRef}
             type="file"
@@ -593,7 +590,7 @@ function NewProjectModal({ open, onClose, onSubmit, loading }) {
             className={cn(
               'relative h-28 overflow-hidden rounded-[10px] border border-border bg-cover bg-center',
               !form.coverImage &&
-                'bg-gradient-to-br from-[var(--accent)]/30 via-surface-raised to-surface',
+                'bg-gradient-to-br from-accent/25 via-surface-raised to-surface',
             )}
             style={
               form.coverImage
@@ -601,11 +598,12 @@ function NewProjectModal({ open, onClose, onSubmit, loading }) {
                 : undefined
             }
           >
-            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/25">
+            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/35">
               <Button
                 type="button"
                 size="sm"
                 variant="secondary"
+                className="border-white/20 bg-white/95 text-[#171717] hover:bg-white"
                 loading={coverBusy}
                 onClick={() => coverRef.current?.click()}
               >
@@ -617,7 +615,7 @@ function NewProjectModal({ open, onClose, onSubmit, loading }) {
                   type="button"
                   size="sm"
                   variant="ghost"
-                  className="bg-black/40 text-white hover:bg-black/60"
+                  className="bg-black/50 text-white hover:bg-black/70"
                   onClick={() => setForm({ ...form, coverImage: '' })}
                 >
                   Remove
@@ -625,7 +623,7 @@ function NewProjectModal({ open, onClose, onSubmit, loading }) {
               ) : null}
             </div>
           </div>
-          <p className="mt-1 text-[11px] text-secondary">
+          <p className="mt-1.5 text-[11px] text-secondary">
             Optional — you can change it anytime from the project card.
           </p>
         </div>

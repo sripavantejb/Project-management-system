@@ -722,6 +722,27 @@ body {
 [data-theme="dark"] .bg-light-card.border-border {
   border-color: transparent !important;
 }
+
+/* Form controls must stay readable on dark surfaces (borders + contrast) */
+[data-theme="dark"] .form-field,
+[data-theme="dark"] input.form-field,
+[data-theme="dark"] select.form-field,
+[data-theme="dark"] textarea.form-field {
+  background-color: var(--bg-surface-raised) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="dark"] .form-field::placeholder {
+  color: var(--text-muted) !important;
+}
+[data-theme="dark"] .dark-modal {
+  background-color: var(--bg-surface) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="dark"] .dark-modal .border-b {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
 /* Shell chrome stays whisper-thin */
 [data-theme="dark"] aside.border-r,
 [data-theme="dark"] header.border-b,

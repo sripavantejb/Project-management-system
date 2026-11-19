@@ -49,7 +49,8 @@ export function Modal({
             role="dialog"
             aria-modal="true"
             className={cn(
-              'relative w-full rounded-[16px] border border-border bg-surface shadow-[0_16px_48px_rgba(0,0,0,0.12)]',
+              'relative w-full rounded-[16px] border border-border bg-surface text-primary shadow-[0_16px_48px_rgba(0,0,0,0.12)]',
+              'dark-modal',
               widths[size],
               className,
             )}
@@ -61,19 +62,23 @@ export function Modal({
           >
             {(title || onClose) && (
               <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-                <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+                <h2 className="text-base font-semibold tracking-tight text-primary">
+                  {title}
+                </h2>
                 {onClose && (
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-lg p-1.5 text-secondary hover:text-primary hover:bg-surface-raised transition-colors duration-150"
+                    className="rounded-lg p-1.5 text-secondary transition-colors duration-150 hover:bg-surface-raised hover:text-primary"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
             )}
-            <div className="p-5">{children}</div>
+            <div className="max-h-[min(80vh,720px)] overflow-y-auto p-5">
+              {children}
+            </div>
           </motion.div>
         </div>
       )}
