@@ -2,7 +2,25 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { compressFormDataUploads } from './compressImage'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+function isLocalHostname(host) {
+  return host === 'localhost' || host === '127.0.0.1'
+}
+
+/**
+ * Resolve API base URL. If a production/preview page was built with a bad
+ * VITE_API_URL pointing at localhost, fall back to same-origin `/api` (Vercel rewrite).
+ */
+function resolveApiUrl() {
+  const raw = String(import.meta.env.VITE_API_URL || '/api').trim() || '/api'
+  if (typeof window === 'undefined') return raw
+  if (isLocalHostname(window.location.hostname)) return raw
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)([:/]|$)/i.test(raw)) {
+    return '/api'
+  }
+  return raw
+}
+
+const API_URL = resolveApiUrl()
 
 const RESERVED_SUBS = new Set([
   'www',

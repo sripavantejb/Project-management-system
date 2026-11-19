@@ -14,16 +14,25 @@ function isLocalHost(url) {
 
 /**
  * Prefer the real API host so websockets are not dropped by the Vite proxy.
- * Never point production builds at localhost (common misconfigured VITE_API_URL).
+ * Never point a hosted page at localhost (common misconfigured VITE_API_URL).
  * Vercel serverless has no Socket.IO — skip connecting there.
  */
 function socketUrl() {
+  const pageIsLocal =
+    typeof window !== 'undefined' && isLocalHost(window.location.href)
+
+  // Hosted SPA (Vercel): never dial the developer's machine, even if env is wrong.
+  if (typeof window !== 'undefined' && !pageIsLocal) {
+    return null
+  }
+
   const raw = (import.meta.env.VITE_API_URL || '').trim()
   let url = null
   if (raw && /^https?:\/\//i.test(raw)) {
     url = raw.replace(/\/api\/?$/, '')
   } else if (import.meta.env.DEV) {
-    url = 'http://localhost:5000'
+    // Same-origin so Vite's /socket.io proxy is used.
+    url = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'
   } else {
     url = apiOrigin() || null
   }

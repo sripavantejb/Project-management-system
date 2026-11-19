@@ -111,10 +111,11 @@ export function resolvePermissions(user, tenant = null) {
   if (user.isPlatformAdmin) {
     return { ...ALL_ENABLED }
   }
-  // Built-in company admins always keep the full role map. Stale per-user
-  // overrides (e.g. portfolio:false saved from People) must not lock them out.
+  // Built-in company admins keep the full role map. Stale per-user overrides
+  // (e.g. portfolio:false) and tenant feature toggles must not lock them out
+  // of core ops pages like Dashboard.
   if (user.role === 'admin' || user.role === 'owner') {
-    return applyTenantFeatureLimits({ ...ALL_ENABLED }, tenant)
+    return { ...ALL_ENABLED }
   }
   const perms = {
     ...defaultPermissionsForRole(user.role, tenant?.customRoles),
