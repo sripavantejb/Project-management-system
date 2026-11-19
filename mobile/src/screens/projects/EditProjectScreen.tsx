@@ -19,6 +19,13 @@ const TYPES: { value: 'residential' | 'commercial'; label: string }[] = [
   { value: 'commercial', label: 'Commercial' },
 ]
 
+const STATUSES: { value: string; label: string }[] = [
+  { value: 'in_progress', label: 'In progress' },
+  { value: 'on_hold', label: 'On hold' },
+  { value: 'delayed', label: 'Delayed' },
+  { value: 'completed', label: 'Completed' },
+]
+
 export function EditProjectScreen({ route, navigation }: Props) {
   const colors = useColors()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -36,6 +43,7 @@ export function EditProjectScreen({ route, navigation }: Props) {
   const [location, setLocation] = useState('')
   const [budget, setBudget] = useState('')
   const [type, setType] = useState<'residential' | 'commercial'>('residential')
+  const [status, setStatus] = useState('in_progress')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -47,6 +55,8 @@ export function EditProjectScreen({ route, navigation }: Props) {
     setLocation(p.location || '')
     setBudget(p.budget ? String(p.budget) : '')
     setType(p.type === 'commercial' ? 'commercial' : 'residential')
+    const raw = p.isDelayed || p.status === 'delayed' ? 'delayed' : p.status || 'in_progress'
+    setStatus(STATUSES.some((s) => s.value === raw) ? raw : 'in_progress')
   }, [data?.project])
 
   const saveMutation = useMutation({
@@ -58,6 +68,7 @@ export function EditProjectScreen({ route, navigation }: Props) {
         location: location.trim() || undefined,
         budget: budget ? Number(budget) : undefined,
         type,
+        status,
       }),
     onSuccess: (project) => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] })
@@ -136,6 +147,22 @@ export function EditProjectScreen({ route, navigation }: Props) {
               style={[styles.typeChip, type === t.value && styles.typeChipActive]}
             >
               <Text style={[styles.typeChipText, type === t.value && styles.typeChipTextActive]}>{t.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+      <View>
+        <Text style={styles.label}>Status</Text>
+        <View style={styles.typeRow}>
+          {STATUSES.map((s) => (
+            <Pressable
+              key={s.value}
+              onPress={() => setStatus(s.value)}
+              style={[styles.typeChip, status === s.value && styles.typeChipActive]}
+            >
+              <Text style={[styles.typeChipText, status === s.value && styles.typeChipTextActive]}>
+                {s.label}
+              </Text>
             </Pressable>
           ))}
         </View>

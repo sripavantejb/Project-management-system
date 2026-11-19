@@ -442,15 +442,37 @@ router.patch(
       if (req.body[key] !== undefined) project[key] = req.body[key]
     }
 
+    const order = [
+      'design',
+      'planning',
+      'procurement',
+      'execution',
+      'handover',
+    ]
+
+    // Closing an old job: mark the whole journey done and clear delay flags.
+    if (req.body.status === 'completed') {
+      project.isDelayed = false
+      project.progress = 100
+      project.currentStage = 'handover'
+      if (Array.isArray(project.stages) && project.stages.length) {
+        for (const s of project.stages) {
+          s.status = 'completed'
+          s.progress = 100
+        }
+        project.markModified('stages')
+      }
+    } else if (req.body.status && req.body.status !== 'delayed') {
+      // Switching away from delayed / completed should not leave isDelayed stuck.
+      if (req.body.status === 'in_progress' || req.body.status === 'on_hold') {
+        project.isDelayed = false
+      }
+    } else if (req.body.status === 'delayed') {
+      project.isDelayed = true
+    }
+
     // Keep stage checklist in sync when currentStage moves forward
     if (req.body.currentStage && Array.isArray(project.stages)) {
-      const order = [
-        'design',
-        'planning',
-        'procurement',
-        'execution',
-        'handover',
-      ]
       const idx = order.indexOf(req.body.currentStage)
       if (idx >= 0) {
         for (const s of project.stages) {

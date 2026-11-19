@@ -35,6 +35,30 @@ const MAIN_TABS = [
   { to: 'team', label: 'Team', icon: Users, capability: 'team' },
 ]
 
+const PROJECT_STATUS_OPTIONS = [
+  { value: 'not_started', label: 'Not started' },
+  { value: 'in_progress', label: 'In progress' },
+  { value: 'on_hold', label: 'On hold' },
+  { value: 'delayed', label: 'Delayed' },
+  { value: 'completed', label: 'Completed' },
+]
+
+function statusBadge(project) {
+  if (project.status === 'completed') {
+    return { label: 'Completed', className: 'bg-[#bceed3] text-[#002114]' }
+  }
+  if (project.isDelayed || project.status === 'delayed') {
+    return { label: 'Delayed', className: 'bg-[#ffdad6] text-[#93000a]' }
+  }
+  if (project.status === 'on_hold') {
+    return { label: 'On hold', className: 'bg-[#f3e6d4] text-[#7a573b]' }
+  }
+  if (project.status === 'not_started') {
+    return { label: 'Not started', className: 'bg-[#e8e8ea] text-[#44474a]' }
+  }
+  return { label: 'In progress', className: 'bg-[#bceed3] text-[#002114]' }
+}
+
 export function ProjectWorkspace() {
   const { id } = useParams()
   const user = useAuthStore((s) => s.user)
@@ -91,6 +115,27 @@ export function ProjectWorkspace() {
     },
   })
 
+  const setStatus = useMutation({
+    mutationFn: (status) =>
+      api(`/projects/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }),
+    onSuccess: (_res, status) => {
+      qc.invalidateQueries({ queryKey: ['project', id] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['projects-nav'] })
+      qc.invalidateQueries({ queryKey: ['company-admin-dashboard'] })
+      toast(
+        status === 'completed'
+          ? 'Project marked completed'
+          : `Status updated to ${String(status).replace(/_/g, ' ')}`,
+        { type: 'success' },
+      )
+    },
+    onError: (e) => toast(e.message || 'Could not update status', { type: 'error' }),
+  })
+
   useEffect(() => {
     if (isError && error?.status === 404) {
       bustProjectCaches(id)
@@ -135,21 +180,55 @@ export function ProjectWorkspace() {
               <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#7a573b]">
                 {project.code || 'Project'}
               </span>
-              <span
-                className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase',
-                  project.isDelayed || project.status === 'delayed'
-                    ? 'bg-[#ffdad6] text-[#93000a]'
-                    : 'bg-[#bceed3] text-[#002114]',
-                )}
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                {project.isDelayed || project.status === 'delayed'
-                  ? 'Delayed'
-                  : project.status === 'on_hold'
-                    ? 'On hold'
-                    : 'On track'}
-              </span>
+              {canManageProject ? (
+                <label className="relative inline-flex items-center">
+                  <span className="sr-only">Project status</span>
+                  <select
+                    value={
+                      project.status === 'delayed' || project.isDelayed
+                        ? 'delayed'
+                        : project.status || 'in_progress'
+                    }
+                    disabled={setStatus.isPending}
+                    onChange={(e) => {
+                      const next = e.target.value
+                      if (next === 'completed') {
+                        const ok = window.confirm(
+                          `Mark “${project.name}” as completed?\n\nUse this for finished or old closed jobs. You can reopen it later.`,
+                        )
+                        if (!ok) {
+                          e.target.value =
+                            project.status === 'delayed' || project.isDelayed
+                              ? 'delayed'
+                              : project.status || 'in_progress'
+                          return
+                        }
+                      }
+                      setStatus.mutate(next)
+                    }}
+                    className={cn(
+                      'cursor-pointer appearance-none rounded-full py-0.5 pl-2 pr-6 text-[11px] font-semibold uppercase outline-none',
+                      statusBadge(project).className,
+                    )}
+                  >
+                    {PROJECT_STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase',
+                    statusBadge(project).className,
+                  )}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  {statusBadge(project).label}
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">

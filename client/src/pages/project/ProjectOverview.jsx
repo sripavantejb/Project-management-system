@@ -150,6 +150,23 @@ export function ProjectOverview() {
     onError: (e) => toast(e.message || 'Could not update stage', { type: 'error' }),
   })
 
+  const markCompleted = useMutation({
+    mutationFn: () =>
+      api(`/projects/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'completed' }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project', id] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['projects-nav'] })
+      toast('Project marked completed', { type: 'success' })
+    },
+    onError: (e) => toast(e.message || 'Could not mark completed', { type: 'error' }),
+  })
+
+  const isCompleted = project.status === 'completed'
+
   const nextStageKey = (() => {
     const i = STAGE_ORDER.indexOf(current)
     return i >= 0 && i < STAGE_ORDER.length - 1 ? STAGE_ORDER[i + 1] : null
@@ -167,6 +184,43 @@ export function ProjectOverview() {
           </Link>
         </div>
       )}
+
+      {isCompleted ? (
+        <div className="flex items-center gap-3 rounded-xl bg-[#bceed3] px-4 py-2.5 text-sm text-[#002114]">
+          <Check className="h-4 w-4 shrink-0" />
+          This project is completed / closed
+        </div>
+      ) : null}
+
+      {canManage && !isCompleted ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e5dfd7] bg-white px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold text-[#1e2022]">
+              Finished or old job?
+            </p>
+            <p className="mt-0.5 text-[12px] text-[#68645e]">
+              Mark it completed to close it. You can reopen anytime from the status menu in the header.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={markCompleted.isPending}
+            onClick={() => {
+              if (
+                !window.confirm(
+                  `Mark “${project.name}” as completed?\n\nUse this for finished or old closed jobs.`,
+                )
+              )
+                return
+              markCompleted.mutate()
+            }}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-[#1e2022] px-3.5 text-[12px] font-semibold text-white hover:bg-black disabled:opacity-50"
+          >
+            <Flag className="h-3.5 w-3.5" />
+            {markCompleted.isPending ? 'Saving…' : 'Mark completed'}
+          </button>
+        </div>
+      ) : null}
 
       {/* 1 — Journey: where am I? */}
       <section className="rounded-[16px] border border-[#e5dfd7] bg-white p-4 sm:p-5">
