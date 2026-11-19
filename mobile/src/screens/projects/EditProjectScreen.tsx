@@ -180,17 +180,22 @@ export function EditProjectScreen({ route, navigation }: Props) {
 function createStyles(c: AppColors) {
   return StyleSheet.create({
     footer: { gap: spacing.sm },
-    label: { ...typography.captionStrong, color: c.textSecondary, marginBottom: spacing.sm },
+    label: { ...typography.captionStrong, color: c.textPrimary, marginBottom: spacing.sm },
     typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     typeChip: {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: radius.full,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
       backgroundColor: c.surfaceRaised,
     },
-    typeChipActive: { backgroundColor: c.textPrimary },
+    typeChipActive: {
+      borderColor: c.accent,
+      backgroundColor: c.accentSoft,
+    },
     typeChipText: { ...typography.caption, color: c.textSecondary },
-    typeChipTextActive: { color: c.canvas, fontWeight: '700' },
+    typeChipTextActive: { color: c.textPrimary, fontWeight: '700' },
     error: { ...typography.caption, color: c.danger },
   })
 }

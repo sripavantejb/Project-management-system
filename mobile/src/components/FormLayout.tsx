@@ -261,7 +261,7 @@ function createStyles(
       backgroundColor: c.surface,
       borderRadius: radius.xl,
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: c.borderStrong,
       padding: spacing.lg,
       gap: spacing.md,
       overflow: 'visible',

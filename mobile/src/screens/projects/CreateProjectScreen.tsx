@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FormLayout } from '../../components/FormLayout'
 import { Input } from '../../components/Input'
 import { CollapsibleSection } from '../../components/CollapsibleSection'
-import { FieldRow } from '../../components/FieldRow'
 import { Button } from '../../components/Button'
 import { radius, spacing, typography, type AppColors } from '../../constants/theme'
 import { useColors } from '../../theme/useColors'
@@ -19,11 +18,12 @@ type Props = NativeStackScreenProps<ProjectStackParamList, 'CreateProject'>
 const TYPES: {
   value: 'residential' | 'commercial' | 'renovation' | 'custom'
   label: string
+  hint: string
 }[] = [
-  { value: 'residential', label: 'Residential' },
-  { value: 'commercial', label: 'Commercial' },
-  { value: 'renovation', label: 'Renovation' },
-  { value: 'custom', label: 'Custom' },
+  { value: 'residential', label: 'Residential', hint: 'Home interiors' },
+  { value: 'commercial', label: 'Commercial', hint: 'Offices & retail' },
+  { value: 'renovation', label: 'Renovation', hint: 'Remodel & retrofit' },
+  { value: 'custom', label: 'Custom', hint: 'Build your own schedule' },
 ]
 
 export function CreateProjectScreen({ navigation }: Props) {
@@ -72,89 +72,101 @@ export function CreateProjectScreen({ navigation }: Props) {
   return (
     <FormLayout
       title="New project"
-      subtitle="Set up a workspace for the client"
+      subtitle="Creates 5 stages (Design → Handover) and template tasks"
       subtitleIcon="folder-outline"
-
       footer={<Button title="Create project" onPress={onSubmit} loading={mutation.isPending} fullWidth />}
     >
-      <View>
-        <Text style={styles.label}>Property type</Text>
-        <View style={styles.typeRow}>
-          {TYPES.map((t) => (
-            <Pressable
-              key={t.value}
-              onPress={() => setType(t.value)}
-              style={[styles.typeChip, type === t.value && styles.typeChipActive]}
-            >
-              <Text style={[styles.typeChipText, type === t.value && styles.typeChipTextActive]}>{t.label}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-      <Input label="Project name" placeholder="e.g. Sharma Penthouse" value={name} onChangeText={setName} error={errors.name} />
       <Input
-        label="Client name"
-        placeholder="e.g. Priya Sharma"
+        label="Project name"
+        placeholder="e.g. Sharma Penthouse"
+        value={name}
+        onChangeText={setName}
+        error={errors.name}
+      />
+      <Input
+        label="Client"
+        placeholder="Client / company"
         value={clientName}
         onChangeText={setClientName}
         error={errors.clientName}
       />
-      {/*
-        * Everything below is optional, so it starts collapsed: a project can be
-        * created from the three fields above, and hiding the rest is what keeps
-        * this sheet from scrolling on a small phone.
-        */}
+      <Input
+        label="Client phone"
+        placeholder="98765 43210"
+        keyboardType="phone-pad"
+        value={clientPhone}
+        onChangeText={setClientPhone}
+      />
+
+      <View>
+        <Text style={styles.label}>Property type</Text>
+        <View style={styles.typeGrid}>
+          {TYPES.map((t) => {
+            const active = type === t.value
+            return (
+              <Pressable
+                key={t.value}
+                onPress={() => setType(t.value)}
+                style={[styles.typeCard, active && styles.typeCardActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.typeLabel, active && styles.typeLabelActive]}>{t.label}</Text>
+                <Text style={styles.typeHint}>{t.hint}</Text>
+              </Pressable>
+            )
+          })}
+        </View>
+      </View>
+
       <CollapsibleSection>
-        <FieldRow>
-          <Input
-            label="Client phone"
-            placeholder="+91…"
-            keyboardType="phone-pad"
-            value={clientPhone}
-            onChangeText={setClientPhone}
-          />
-          <Input label="Location" placeholder="City, area" value={location} onChangeText={setLocation} />
-        </FieldRow>
-        <Input label="Budget" placeholder="0" keyboardType="numeric" value={budget} onChangeText={setBudget} />
+        <Input label="Location" placeholder="City, area" value={location} onChangeText={setLocation} />
+        <Input
+          label="Budget (INR)"
+          placeholder="0"
+          keyboardType="numeric"
+          value={budget}
+          onChangeText={setBudget}
+        />
 
         <View>
-        <View style={styles.spaceHead}>
-          <Text style={styles.label}>Space</Text>
-          <Pressable
-            onPress={() => navigation.navigate('CreateSpace')}
-            hitSlop={8}
-            accessibilityRole="button"
-          >
-            <Text style={styles.spaceAction}>New space</Text>
-          </Pressable>
-        </View>
-        <View style={styles.typeRow}>
-          <Pressable
-            onPress={() => setSpaceId('')}
-            style={[styles.typeChip, !spaceId && styles.typeChipActive]}
-            accessibilityRole="button"
-            accessibilityState={{ selected: !spaceId }}
-          >
-            <Text style={[styles.typeChipText, !spaceId && styles.typeChipTextActive]}>No space</Text>
-          </Pressable>
-          {(spaces.data || []).map((sp) => (
+          <View style={styles.spaceHead}>
+            <Text style={styles.label}>Space</Text>
             <Pressable
-              key={sp._id}
-              onPress={() => setSpaceId(sp._id)}
-              style={[styles.typeChip, spaceId === sp._id && styles.typeChipActive]}
+              onPress={() => navigation.navigate('CreateSpace')}
+              hitSlop={8}
               accessibilityRole="button"
-              accessibilityState={{ selected: spaceId === sp._id }}
             >
-              <View style={[styles.spaceDot, { backgroundColor: sp.color }]} />
-              <Text
-                style={[styles.typeChipText, spaceId === sp._id && styles.typeChipTextActive]}
-                numberOfLines={1}
-              >
-                {sp.name}
-              </Text>
+              <Text style={styles.spaceAction}>New space</Text>
             </Pressable>
-          ))}
-        </View>
+          </View>
+          <View style={styles.chipRow}>
+            <Pressable
+              onPress={() => setSpaceId('')}
+              style={[styles.chip, !spaceId && styles.chipActive]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: !spaceId }}
+            >
+              <Text style={[styles.chipText, !spaceId && styles.chipTextActive]}>No space</Text>
+            </Pressable>
+            {(spaces.data || []).map((sp) => (
+              <Pressable
+                key={sp._id}
+                onPress={() => setSpaceId(sp._id)}
+                style={[styles.chip, spaceId === sp._id && styles.chipActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: spaceId === sp._id }}
+              >
+                <View style={[styles.spaceDot, { backgroundColor: sp.color || colors.accent }]} />
+                <Text
+                  style={[styles.chipText, spaceId === sp._id && styles.chipTextActive]}
+                  numberOfLines={1}
+                >
+                  {sp.name}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
       </CollapsibleSection>
 
@@ -165,24 +177,78 @@ export function CreateProjectScreen({ navigation }: Props) {
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-    label: { ...typography.captionStrong, color: c.textSecondary, marginBottom: spacing.sm },
-    typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    typeChip: {
+    label: {
+      ...typography.captionStrong,
+      color: c.textPrimary,
+      marginBottom: spacing.sm,
+    },
+    typeGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    typeCard: {
+      width: '48%',
+      flexGrow: 1,
+      minWidth: '46%',
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
+      backgroundColor: c.surfaceRaised,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+    },
+    typeCardActive: {
+      borderColor: c.accent,
+      backgroundColor: c.accentSoft,
+    },
+    typeLabel: {
+      ...typography.captionStrong,
+      color: c.textPrimary,
+    },
+    typeLabelActive: {
+      color: c.textPrimary,
+    },
+    typeHint: {
+      ...typography.micro,
+      color: c.textSecondary,
+      marginTop: 4,
+    },
+    chipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    chip: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: radius.full,
+      borderWidth: 1,
+      borderColor: c.borderStrong,
       backgroundColor: c.surfaceRaised,
       maxWidth: '100%',
     },
-    typeChipActive: { backgroundColor: c.textPrimary },
-    typeChipText: { ...typography.caption, color: c.textSecondary },
-    typeChipTextActive: { color: c.canvas, fontWeight: '700' },
+    chipActive: {
+      borderColor: c.accent,
+      backgroundColor: c.accentSoft,
+    },
+    chipText: { ...typography.caption, color: c.textSecondary },
+    chipTextActive: { color: c.textPrimary, fontWeight: '700' },
     error: { ...typography.caption, color: c.danger },
-    spaceHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
-    spaceAction: { ...typography.captionStrong, color: c.accentHover, marginBottom: spacing.sm },
+    spaceHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    spaceAction: {
+      ...typography.captionStrong,
+      color: c.accentText,
+      marginBottom: spacing.sm,
+    },
     spaceDot: { width: 8, height: 8, borderRadius: 4 },
   })
 }

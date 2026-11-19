@@ -73,7 +73,7 @@ function createThemed(c: AppColors) {
   return {
     variant: {
       primary: { backgroundColor: c.cta },
-      secondary: { backgroundColor: c.surface, borderWidth: 1, borderColor: c.borderLight },
+      secondary: { backgroundColor: c.surfaceRaised, borderWidth: 1, borderColor: c.borderStrong },
       ghost: { backgroundColor: 'transparent' },
       danger: { backgroundColor: c.danger },
     } as Record<Variant, object>,

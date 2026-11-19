@@ -56,8 +56,8 @@ export const lightColors = {
 
   textPrimary: '#1e2022',
   textSecondary: '#68645e',
-  textMuted: '#68645e',
-  textSoft: '#44474a',
+  textMuted: '#8a847c',
+  textSoft: '#44423e',
   textOnRail: '#1e2022',
   textOnRailMuted: '#68645e',
   /** CTA / primary button label on graphite */
@@ -65,11 +65,13 @@ export const lightColors = {
   /** Label on danger / solid red surfaces */
   textOnDanger: '#ffffff',
 
-  accent: '#a27b5c',
-  accentHover: '#8c674a',
-  accentSoft: '#fbf5ee',
+  /** Matches web light accent (graphite) + bronze for warm secondary */
+  accent: '#1e2022',
+  accentHover: '#33373b',
+  accentSoft: '#f3efea',
   accentText: '#7a573b',
-  /** Filled CTA — warm graphite from the Stitch design system */
+  bronze: '#a27b5c',
+  /** Filled CTA — same as web btn-create */
   cta: '#1e2022',
   ctaText: '#ffffff',
 
@@ -95,33 +97,36 @@ export const lightColors = {
 }
 
 export const darkColors = {
-  canvas: '#0b0b0e',
-  surface: '#141418',
-  surfaceRaised: '#1c1c21',
-  muted: '#131316',
-  active: '#26262d',
-  rail: '#0e0e11',
+  /** Aligned with web [data-theme="dark"] in client/src/index.css */
+  canvas: '#0f0f0f',
+  surface: '#181818',
+  surfaceRaised: '#1f1f1f',
+  muted: '#151515',
+  active: '#262626',
+  rail: '#0c0c0c',
   railHover: 'rgba(255,255,255,0.06)',
 
-  textPrimary: '#f3f3f5',
-  textSecondary: '#a8a8b3',
-  textMuted: '#8a8a95',
-  textSoft: '#d0d0d7',
-  textOnRail: '#f3f3f5',
-  textOnRailMuted: '#a8a8b3',
-  textOnAccent: '#0d1a14',
+  textPrimary: '#f5f5f5',
+  textSecondary: '#a3a3a3',
+  textMuted: '#737373',
+  textSoft: '#d4d4d4',
+  textOnRail: '#f5f5f5',
+  textOnRailMuted: '#a3a3a3',
+  textOnAccent: '#171717',
   textOnDanger: '#ffffff',
 
   accent: '#3ecf8e',
-  accentHover: '#4ddb9c',
-  accentSoft: 'rgba(62,207,142,0.13)',
-  accentText: '#5fdca6',
-  cta: '#004838',
-  ctaText: '#ffffff',
+  accentHover: '#34d399',
+  accentSoft: 'rgba(62,207,142,0.14)',
+  accentText: '#6ee7b7',
+  bronze: '#c4a484',
+  cta: '#3ecf8e',
+  ctaText: '#171717',
 
-  border: 'rgba(255,255,255,0.07)',
-  borderLight: 'rgba(255,255,255,0.1)',
-  borderStrong: 'rgba(255,255,255,0.14)',
+  /** Stronger than web whisper borders so form fields stay visible */
+  border: 'rgba(255,255,255,0.12)',
+  borderLight: 'rgba(255,255,255,0.14)',
+  borderStrong: 'rgba(255,255,255,0.2)',
 
   danger: '#f87171',
   dangerSoft: 'rgba(248,113,113,0.15)',
