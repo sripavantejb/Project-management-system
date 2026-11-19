@@ -106,14 +106,19 @@ export function normalizePermissionMap(value = {}) {
 
 export function resolvePermissions(user, tenant = null) {
   if (!user) return {}
-  let perms
+  // Platform admins mirror the client: full access while supporting a company,
+  // without being blocked by that company's feature toggles.
   if (user.isPlatformAdmin) {
-    perms = { ...ALL_ENABLED }
-  } else {
-    perms = {
-      ...defaultPermissionsForRole(user.role, tenant?.customRoles),
-      ...overridesFor(user),
-    }
+    return { ...ALL_ENABLED }
+  }
+  // Built-in company admins always keep the full role map. Stale per-user
+  // overrides (e.g. portfolio:false saved from People) must not lock them out.
+  if (user.role === 'admin' || user.role === 'owner') {
+    return applyTenantFeatureLimits({ ...ALL_ENABLED }, tenant)
+  }
+  const perms = {
+    ...defaultPermissionsForRole(user.role, tenant?.customRoles),
+    ...overridesFor(user),
   }
   return applyTenantFeatureLimits(perms, tenant)
 }

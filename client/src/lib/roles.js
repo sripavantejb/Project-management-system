@@ -116,6 +116,10 @@ export function permissionsForUser(user, tenant = null) {
   if (user.isPlatformAdmin) {
     return Object.fromEntries(ALL_PERMISSION_KEYS.map((key) => [key, true]))
   }
+  // Match server: admin/owner keep full access; ignore stale false overrides.
+  if (user.role === 'admin' || user.role === 'owner') {
+    return Object.fromEntries(ALL_PERMISSION_KEYS.map((key) => [key, true]))
+  }
   return {
     ...defaultPermissionsForRole(user.role, tenant?.customRoles),
     ...(user.permissions || {}),
