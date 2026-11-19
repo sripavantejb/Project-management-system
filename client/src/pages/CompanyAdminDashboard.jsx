@@ -157,19 +157,19 @@ export function CompanyAdminDashboard() {
     >
       <header className="flex flex-col gap-4 px-1 pt-1 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#efe4d6] text-[#7a573b]">
+          <span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--bronze)_22%,var(--bg-surface))] text-[var(--bronze)]">
             <SunMedium className="h-4 w-4" />
           </span>
           <div>
-            <h1 className="font-display text-[28px] font-medium leading-none tracking-[-0.03em] text-[#1e2022] sm:text-[34px]">
+            <h1 className="font-display text-[28px] font-medium leading-none tracking-[-0.03em] text-primary sm:text-[34px]">
               {greeting()}, {firstName}
             </h1>
-            <p className="mt-2 max-w-md text-[13.5px] text-[#68645e]">
+            <p className="mt-2 max-w-md text-[13.5px] text-secondary">
               Stay on top of the studio — budget, pipeline, and the projects moving today.
             </p>
           </div>
         </div>
-        <div className="flex w-fit items-center gap-1 rounded-full bg-white p-1 shadow-[0_10px_30px_-18px_rgba(30,32,34,0.45)]">
+        <div className="flex w-fit items-center gap-1 rounded-full bg-surface p-1 shadow-[0_10px_30px_-18px_rgba(30,32,34,0.45)]">
           {RANGES.map((item) => (
             <button
               key={item.key}
@@ -178,8 +178,8 @@ export function CompanyAdminDashboard() {
               className={cn(
                 'rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition',
                 range === item.key
-                  ? 'bg-[#1e2022] text-white'
-                  : 'text-[#68645e] hover:bg-[#f3efea] hover:text-[#1e2022]',
+                  ? 'bg-[var(--create-bg)] text-[var(--create-fg)]'
+                  : 'text-secondary hover:bg-surface-raised hover:text-primary',
               )}
             >
               {item.label}
@@ -190,20 +190,20 @@ export function CompanyAdminDashboard() {
 
       <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.9fr)_minmax(280px,1fr)]">
         <section className="flex flex-col gap-4">
-          <article className="rounded-[28px] bg-white p-5 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.55)]">
+          <article className="rounded-[28px] bg-surface p-5 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.55)]">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[13px] font-medium text-[#68645e]">Studio budget</p>
-              <span className="rounded-full bg-[#f3efea] px-2.5 py-1 text-[11px] font-medium text-[#68645e]">
+              <p className="text-[13px] font-medium text-secondary">Studio budget</p>
+              <span className="rounded-full bg-surface-raised px-2.5 py-1 text-[11px] font-medium text-secondary">
                 {d?.rangeLabel}
               </span>
             </div>
             <p
-              className="mt-3 font-display text-[40px] font-medium leading-none tracking-[-0.04em] text-[#1e2022] sm:text-[46px]"
+              className="mt-3 font-display text-[40px] font-medium leading-none tracking-[-0.04em] text-primary sm:text-[46px]"
               title={formatInr(kpis?.totalBudget || 0)}
             >
               {formatInrCompact(kpis?.totalBudget || 0)}
             </p>
-            <p className="mt-3 text-[13px] text-[#2d5a46]">
+            <p className="mt-3 text-[13px] text-emerald-700">
               {spendPct.toFixed(spendPct % 1 ? 1 : 0)}% of the budget is already in motion
               {kpis?.projectDelta != null
                 ? ` · ${kpis.projectDelta >= 0 ? '+' : ''}${kpis.projectDelta} projects this period`
@@ -212,34 +212,34 @@ export function CompanyAdminDashboard() {
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
                 to="/finance"
-                className="inline-flex items-center gap-2 rounded-full bg-[#1e2022] px-4 py-2.5 text-[13px] font-semibold text-white"
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--create-bg)] px-4 py-2.5 text-[13px] font-semibold text-[var(--create-fg)]"
               >
                 <Wallet className="h-3.5 w-3.5" />
                 Open revenue
               </Link>
               <Link
                 to="/projects"
-                className="inline-flex items-center gap-2 rounded-full bg-[#f3efea] px-4 py-2.5 text-[13px] font-semibold text-[#1e2022]"
+                className="inline-flex items-center gap-2 rounded-full bg-surface-raised px-4 py-2.5 text-[13px] font-semibold text-primary"
               >
                 All projects
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </div>
 
-            <div className="mt-5 rounded-[22px] bg-[#faf9f7] p-4">
+            <div className="mt-5 rounded-[22px] bg-surface-raised p-4">
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-[13px] font-medium text-[#1e2022]">
-                  Stages <span className="font-normal text-[#68645e]">· {timeline.length} projects</span>
+                <p className="text-[13px] font-medium text-primary">
+                  Stages <span className="font-normal text-secondary">· {timeline.length} projects</span>
                 </p>
-                <Link to="/portfolio" className="text-[12px] font-medium text-[#7a573b]">
+                <Link to="/portfolio" className="text-[12px] font-medium text-[var(--bronze)]">
                   Portfolio
                 </Link>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                 {STAGE_ORDER.map((stage) => (
-                  <div key={stage.key} className="rounded-[16px] bg-white px-3 py-2.5">
-                    <p className="text-[11px] text-[#68645e]">{stage.label}</p>
-                    <p className="mt-1 font-display text-[20px] font-medium leading-none text-[#1e2022]">
+                  <div key={stage.key} className="rounded-[16px] bg-surface px-3 py-2.5">
+                    <p className="text-[11px] text-secondary">{stage.label}</p>
+                    <p className="mt-1 font-display text-[20px] font-medium leading-none text-primary">
                       {stageCounts[stage.key] || 0}
                     </p>
                   </div>
@@ -249,14 +249,14 @@ export function CompanyAdminDashboard() {
 
             <div className="mt-4">
               <div className="mb-2 flex items-center justify-between text-[12px]">
-                <span className="font-medium text-[#1e2022]">Budget used</span>
-                <span className="tabular-nums text-[#68645e]">
+                <span className="font-medium text-primary">Budget used</span>
+                <span className="tabular-nums text-secondary">
                   {formatInrCompact(kpis?.totalSpent || 0)} of {formatInrCompact(kpis?.totalBudget || 0)}
                 </span>
               </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-[#f3efea]">
+              <div className="h-2.5 overflow-hidden rounded-full bg-surface-raised">
                 <div
-                  className="h-full rounded-full bg-[#a27b5c]"
+                  className="h-full rounded-full bg-[var(--bronze)]"
                   style={{ width: `${spendPct}%` }}
                 />
               </div>
@@ -318,29 +318,29 @@ export function CompanyAdminDashboard() {
         </section>
 
         <section className="flex flex-col gap-4 self-start">
-          <article className="rounded-[28px] bg-white p-5 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.55)]">
+          <article className="rounded-[28px] bg-surface p-5 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.55)]">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-[20px] font-medium tracking-[-0.03em] text-[#1e2022]">
+                <h2 className="font-display text-[20px] font-medium tracking-[-0.03em] text-primary">
                   Budget and spend
                 </h2>
-                <p className="mt-1 text-[12.5px] text-[#68645e]">
+                <p className="mt-1 text-[12.5px] text-secondary">
                   The busiest projects in this view
                 </p>
               </div>
-              <div className="flex items-center gap-3 text-[11px] text-[#68645e]">
+              <div className="flex items-center gap-3 text-[11px] text-secondary">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-[#a27b5c]" />
+                  <span className="h-2 w-2 rounded-full bg-[var(--bronze)]" />
                   Budget
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-[#1e2022]" />
+                  <span className="h-2 w-2 rounded-full bg-[var(--shell-text-strong)]" />
                   Spend
                 </span>
               </div>
             </div>
             {bars.length === 0 ? (
-              <p className="py-16 text-center text-[13px] text-[#68645e]">
+              <p className="py-16 text-center text-[13px] text-secondary">
                 No budget rows yet
               </p>
             ) : (
@@ -349,17 +349,17 @@ export function CompanyAdminDashboard() {
                   <div key={row.id} className="flex min-w-0 flex-1 flex-col items-center gap-2">
                     <div className="flex h-36 w-full items-end justify-center gap-1">
                       <div
-                        className="w-[38%] max-w-4 rounded-t-full bg-[#e7d3c2]"
+                        className="w-[38%] max-w-4 rounded-t-full bg-[color-mix(in_srgb,var(--bronze)_45%,var(--bg-surface))]"
                         style={{ height: `${row.budgetH}%` }}
                         title={`Budget ${formatInr(row.budget)}`}
                       />
                       <div
-                        className="w-[38%] max-w-4 rounded-t-full bg-[#1e2022]"
+                        className="w-[38%] max-w-4 rounded-t-full bg-[var(--shell-text-strong)]"
                         style={{ height: `${row.spentH}%` }}
                         title={`Spend ${formatInr(row.spent)}`}
                       />
                     </div>
-                    <p className="w-full truncate text-center text-[10px] text-[#68645e]">
+                    <p className="w-full truncate text-center text-[10px] text-secondary">
                       {String(row.name || '').split(' ')[0]}
                     </p>
                   </div>
@@ -368,26 +368,26 @@ export function CompanyAdminDashboard() {
             )}
           </article>
 
-          <article className="rounded-[28px] bg-white p-5 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.45)]">
+          <article className="rounded-[28px] bg-surface p-5 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.45)]">
             <div className="flex items-center justify-between">
-              <h2 className="text-[15px] font-medium text-[#1e2022]">Materials</h2>
-              <Link to="/procurement" className="text-[12px] font-medium text-[#7a573b]">
+              <h2 className="text-[15px] font-medium text-primary">Materials</h2>
+              <Link to="/procurement" className="text-[12px] font-medium text-[var(--bronze)]">
                 Open
               </Link>
             </div>
             <div className="mt-3 flex items-end justify-between gap-3">
-              <p className="font-display text-[28px] font-medium leading-none text-[#1e2022]">
+              <p className="font-display text-[28px] font-medium leading-none text-primary">
                 {d?.materials?.coveragePct != null ? `${d.materials.coveragePct}%` : '0%'}
               </p>
-              <p className="text-right text-[12px] text-[#68645e]">
+              <p className="text-right text-[12px] text-secondary">
                 {d?.materials?.poLines ?? 0} PO lines
                 <br />
                 {d?.materials?.approvedBoqLines ?? 0} quote lines
               </p>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#f3efea]">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-raised">
               <div
-                className="h-full rounded-full bg-[#1e2022]"
+                className="h-full rounded-full bg-[var(--shell-text-strong)]"
                 style={{ width: `${Math.min(100, d?.materials?.coveragePct || 0)}%` }}
               />
             </div>
@@ -397,30 +397,30 @@ export function CompanyAdminDashboard() {
                 .map((row) => (
                   <span
                     key={row.key}
-                    className="rounded-full bg-[#f3efea] px-2.5 py-1 text-[11px] font-medium text-[#68645e]"
+                    className="rounded-full bg-surface-raised px-2.5 py-1 text-[11px] font-medium text-secondary"
                   >
                     {row.label} · {row.value}
                   </span>
                 ))}
               {!(d?.materials?.poStatus || []).some((row) => row.value > 0) && (
-                <span className="text-[12px] text-[#8a847c]">No purchase orders in this range</span>
+                <span className="text-[12px] text-muted">No purchase orders in this range</span>
               )}
             </div>
             <ul className="mt-4 space-y-2">
               {(d?.topVendors || []).slice(0, 6).map((vendor) => (
                 <li key={vendor.id} className="flex items-center justify-between gap-3 text-[13px]">
-                  <span className="truncate text-[#1e2022]">{vendor.name}</span>
-                  <span className="shrink-0 tabular-nums text-[#68645e]" title={formatInr(vendor.value)}>
+                  <span className="truncate text-primary">{vendor.name}</span>
+                  <span className="shrink-0 tabular-nums text-secondary" title={formatInr(vendor.value)}>
                     {formatInrCompact(vendor.value)}
                   </span>
                 </li>
               ))}
               {!d?.topVendors?.length && (
-                <li className="text-[13px] text-[#68645e]">No vendor spend in this range</li>
+                <li className="text-[13px] text-secondary">No vendor spend in this range</li>
               )}
             </ul>
             {vendorTotal > 0 && (
-              <p className="mt-3 text-[11px] text-[#8a847c]">
+              <p className="mt-3 text-[11px] text-muted">
                 {formatInrCompact(vendorTotal)} across the top vendors
               </p>
             )}
@@ -428,28 +428,28 @@ export function CompanyAdminDashboard() {
         </section>
       </div>
 
-      <section className="rounded-[28px] bg-white p-4 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.5)] sm:p-5">
+      <section className="rounded-[28px] bg-surface p-4 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.5)] sm:p-5">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-display text-[22px] font-medium tracking-[-0.03em] text-[#1e2022]">
+            <h2 className="font-display text-[22px] font-medium tracking-[-0.03em] text-primary">
               Schedule
             </h2>
-            <p className="text-[12.5px] text-[#68645e]">Every project on one timeline</p>
+            <p className="text-[12.5px] text-secondary">Every project on one timeline</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <label className="flex h-10 items-center gap-2 rounded-full bg-[#faf9f7] px-3 text-[#68645e]">
+            <label className="flex h-10 items-center gap-2 rounded-full bg-surface-raised px-3 text-secondary">
               <Search className="h-3.5 w-3.5" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search"
-                className="w-28 bg-transparent text-[13px] text-[#1e2022] outline-none placeholder:text-[#8a847c] sm:w-40"
+                className="w-28 bg-transparent text-[13px] text-primary outline-none placeholder:text-muted sm:w-40"
               />
             </label>
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-              className="h-10 rounded-full bg-[#faf9f7] px-3 text-[13px] text-[#1e2022] outline-none"
+              className="h-10 rounded-full bg-surface-raised px-3 text-[13px] text-primary outline-none"
             >
               <option value="all">All statuses</option>
               <option value="in_progress">In progress</option>
@@ -492,38 +492,38 @@ function StudioSpread({ total, delayed, finished, segments }) {
   const rows = (segments || []).filter((seg) => seg.key !== 'empty')
   const sum = rows.reduce((count, seg) => count + (seg.value || 0), 0) || 1
   return (
-    <article className="flex min-h-[220px] flex-1 flex-col rounded-[28px] bg-white p-5 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.5)]">
+    <article className="flex min-h-[220px] flex-1 flex-col rounded-[28px] bg-surface p-5 shadow-[0_24px_50px_-36px_rgba(30,32,34,0.5)]">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h2 className="font-display text-[20px] font-medium tracking-[-0.03em] text-[#1e2022]">
+          <h2 className="font-display text-[20px] font-medium tracking-[-0.03em] text-primary">
             Across the studio
           </h2>
-          <p className="mt-1 text-[12.5px] text-[#68645e]">
+          <p className="mt-1 text-[12.5px] text-secondary">
             {delayed} delayed · {finished} finished
           </p>
         </div>
-        <p className="font-display text-[36px] font-medium leading-none tracking-[-0.04em] text-[#1e2022]">
+        <p className="font-display text-[36px] font-medium leading-none tracking-[-0.04em] text-primary">
           {total}
         </p>
       </div>
       <div className="mt-5 flex flex-1 flex-col justify-evenly gap-4">
         {rows.length === 0 && (
-          <p className="text-[13px] text-[#68645e]">No projects in this view yet.</p>
+          <p className="text-[13px] text-secondary">No projects in this view yet.</p>
         )}
         {rows.map((seg) => {
           const pct = Math.round(((seg.value || 0) / sum) * 100)
           return (
             <div key={seg.key}>
               <div className="mb-1.5 flex items-center justify-between text-[13px]">
-                <span className="inline-flex items-center gap-2 font-medium text-[#1e2022]">
+                <span className="inline-flex items-center gap-2 font-medium text-primary">
                   <span className="h-2 w-2 rounded-full" style={{ background: seg.color }} />
                   {seg.label}
                 </span>
-                <span className="tabular-nums text-[#68645e]">
+                <span className="tabular-nums text-secondary">
                   {seg.value} · {pct}%
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[#f3efea]">
+              <div className="h-2 overflow-hidden rounded-full bg-surface-raised">
                 <div
                   className="h-full rounded-full"
                   style={{ width: `${pct}%`, background: seg.color }}
@@ -569,7 +569,7 @@ function StudioGantt({ rows }) {
 
   if (!rows.length) {
     return (
-      <p className="px-3 py-10 text-center text-[13px] text-[#68645e]">
+      <p className="px-3 py-10 text-center text-[13px] text-secondary">
         No projects match this view
       </p>
     )
@@ -579,7 +579,7 @@ function StudioGantt({ rows }) {
     <div className="overflow-x-auto">
       <div style={{ minWidth: 240 + months.length * 72 }}>
         <div className="grid grid-cols-[200px_1fr] items-end pb-2 sm:grid-cols-[240px_1fr]">
-          <span className="px-2 text-[11px] font-medium text-[#8a847c]">Project</span>
+          <span className="px-2 text-[11px] font-medium text-muted">Project</span>
           <div className="relative h-6">
             {months.map((month, index) => {
               const left = place(month, min, max)
@@ -589,7 +589,7 @@ function StudioGantt({ rows }) {
               return (
                 <span
                   key={month.toISOString()}
-                  className="absolute top-0 whitespace-nowrap text-[11px] font-medium text-[#8a847c]"
+                  className="absolute top-0 whitespace-nowrap text-[11px] font-medium text-muted"
                   style={{ left: `${left}%` }}
                 >
                   {month.toLocaleDateString('en-IN', { month: 'short' })}
@@ -610,11 +610,11 @@ function StudioGantt({ rows }) {
             return (
               <li
                 key={row.id}
-                className="grid grid-cols-[200px_1fr] items-center border-t border-[#f3efea] py-2 sm:grid-cols-[240px_1fr]"
+                className="grid grid-cols-[200px_1fr] items-center border-t border-border py-2 sm:grid-cols-[240px_1fr]"
               >
                 <Link to={`/projects/${row.id}/overview`} className="min-w-0 px-2">
-                  <p className="truncate text-[13.5px] font-medium text-[#1e2022]">{row.name}</p>
-                  <p className="truncate text-[11px] text-[#8a847c]">
+                  <p className="truncate text-[13.5px] font-medium text-primary">{row.name}</p>
+                  <p className="truncate text-[11px] text-muted">
                     {row.clientName || stageLabel(row.currentStage)}
                   </p>
                 </Link>
@@ -622,16 +622,16 @@ function StudioGantt({ rows }) {
                   {months.map((month) => (
                     <span
                       key={month.toISOString()}
-                      className="absolute inset-y-0 w-px bg-[#f3efea]"
+                      className="absolute inset-y-0 w-px bg-surface-raised"
                       style={{ left: `${place(month, min, max)}%` }}
                     />
                   ))}
                   <span
-                    className="absolute inset-y-0 z-[1] w-px bg-[#1e2022]/30"
+                    className="absolute inset-y-0 z-[1] w-px bg-primary/30"
                     style={{ left: `${today}%` }}
                   />
                   {!start && !end ? (
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-[#8a847c]">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-muted">
                       No dates yet
                     </span>
                   ) : (
@@ -663,10 +663,10 @@ function StudioGantt({ rows }) {
 function MetricTile({ featured, tone, label, value, title, hint, delta, to }) {
   const wash =
     tone === 'warn'
-      ? 'bg-[#f8ebe8]'
+      ? 'bg-[color-mix(in_srgb,#9e3b3b_14%,var(--bg-surface))]'
       : tone === 'sage'
-        ? 'bg-[#e7f2ec]'
-        : 'bg-white shadow-[0_24px_50px_-36px_rgba(30,32,34,0.5)]'
+        ? 'bg-[color-mix(in_srgb,var(--accent)_14%,var(--bg-surface))]'
+        : 'bg-surface shadow-[0_24px_50px_-36px_rgba(30,32,34,0.5)]'
   return (
     <Link
       to={to}
@@ -674,20 +674,19 @@ function MetricTile({ featured, tone, label, value, title, hint, delta, to }) {
       className={cn(
         'flex h-fit flex-col self-start rounded-[22px] px-4 py-3.5 transition hover:-translate-y-0.5',
         featured
-          ? 'bg-[#a27b5c] shadow-[0_18px_40px_-24px_rgba(122,87,59,0.8)]'
+          ? 'bg-[var(--bronze)] text-[#faf9f7] shadow-[0_18px_40px_-24px_rgba(122,87,59,0.8)]'
           : wash,
       )}
-      style={featured ? { color: '#faf9f7' } : undefined}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className={cn('text-[13px] font-medium', featured ? '' : 'text-[#68645e]')}>{label}</p>
+        <p className={cn('text-[13px] font-medium', featured ? 'text-[#faf9f7]/90' : 'text-secondary')}>{label}</p>
         {delta && (
           <span
             className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
             style={
               featured
                 ? { background: 'rgba(255,255,255,0.18)' }
-                : { background: '#efe4d6', color: '#7a573b' }
+                : { background: 'color-mix(in srgb, var(--bronze) 22%, var(--bg-surface))', color: 'var(--bronze)' }
             }
           >
             {delta}
@@ -696,11 +695,11 @@ function MetricTile({ featured, tone, label, value, title, hint, delta, to }) {
       </div>
       <p className={cn(
         'mt-3 font-display text-[24px] font-medium leading-none tracking-[-0.04em] sm:text-[26px]',
-        featured ? '' : tone === 'warn' ? 'text-[#9e3b3b]' : 'text-[#1e2022]',
+        featured ? '' : tone === 'warn' ? 'text-[#9e3b3b]' : 'text-primary',
       )}>
         {value}
       </p>
-      <p className={cn('mt-1.5 text-[12px]', featured ? 'opacity-80' : 'text-[#8a847c]')}>{hint}</p>
+      <p className={cn('mt-1.5 text-[12px]', featured ? 'opacity-80' : 'text-muted')}>{hint}</p>
     </Link>
   )
 }
@@ -709,7 +708,7 @@ function ProjectPass({ project, tone, empty }) {
   const ink = tone === 'ink'
   if (!project) {
     return (
-      <div className="flex min-h-[132px] items-center justify-center rounded-[24px] bg-white px-4 text-[13px] text-[#8a847c] shadow-[0_24px_50px_-36px_rgba(30,32,34,0.45)]">
+      <div className="flex min-h-[132px] items-center justify-center rounded-[24px] bg-surface px-4 text-[13px] text-muted shadow-[0_24px_50px_-36px_rgba(30,32,34,0.45)]">
         {empty}
       </div>
     )
@@ -719,9 +718,8 @@ function ProjectPass({ project, tone, empty }) {
       to={`/projects/${project.id}/overview`}
       className={cn(
         'flex min-h-[132px] flex-col justify-between rounded-[24px] p-4',
-        ink ? 'bg-[#1e2022] text-white' : 'bg-[#a27b5c]',
+        ink ? 'bg-[var(--shell-text-strong)] text-[var(--bg-canvas)]' : 'bg-[var(--bronze)] text-[#faf9f7]',
       )}
-      style={ink ? undefined : { color: '#faf9f7' }}
     >
       <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-[0.12em] opacity-70">
         <span>{ink ? 'Largest' : project.isDelayed ? 'Needs a look' : 'In motion'}</span>
