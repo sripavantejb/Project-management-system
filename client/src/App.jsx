@@ -68,6 +68,7 @@ import {
 } from './pages/InventoryPages'
 import { PagePad } from './components/layout/PagePad'
 import { AttendancePage } from './pages/AttendancePage'
+import { DeleteAccountPage } from './pages/DeleteAccountPage'
 import { ToastViewport } from './components/ui'
 import { useAuthStore } from './lib/api'
 import {
@@ -130,6 +131,9 @@ export default function App() {
 
           {/* Client BOQ approve link from email / WhatsApp — no staff login */}
           <Route path="/approve/:token" element={<ClientBoqApprovePage />} />
+
+          {/* Public — Google Play / App Store account deletion URL */}
+          <Route path="/delete-account" element={<DeleteAccountPage />} />
 
           <Route element={<PlatformGuestOnly />}>
             <Route path="/platform/login" element={<PlatformLoginPage />} />
