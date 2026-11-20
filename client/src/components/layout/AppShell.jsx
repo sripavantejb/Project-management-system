@@ -410,36 +410,46 @@ export function AppShell({ children }) {
           >
             <div
               className={cn(
-                'flex items-center gap-2',
+                'flex min-w-0 items-center gap-2.5',
                 collapsed ? 'justify-center' : 'justify-start',
               )}
               title={brandLabel}
             >
-              <div
-                className={cn(
-                  'flex shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-transparent',
-                  collapsed ? 'h-9 w-9' : 'h-10 w-10',
-                )}
-              >
-                {tenant?.logoUrl ? (
+              {tenant?.logoUrl ? (
+                <div
+                  className={cn(
+                    'flex items-center justify-center overflow-hidden rounded-[10px] bg-surface',
+                    collapsed
+                      ? 'h-10 w-10'
+                      : 'h-12 w-full max-w-[168px] px-2 py-1.5',
+                  )}
+                >
                   <img
                     src={assetUrl(tenant.logoUrl)}
                     alt={brandLabel}
-                    className="h-full w-full object-contain p-0.5"
+                    className={cn(
+                      'object-contain',
+                      collapsed ? 'h-full w-full p-0.5' : 'h-9 w-auto max-w-full',
+                    )}
                   />
-                ) : (
+                </div>
+              ) : (
+                <>
                   <img
                     src="/clyro-logo.png"
                     alt="Clyro"
-                    className="h-full w-full rounded-[8px] object-cover"
+                    className={cn(
+                      'shrink-0 rounded-[8px] object-cover',
+                      collapsed ? 'h-10 w-10' : 'h-11 w-11',
+                    )}
                   />
-                )}
-              </div>
-              {!collapsed && !tenant?.logoUrl ? (
-                <span className="truncate text-[14px] font-semibold tracking-tight text-[var(--shell-text-strong)]">
-                  Clyro
-                </span>
-              ) : null}
+                  {!collapsed ? (
+                    <span className="truncate text-[15px] font-semibold tracking-tight text-[var(--shell-text-strong)]">
+                      Clyro
+                    </span>
+                  ) : null}
+                </>
+              )}
             </div>
           </FlyoutAnchor>
 
