@@ -20,7 +20,7 @@ Both the SPA and the API run on Vercel.
 
 `CLIENT_URL` must be your frontend origin, e.g.:
 ```
-https://pms-cubic.vercel.app
+https://clyro.editcomedia.com
 ```
 
 ---
@@ -60,6 +60,6 @@ Network Access → allow `0.0.0.0/0` (or Vercel IPs).
 
 | | Local | Production |
 |--|--------|------------|
-| App | `http://localhost:5173` | `https://pms-cubic.vercel.app` |
+| App | `http://localhost:5173` | `https://clyro.editcomedia.com` |
 | API | `http://localhost:5000/api` | `https://project-management-backend-nine-tau.vercel.app/api` |
 | Socket.io | yes | **no** |

@@ -5,10 +5,10 @@
 const SUPPORT_EMAIL = 'aanya@cubic.studio'
 
 export function DeleteAccountPage() {
-  const subject = encodeURIComponent('Delete my Cubic account')
+  const subject = encodeURIComponent('Delete my Clyro account')
   const body = encodeURIComponent(
     [
-      'Please delete my Cubic account and associated personal data.',
+      'Please delete my Clyro account and associated personal data.',
       '',
       'Full name:',
       'Account email:',
@@ -23,13 +23,13 @@ export function DeleteAccountPage() {
     <div className="min-h-screen bg-[#faf9f7] px-4 py-12 text-[#1a1c1b]">
       <div className="mx-auto max-w-lg">
         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a573b]">
-          Cubic Studio
+          Clyro
         </p>
         <h1 className="mt-2 text-[28px] font-semibold tracking-[-0.02em]">
           Delete your account
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-[#44474a]">
-          You can request permanent deletion of your Cubic account and personal
+          You can request permanent deletion of your Clyro account and personal
           data associated with it. This page is provided for Play Store and App
           Store account-deletion requirements.
         </p>

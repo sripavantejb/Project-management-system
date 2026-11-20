@@ -58,7 +58,7 @@ export function getTenantSlug() {
       }
     }
   }
-  return (import.meta.env.VITE_TENANT_SLUG || 'cubic').toLowerCase()
+  return (import.meta.env.VITE_TENANT_SLUG || 'clyro').toLowerCase()
 }
 
 export function setTenantSlug(slug) {

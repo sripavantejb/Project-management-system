@@ -3,8 +3,8 @@
  * Must stay reachable without login.
  */
 const SUPPORT_EMAIL = 'aanya@cubic.studio'
-const APP_NAME = 'Cubic Studio'
-const LAST_UPDATED = '19 November 2026'
+const APP_NAME = 'Clyro'
+const LAST_UPDATED = '20 November 2026'
 
 export function PrivacyPolicyPage() {
   return (
