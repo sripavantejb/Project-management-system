@@ -112,8 +112,10 @@ router.post(
       }),
     )
 
+    user.sessionVersion = (user.sessionVersion || 0) + 1
     const accessToken = signAccessToken(user)
     const refreshToken = signRefreshToken(user)
+    // One active session only — a later login on another device replaces this.
     user.refreshTokens = [refreshToken]
     await user.save()
 
@@ -164,9 +166,11 @@ router.post(
       throw new AppError(tenantBlockMessage(req.tenant), 403, 'TENANT_BLOCKED')
     }
 
+    // New login wins: bump session so every other device is signed out.
+    user.sessionVersion = (user.sessionVersion || 0) + 1
     const accessToken = signAccessToken(user)
     const refreshToken = signRefreshToken(user)
-    user.refreshTokens = [...(user.refreshTokens || []).slice(-4), refreshToken]
+    user.refreshTokens = [refreshToken]
     await user.save()
 
     res.json({
@@ -198,12 +202,17 @@ router.post(
       throw new AppError('Invalid refresh token', 401)
     }
 
+    const tokenSv = payload.sv
+    const currentSv = user.sessionVersion || 0
+    if (typeof tokenSv === 'number' ? tokenSv !== currentSv : currentSv > 0) {
+      throw new AppError('Signed in on another device. Please sign in again.', 401)
+    }
+
     const accessToken = signAccessToken(user)
     const newRefresh = signRefreshToken(user)
-    // Keep the presented token valid too (grace for a second tab / a request
-    // that raced this one), instead of instantly revoking it — revoking used
-    // to log users out mid-session. Cap the list so it can't grow unbounded.
-    user.refreshTokens = [...user.refreshTokens, newRefresh].slice(-10)
+    // Rotate within the same session; keep previous briefly for tab races.
+    const prev = user.refreshTokens || []
+    user.refreshTokens = [...new Set([...prev.slice(-1), newRefresh])].slice(-2)
     await user.save()
 
     res.json({ success: true, accessToken, refreshToken: newRefresh })

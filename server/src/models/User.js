@@ -41,6 +41,8 @@ const userSchema = new mongoose.Schema(
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: Date, select: false },
     refreshTokens: [{ type: String, select: false }],
+    /** Bumped on each login so older devices lose access immediately. */
+    sessionVersion: { type: Number, default: 0 },
     googleCalendar: {
       connected: { type: Boolean, default: false },
       email: { type: String, default: '' },

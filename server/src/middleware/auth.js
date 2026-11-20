@@ -10,10 +10,12 @@ export function signAccessToken(user) {
       role: user.role,
       tenantId: user.tenantId ? String(user.tenantId) : null,
       isPlatformAdmin: !!user.isPlatformAdmin,
+      sv: user.sessionVersion || 0,
     },
     process.env.JWT_ACCESS_SECRET,
     // Long-lived access token so normal use does not force a refresh every
-    // few minutes. Session end is driven by refresh expiry / explicit logout.
+    // few minutes. Session end is driven by refresh expiry / explicit logout
+    // / a newer login bumping sessionVersion.
     { expiresIn: process.env.JWT_ACCESS_EXPIRES || '7d' },
   )
 }
@@ -23,10 +25,18 @@ export function signRefreshToken(user) {
     {
       sub: user._id.toString(),
       tenantId: user.tenantId ? String(user.tenantId) : null,
+      sv: user.sessionVersion || 0,
     },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: process.env.JWT_REFRESH_EXPIRES || '30d' },
   )
+}
+
+function sessionMatches(payload, user) {
+  const tokenSv = payload?.sv
+  const currentSv = user.sessionVersion || 0
+  if (typeof tokenSv !== 'number') return currentSv === 0
+  return tokenSv === currentSv
 }
 
 export async function requireAuth(req, _res, next) {
@@ -38,6 +48,10 @@ export async function requireAuth(req, _res, next) {
     const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET)
     const user = await User.findById(payload.sub).select('-password')
     if (!user || !user.isActive) throw new AppError('User not found', 401)
+
+    if (!sessionMatches(payload, user)) {
+      throw new AppError('Signed in on another device. Please sign in again.', 401)
+    }
 
     // Platform admins can operate across tenants. Everyone else must stay in
     // their home workspace — if the client still has a stale X-Tenant-Slug

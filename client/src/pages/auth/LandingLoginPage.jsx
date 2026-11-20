@@ -246,19 +246,6 @@ function LogoMark({ size = 'md' }) {
   )
 }
 
-const DEMO_CREDENTIALS = {
-  staff: {
-    workspace: 'cubic',
-    email: 'employee@cubic.demo',
-    password: 'Employee@Demo123',
-  },
-  admin: {
-    workspace: 'cubic',
-    email: 'admin@cubic.demo',
-    password: 'Company@Admin123',
-  },
-}
-
 export function LoginPage() {
   const root = useRef(null)
   const navigate = useNavigate()
@@ -271,19 +258,22 @@ export function LoginPage() {
     register,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      ...DEMO_CREDENTIALS[portal],
-      workspace: getTenantSlug() || DEMO_CREDENTIALS[portal].workspace,
+      workspace: getTenantSlug() || '',
+      email: '',
+      password: '',
     },
   })
 
   const setPortal = (next) => {
     reset({
-      ...DEMO_CREDENTIALS[next],
-      workspace: getTenantSlug() || DEMO_CREDENTIALS[next].workspace,
+      workspace: getValues('workspace') || getTenantSlug() || '',
+      email: getValues('email') || '',
+      password: '',
     })
     const p = new URLSearchParams(searchParams)
     if (next === 'admin') p.set('portal', 'admin')
@@ -893,11 +883,6 @@ export function LoginPage() {
                 {portal === 'admin'
                   ? 'People, company operations, permissions, and workspace administration.'
                   : 'Projects, tasks, and site work — for your studio team.'}
-              </p>
-              <p className="mt-8 text-[11px] text-[#707070]">
-                {portal === 'admin'
-                  ? 'Demo admin · cubic · admin@cubic.demo · Company@Admin123'
-                  : 'Demo employee · cubic · employee@cubic.demo · Employee@Demo123'}
               </p>
             </div>
           </div>
