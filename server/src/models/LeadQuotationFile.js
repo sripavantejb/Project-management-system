@@ -34,6 +34,17 @@ const leadSchema = new mongoose.Schema(
     notes: { type: String, default: '' },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     convertedProjectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+    /** Floor plans, briefs, PDFs, site photos attached to the enquiry. */
+    attachments: [
+      {
+        name: { type: String, default: '' },
+        url: { type: String, required: true },
+        mime: { type: String, default: '' },
+        size: { type: Number, default: 0 },
+        uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true },
 )

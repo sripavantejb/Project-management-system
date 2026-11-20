@@ -2,6 +2,7 @@ import { NestedChrome } from '../../components/NestedChrome'
 import { useMemo, useState } from 'react'
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import * as DocumentPicker from 'expo-document-picker'
 import { Ionicons } from '@expo/vector-icons'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { CompositeNavigationProp } from '@react-navigation/native'
@@ -14,6 +15,7 @@ import { LoadingState, ErrorState } from '../../components/States'
 import { formatInr, radius, spacing, stageLabel, typography, type AppColors } from '../../constants/theme'
 import { useColors } from '../../theme/useColors'
 import { useResponsive } from '../../theme/useResponsive'
+import { assetUrl } from '../../constants/env'
 import { leadsApi } from '../../api/leads'
 import { adminApi } from '../../api/admin'
 import { isApiError } from '../../api/client'
@@ -128,6 +130,51 @@ export function LeadDetailScreen({ route, navigation }: Props) {
     onError: (err) => Alert.alert('Could not delete', isApiError(err) ? err.message : 'Try again'),
   })
 
+  const uploadMutation = useMutation({
+    mutationFn: async () => {
+      const result = await DocumentPicker.getDocumentAsync({
+        multiple: true,
+        copyToCacheDirectory: true,
+        type: ['image/*', 'application/pdf', '*/*'],
+      })
+      if (result.canceled || !result.assets?.length) return { ok: 0, failed: 0 }
+
+      let ok = 0
+      let failed = 0
+      for (const asset of result.assets) {
+        try {
+          await leadsApi.addAttachment(leadId, {
+            uri: asset.uri,
+            name: asset.name,
+            mimeType: asset.mimeType,
+          })
+          ok += 1
+        } catch {
+          failed += 1
+        }
+      }
+      return { ok, failed }
+    },
+    onSuccess: (res) => {
+      if (res.ok) invalidate()
+      if (res.failed) {
+        Alert.alert(
+          'Some files did not upload',
+          `${res.ok} uploaded, ${res.failed} failed. Check your connection and try again.`,
+        )
+      }
+    },
+    onError: (err) =>
+      Alert.alert('Upload failed', isApiError(err) ? err.message : 'Could not upload those files.'),
+  })
+
+  const removeAttachmentMutation = useMutation({
+    mutationFn: (attachmentId: string) => leadsApi.removeAttachment(leadId, attachmentId),
+    onSuccess: () => invalidate(),
+    onError: (err) =>
+      Alert.alert('Could not remove', isApiError(err) ? err.message : 'Try again'),
+  })
+
   const chromeProps = {
     title: lead?.clientName || 'Enquiry',
     subtitle: "Lead details",
@@ -173,6 +220,62 @@ export function LeadDetailScreen({ route, navigation }: Props) {
               <Text style={styles.notes}>{lead.notes}</Text>
             </>
           ) : null}
+        </SurfaceCard>
+
+        <SurfaceCard>
+          <SectionLabel>Files (floor plan, docs)</SectionLabel>
+          <Pressable
+            style={[styles.uploadBtn, uploadMutation.isPending && styles.uploadBtnDisabled]}
+            disabled={uploadMutation.isPending || (lead.attachments || []).length >= 25}
+            onPress={() => uploadMutation.mutate()}
+          >
+            <Ionicons name="attach-outline" size={16} color={colors.textPrimary} />
+            <Text style={styles.uploadText}>
+              {uploadMutation.isPending ? 'Uploading…' : 'Add floor plan or document'}
+            </Text>
+          </Pressable>
+          {(lead.attachments || []).length === 0 ? (
+            <Text style={styles.fileHint}>No files yet — attach drawings or PDFs needed to convert.</Text>
+          ) : (
+            (lead.attachments || []).map((file) => (
+              <View key={file._id || file.url} style={styles.fileRow}>
+                <Pressable
+                  style={styles.fileOpen}
+                  onPress={() => Linking.openURL(assetUrl(file.url))}
+                >
+                  <Ionicons
+                    name={
+                      String(file.mime || '').startsWith('image/')
+                        ? 'image-outline'
+                        : 'document-text-outline'
+                    }
+                    size={16}
+                    color={colors.textSecondary}
+                  />
+                  <Text style={styles.fileName} numberOfLines={1}>
+                    {file.name || 'Attachment'}
+                  </Text>
+                </Pressable>
+                {file._id ? (
+                  <Pressable
+                    hitSlop={8}
+                    onPress={() =>
+                      Alert.alert('Remove file', `Remove ${file.name || 'this file'}?`, [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Remove',
+                          style: 'destructive',
+                          onPress: () => removeAttachmentMutation.mutate(file._id!),
+                        },
+                      ])
+                    }
+                  >
+                    <Ionicons name="close" size={16} color={colors.textMuted} />
+                  </Pressable>
+                ) : null}
+              </View>
+            ))
+          )}
         </SurfaceCard>
 
         {lead.phone ? (
@@ -329,5 +432,35 @@ function createStyles(c: AppColors) {
     chipActive: { backgroundColor: c.textPrimary },
     chipText: { ...typography.caption, color: c.textSecondary, maxWidth: 140 },
     chipTextActive: { color: c.canvas },
+    uploadBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      borderColor: c.border,
+      backgroundColor: c.surfaceRaised,
+      borderRadius: radius.md,
+      paddingVertical: 12,
+      paddingHorizontal: spacing.md,
+    },
+    uploadBtnDisabled: { opacity: 0.5 },
+    uploadText: { ...typography.captionStrong, color: c.textPrimary },
+    fileHint: { ...typography.caption, color: c.textMuted, marginTop: spacing.sm },
+    fileRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    fileOpen: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+    fileName: { ...typography.caption, color: c.textPrimary, flex: 1 },
   })
 }

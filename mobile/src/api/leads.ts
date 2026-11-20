@@ -1,5 +1,5 @@
 import { http } from './client'
-import type { Lead, Quotation } from '../types/ops'
+import type { Lead, LeadAttachment, Quotation } from '../types/ops'
 import type { Project } from '../types/models'
 
 export interface CreateLeadPayload {
@@ -11,6 +11,7 @@ export interface CreateLeadPayload {
   estimatedValue?: number
   notes?: string
   owner?: string
+  attachments?: LeadAttachment[]
 }
 
 export const leadsApi = {
@@ -35,4 +36,23 @@ export const leadsApi = {
       .then((r) => r.data),
 
   remove: (id: string) => http.delete<{ success: true }>(`/leads/${id}`).then((r) => r.data),
+
+  addAttachment: (id: string, file: { uri: string; name?: string; mimeType?: string }) => {
+    const form = new FormData()
+    form.append('file', {
+      uri: file.uri,
+      name: file.name || 'file',
+      type: file.mimeType || 'application/octet-stream',
+    } as unknown as Blob)
+    return http
+      .post<{ success: true; lead: Lead; attachment: LeadAttachment }>(`/leads/${id}/attachments`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data)
+  },
+
+  removeAttachment: (id: string, attachmentId: string) =>
+    http
+      .delete<{ success: true; lead: Lead }>(`/leads/${id}/attachments/${attachmentId}`)
+      .then((r) => r.data.lead),
 }

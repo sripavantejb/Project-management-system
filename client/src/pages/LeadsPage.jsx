@@ -1,19 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
   Building2,
   ChevronDown,
+  FileImage,
+  FileText,
   Mail,
+  Paperclip,
   Phone,
   Plus,
   Search,
   Trash2,
   UserPlus,
   Users,
+  X,
 } from 'lucide-react'
-import { api, useAuthStore } from '../lib/api'
+import { api, assetUrl, useAuthStore } from '../lib/api'
 import { formatInr, stageLabel } from '../lib/format'
 import { cn } from '../lib/utils'
 import { PageToolbar, PILL_ACTIVE, PILL_IDLE, PILL_TRACK } from '../components/layout/PageToolbar'
@@ -495,6 +499,8 @@ function EnquiryDetail({
       ? new Date(lead.nextFollowUp).toISOString().slice(0, 10)
       : '',
   })
+  const [uploadBusy, setUploadBusy] = useState(false)
+  const fileRef = useRef(null)
 
   useEffect(() => {
     setDraft({
@@ -509,6 +515,49 @@ function EnquiryDetail({
         : '',
     })
   }, [lead])
+
+  const addFiles = async (fileList) => {
+    const files = Array.from(fileList || [])
+    if (!files.length) return
+    setUploadBusy(true)
+    try {
+      let lastLead = lead
+      for (const file of files) {
+        const fd = new FormData()
+        fd.append('file', file)
+        const res = await api(`/leads/${lead._id}/attachments`, {
+          method: 'POST',
+          body: fd,
+        })
+        if (res?.lead) {
+          lastLead = res.lead
+          onSaved(res.lead)
+        }
+      }
+      toast(
+        files.length === 1 ? 'File attached' : `${files.length} files attached`,
+        { type: 'success' },
+      )
+      return lastLead
+    } catch (e) {
+      toast(e.message || 'Upload failed', { type: 'error' })
+    } finally {
+      setUploadBusy(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  const removeAttachment = async (attachmentId) => {
+    try {
+      const res = await api(`/leads/${lead._id}/attachments/${attachmentId}`, {
+        method: 'DELETE',
+      })
+      if (res?.lead) onSaved(res.lead)
+      toast('Attachment removed', { type: 'success' })
+    } catch (e) {
+      toast(e.message || 'Could not remove file', { type: 'error' })
+    }
+  }
 
   const saveDetails = () => {
     patch.mutate(
@@ -593,6 +642,14 @@ function EnquiryDetail({
           placeholder="Context for the follow-up…"
         />
       </div>
+
+      <EnquiryAttachments
+        items={lead.attachments || []}
+        busy={uploadBusy}
+        fileRef={fileRef}
+        onPick={(files) => addFiles(files)}
+        onDeleteRemote={removeAttachment}
+      />
 
       <Button
         className="w-full"
@@ -978,6 +1035,22 @@ function AssigneePicker({
   )
 }
 
+function isImageMime(mime = '') {
+  return String(mime).startsWith('image/')
+}
+
+async function uploadEnquiryFile(file) {
+  const fd = new FormData()
+  fd.append('file', file)
+  const media = await api('/media', { method: 'POST', body: fd })
+  return {
+    name: media.name || file.name || 'Attachment',
+    url: media.url || media.fileUrl,
+    mime: media.mime || file.type || '',
+    size: media.size || file.size || 0,
+  }
+}
+
 function LeadForm({ users, usersLoading, defaultOwner, onSubmit, loading }) {
   const [form, setForm] = useState({
     clientName: '',
@@ -990,12 +1063,41 @@ function LeadForm({ users, usersLoading, defaultOwner, onSubmit, loading }) {
     nextFollowUp: '',
     owner: defaultOwner || '',
   })
+  const [attachments, setAttachments] = useState([])
+  const [uploadBusy, setUploadBusy] = useState(false)
+  const fileRef = useRef(null)
 
   useEffect(() => {
     if (defaultOwner && !form.owner) {
       setForm((prev) => ({ ...prev, owner: defaultOwner }))
     }
   }, [defaultOwner, form.owner])
+
+  const addFiles = async (fileList) => {
+    const files = Array.from(fileList || [])
+    if (!files.length) return
+    if (attachments.length + files.length > 25) {
+      toast('Maximum 25 files per enquiry', { type: 'error' })
+      return
+    }
+    setUploadBusy(true)
+    try {
+      const uploaded = []
+      for (const file of files) {
+        uploaded.push(await uploadEnquiryFile(file))
+      }
+      setAttachments((prev) => [...prev, ...uploaded])
+      toast(
+        uploaded.length === 1 ? 'File attached' : `${uploaded.length} files attached`,
+        { type: 'success' },
+      )
+    } catch (e) {
+      toast(e.message || 'Upload failed', { type: 'error' })
+    } finally {
+      setUploadBusy(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   return (
     <form
@@ -1008,6 +1110,7 @@ function LeadForm({ users, usersLoading, defaultOwner, onSubmit, loading }) {
           stage: 'new_enquiry',
           owner: form.owner || undefined,
           nextFollowUp: form.nextFollowUp || undefined,
+          attachments,
         })
       }}
     >
@@ -1083,9 +1186,88 @@ function LeadForm({ users, usersLoading, defaultOwner, onSubmit, loading }) {
         />
       </div>
 
-      <Button type="submit" className="w-full" loading={loading}>
+      <EnquiryAttachments
+        items={attachments}
+        busy={uploadBusy}
+        fileRef={fileRef}
+        onPick={(files) => addFiles(files)}
+        onRemove={(idx) =>
+          setAttachments((prev) => prev.filter((_, i) => i !== idx))
+        }
+      />
+
+      <Button type="submit" className="w-full" loading={loading || uploadBusy}>
         Create enquiry
       </Button>
     </form>
+  )
+}
+
+function EnquiryAttachments({ items, busy, fileRef, onPick, onRemove, onDeleteRemote }) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <p className="text-[12px] font-semibold text-secondary">
+          Files (floor plan, docs, photos)
+        </p>
+        <span className="text-[11px] text-muted">{items.length}/25</span>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        multiple
+        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.dwg,.dxf,.zip"
+        className="hidden"
+        onChange={(e) => onPick(e.target.files)}
+      />
+      <button
+        type="button"
+        disabled={busy || items.length >= 25}
+        onClick={() => fileRef.current?.click()}
+        className="flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-dashed border-border bg-surface-raised text-[12px] font-semibold text-primary hover:border-accent/40 disabled:opacity-50"
+      >
+        <Paperclip className="h-3.5 w-3.5" />
+        {busy ? 'Uploading…' : 'Add floor plan or document'}
+      </button>
+      <p className="mt-1.5 text-[11px] text-secondary">
+        Optional — attach drawings, PDFs, or site photos needed before converting this lead.
+      </p>
+      {items.length > 0 ? (
+        <ul className="mt-2 space-y-1.5">
+          {items.map((file, idx) => {
+            const key = file._id || `${file.url}-${idx}`
+            const Icon = isImageMime(file.mime) ? FileImage : FileText
+            return (
+              <li
+                key={key}
+                className="flex items-center gap-2 rounded-[10px] border border-border bg-surface px-2.5 py-2"
+              >
+                <Icon className="h-4 w-4 shrink-0 text-secondary" />
+                <a
+                  href={assetUrl(file.url)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="min-w-0 flex-1 truncate text-[12px] font-medium text-primary hover:underline"
+                >
+                  {file.name || 'Attachment'}
+                </a>
+                <button
+                  type="button"
+                  title="Remove"
+                  onClick={() =>
+                    file._id && onDeleteRemote
+                      ? onDeleteRemote(file._id)
+                      : onRemove?.(idx)
+                  }
+                  className="rounded-md p-1 text-secondary hover:bg-red-50 hover:text-red-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      ) : null}
+    </div>
   )
 }

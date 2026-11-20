@@ -11,6 +11,15 @@ export type LeadStage =
   | 'won'
   | 'lost'
 
+export interface LeadAttachment {
+  _id?: string
+  name: string
+  url: string
+  mime?: string
+  size?: number
+  createdAt?: string
+}
+
 export interface Lead {
   _id: string
   clientName: string
@@ -24,6 +33,7 @@ export interface Lead {
   notes?: string
   owner?: { _id: string; name: string; avatar?: string }
   convertedProjectId?: string
+  attachments?: LeadAttachment[]
   createdAt: string
   updatedAt: string
 }

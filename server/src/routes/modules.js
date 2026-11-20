@@ -242,6 +242,27 @@ function sanitizeLeadPayload(body, { partial = false } = {}) {
   if (body.owner !== undefined) {
     out.owner = body.owner === '' || body.owner == null ? null : body.owner
   }
+  if (body.attachments !== undefined) {
+    if (!Array.isArray(body.attachments)) {
+      throw new AppError('Attachments must be a list', 400)
+    }
+    out.attachments = body.attachments
+      .slice(0, 25)
+      .map((item) => {
+        const url = String(item?.url || '').trim()
+        if (!url) return null
+        return {
+          name: String(item?.name || 'Attachment').trim() || 'Attachment',
+          url,
+          mime: String(item?.mime || '').trim(),
+          size: Number(item?.size) || 0,
+          uploadedBy: item?.uploadedBy || undefined,
+          createdAt: item?.createdAt ? new Date(item.createdAt) : new Date(),
+          ...(item?._id ? { _id: item._id } : {}),
+        }
+      })
+      .filter(Boolean)
+  }
   return out
 }
 
@@ -448,6 +469,67 @@ router.delete(
     await lead.deleteOne()
 
     res.json({ success: true, deleted: true })
+  }),
+)
+
+router.post(
+  '/leads/:id/attachments',
+  requireAuth,
+  requirePermission('leads'),
+  ...withChunkedUpload('file', upload.single('file')),
+  asyncHandler(async (req, res) => {
+    const lead = await Lead.findById(req.params.id)
+    assertTenantDoc(lead, req, 'Lead')
+    if (!req.file) throw new AppError('File is required', 400)
+    if ((lead.attachments || []).length >= 25) {
+      throw new AppError('Maximum 25 files per enquiry', 400)
+    }
+
+    const saved = await storeFileBuffer(req.file, {
+      tenantId: req.tenantId || req.user.tenantId,
+      uploadedBy: req.user._id,
+      kind: String(req.file.mimetype || '').startsWith('image/') ? 'image' : 'file',
+    })
+
+    lead.attachments = lead.attachments || []
+    lead.attachments.push({
+      name: saved.name || req.file.originalname || 'Attachment',
+      url: saved.url,
+      mime: saved.mime || req.file.mimetype || '',
+      size: saved.size || req.file.size || 0,
+      uploadedBy: req.user._id,
+      createdAt: new Date(),
+    })
+    lead.markModified('attachments')
+    await lead.save()
+    await lead.populate('owner', 'name avatar role title')
+
+    res.status(201).json({
+      success: true,
+      lead,
+      attachment: lead.attachments[lead.attachments.length - 1],
+    })
+  }),
+)
+
+router.delete(
+  '/leads/:id/attachments/:attachmentId',
+  requireAuth,
+  requirePermission('leads'),
+  asyncHandler(async (req, res) => {
+    const lead = await Lead.findById(req.params.id)
+    assertTenantDoc(lead, req, 'Lead')
+    const before = (lead.attachments || []).length
+    lead.attachments = (lead.attachments || []).filter(
+      (a) => String(a._id) !== String(req.params.attachmentId),
+    )
+    if (lead.attachments.length === before) {
+      throw new AppError('Attachment not found', 404)
+    }
+    lead.markModified('attachments')
+    await lead.save()
+    await lead.populate('owner', 'name avatar role title')
+    res.json({ success: true, lead })
   }),
 )
 

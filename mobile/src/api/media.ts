@@ -32,4 +32,20 @@ export const mediaApi = {
       })
       .then((r) => r.data)
   },
+
+  /** Any file (PDF, CAD, image) for enquiry / project attachments. */
+  uploadFile: async (file: UploadAsset) => {
+    const form = new FormData()
+    form.append('file', {
+      uri: file.uri,
+      name: file.name || 'file',
+      type: file.mimeType || 'application/octet-stream',
+    } as unknown as Blob)
+
+    return http
+      .post<{ success: true } & StoredMedia>('/media', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data)
+  },
 }

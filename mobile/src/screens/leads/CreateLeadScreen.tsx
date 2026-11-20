@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import * as DocumentPicker from 'expo-document-picker'
+import { Ionicons } from '@expo/vector-icons'
 import { FormLayout } from '../../components/FormLayout'
 import { Input } from '../../components/Input'
 import { CollapsibleSection } from '../../components/CollapsibleSection'
@@ -9,8 +11,10 @@ import { Button } from '../../components/Button'
 import { radius, spacing, typography, type AppColors } from '../../constants/theme'
 import { useColors } from '../../theme/useColors'
 import { leadsApi } from '../../api/leads'
+import { mediaApi } from '../../api/media'
 import { adminApi } from '../../api/admin'
 import { isApiError } from '../../api/client'
+import type { LeadAttachment } from '../../types/ops'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { MoreStackParamList } from '../../navigation/types'
 
@@ -26,8 +30,48 @@ export function CreateLeadScreen({ navigation }: Props) {
   const [estimatedValue, setEstimatedValue] = useState('')
   const [notes, setNotes] = useState('')
   const [owner, setOwner] = useState('')
+  const [attachments, setAttachments] = useState<LeadAttachment[]>([])
+  const [uploadBusy, setUploadBusy] = useState(false)
   const [error, setError] = useState('')
   const users = useQuery({ queryKey: ['users'], queryFn: adminApi.users })
+
+  const pickFiles = async () => {
+    if (attachments.length >= 25) {
+      setError('Maximum 25 files per enquiry')
+      return
+    }
+    const result = await DocumentPicker.getDocumentAsync({
+      multiple: true,
+      copyToCacheDirectory: true,
+      type: ['image/*', 'application/pdf', '*/*'],
+    })
+    if (result.canceled || !result.assets?.length) return
+
+    setUploadBusy(true)
+    setError('')
+    try {
+      const uploaded: LeadAttachment[] = []
+      for (const asset of result.assets) {
+        if (attachments.length + uploaded.length >= 25) break
+        const saved = await mediaApi.uploadFile({
+          uri: asset.uri,
+          name: asset.name,
+          mimeType: asset.mimeType,
+        })
+        uploaded.push({
+          name: saved.name || asset.name || 'Attachment',
+          url: saved.url,
+          mime: saved.mime || asset.mimeType || '',
+          size: saved.size || 0,
+        })
+      }
+      setAttachments((prev) => [...prev, ...uploaded])
+    } catch (err) {
+      setError(isApiError(err) ? err.message : 'Could not upload file')
+    } finally {
+      setUploadBusy(false)
+    }
+  }
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -38,6 +82,7 @@ export function CreateLeadScreen({ navigation }: Props) {
         estimatedValue: estimatedValue ? Number(estimatedValue) : undefined,
         notes: notes.trim() || undefined,
         owner: owner || undefined,
+        attachments,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] })
@@ -64,7 +109,7 @@ export function CreateLeadScreen({ navigation }: Props) {
             setError('')
             mutation.mutate()
           }}
-          loading={mutation.isPending}
+          loading={mutation.isPending || uploadBusy}
           fullWidth
         />
       }
@@ -115,6 +160,39 @@ export function CreateLeadScreen({ navigation }: Props) {
           })}
         </ScrollView>
       </View>
+
+      <View style={styles.filesBlock}>
+        <Text style={styles.label}>Files (floor plan, docs, photos)</Text>
+        <Pressable
+          style={[styles.uploadBtn, (uploadBusy || attachments.length >= 25) && styles.uploadBtnDisabled]}
+          disabled={uploadBusy || attachments.length >= 25}
+          onPress={pickFiles}
+        >
+          <Ionicons name="attach-outline" size={16} color={colors.textPrimary} />
+          <Text style={styles.uploadText}>
+            {uploadBusy ? 'Uploading…' : 'Add floor plan or document'}
+          </Text>
+        </Pressable>
+        <Text style={styles.hint}>Optional — drawings, PDFs, or site photos before converting.</Text>
+        {attachments.map((file, idx) => (
+          <View key={`${file.url}-${idx}`} style={styles.fileRow}>
+            <Ionicons
+              name={String(file.mime || '').startsWith('image/') ? 'image-outline' : 'document-text-outline'}
+              size={16}
+              color={colors.textSecondary}
+            />
+            <Text style={styles.fileName} numberOfLines={1}>
+              {file.name || 'Attachment'}
+            </Text>
+            <Pressable
+              onPress={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
+              hitSlop={8}
+            >
+              <Ionicons name="close" size={16} color={colors.textMuted} />
+            </Pressable>
+          </View>
+        ))}
+      </View>
       </CollapsibleSection>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </FormLayout>
@@ -135,5 +213,35 @@ function createStyles(c: AppColors) {
     chipActive: { backgroundColor: c.textPrimary },
     chipText: { ...typography.caption, color: c.textSecondary },
     chipTextActive: { color: c.canvas },
+    filesBlock: { marginTop: spacing.sm },
+    uploadBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      borderColor: c.border,
+      backgroundColor: c.surfaceRaised,
+      borderRadius: radius.md,
+      paddingVertical: 12,
+      paddingHorizontal: spacing.md,
+    },
+    uploadBtnDisabled: { opacity: 0.5 },
+    uploadText: { ...typography.captionStrong, color: c.textPrimary },
+    hint: { ...typography.caption, color: c.textMuted, marginTop: 6 },
+    fileRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    fileName: { ...typography.caption, color: c.textPrimary, flex: 1 },
   })
 }
