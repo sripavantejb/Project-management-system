@@ -7,7 +7,7 @@
 
 const STORAGE_KEY = 'cubic-active-work'
 const CHANNEL = 'cubic-work-session'
-const BASE_TITLE = 'Cubic'
+const BASE_TITLE = 'Clyro'
 
 let channel = null
 

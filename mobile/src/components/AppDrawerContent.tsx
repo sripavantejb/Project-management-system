@@ -13,6 +13,7 @@ import { capabilitiesForUser, canUseAttendance } from '../utils/roles'
 import { confirmSignOut } from '../screens/attendance/signOut'
 import { openTabScreen } from '../navigation/openProject'
 import { Avatar } from './Avatar'
+import { ClyroMark } from './ClyroMark'
 import { glyphs, type Glyph } from '../icons'
 import { Icon } from './Icon'
 
@@ -163,8 +164,11 @@ export function AppDrawerContent(props: DrawerContentComponentProps) {
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.sm }]}
       >
       <View style={styles.brandBlock}>
-        <Text style={styles.brand}>Clyro</Text>
-        <Text style={styles.brandHint}>Studio workspace</Text>
+        <ClyroMark size={40} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.brand}>Clyro</Text>
+          <Text style={styles.brandHint}>Studio workspace</Text>
+        </View>
       </View>
 
       <Pressable
@@ -246,11 +250,13 @@ function createStyles(c: AppColors, shadows: ReturnType<typeof useShadows>) {
     },
     root: { flex: 1 },
     brandBlock: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
       paddingHorizontal: spacing.sm,
       // Clears the pinned close button floating in the top-right corner.
       paddingRight: 52,
       marginBottom: spacing.lg,
-      gap: 2,
     },
     closeBtn: {
       position: 'absolute',

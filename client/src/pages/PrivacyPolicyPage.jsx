@@ -10,9 +10,16 @@ export function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-[#faf9f7] px-4 py-12 text-[#1a1c1b]">
       <article className="mx-auto max-w-2xl">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a573b]">
-          {APP_NAME}
-        </p>
+        <div className="flex items-center gap-2.5">
+          <img
+            src="/clyro-logo.png"
+            alt={APP_NAME}
+            className="h-8 w-8 rounded-[8px] object-cover"
+          />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a573b]">
+            {APP_NAME}
+          </p>
+        </div>
         <h1 className="mt-2 text-[28px] font-semibold tracking-[-0.02em]">
           Privacy Policy
         </h1>

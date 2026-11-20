@@ -23,6 +23,7 @@ import {
   Users,
   Clock,
 } from 'lucide-react'
+import { BrandLogo } from '../../components/BrandLogo'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
@@ -236,14 +237,8 @@ function ImageSlot({ src, label, className = '', imgClassName = '' }) {
 }
 
 function LogoMark({ size = 'md' }) {
-  const box = size === 'sm' ? 'h-7 w-7 text-[11px]' : 'h-8 w-8 text-[12px]'
-  return (
-    <span
-      className={`flex ${box} items-center justify-center rounded-[6px] bg-[var(--accent)] font-bold text-[#171717] shadow-[0_1px_3px_rgba(0,0,0,0.06)]`}
-    >
-      E
-    </span>
-  )
+  const px = size === 'sm' ? 28 : 32
+  return <BrandLogo size={px} className="shadow-[0_1px_3px_rgba(0,0,0,0.06)]" />
 }
 
 export function LoginPage() {
@@ -705,7 +700,7 @@ export function LoginPage() {
         <div className="mx-auto max-w-6xl">
           <div className="lp-why-head mx-auto max-w-2xl text-center">
             <h2 className="text-[clamp(1.75rem,3.5vw,2.65rem)] font-bold tracking-tight text-[#171717]">
-              Why Teams Choose EPM
+              Why Teams Choose Clyro
             </h2>
             <p className="mt-3 text-[15px] text-[#8b8b90]">
               Built for interior delivery — from lead to handover — with the
@@ -959,7 +954,7 @@ export function LoginPage() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <LogoMark size="sm" />
-            <span className="text-[13px] font-bold text-[#171717]">EPM</span>
+            <span className="text-[13px] font-bold text-[#171717]">Clyro</span>
           </div>
           <p className="text-[12px] text-[#6b6b70]">by Editco</p>
         </div>

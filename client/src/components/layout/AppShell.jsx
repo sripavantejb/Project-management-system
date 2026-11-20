@@ -392,7 +392,7 @@ export function AppShell({ children }) {
 
   const SidebarNav = ({ onNavigate, collapsed = false }) => {
     const flyout = useCollapsedFlyout(collapsed)
-    const brandLabel = tenant?.name || 'EPM'
+    const brandLabel = tenant?.name || 'Clyro'
 
     return (
       <>
@@ -410,7 +410,7 @@ export function AppShell({ children }) {
           >
             <div
               className={cn(
-                'flex items-center',
+                'flex items-center gap-2',
                 collapsed ? 'justify-center' : 'justify-start',
               )}
               title={brandLabel}
@@ -418,24 +418,28 @@ export function AppShell({ children }) {
               <div
                 className={cn(
                   'flex shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-transparent',
-                  collapsed ? 'h-9 w-9' : 'h-11 w-auto max-w-[160px]',
+                  collapsed ? 'h-9 w-9' : 'h-10 w-10',
                 )}
               >
                 {tenant?.logoUrl ? (
                   <img
                     src={assetUrl(tenant.logoUrl)}
                     alt={brandLabel}
-                    className={cn(
-                      'object-contain',
-                      collapsed ? 'h-full w-full p-0.5' : 'h-11 w-auto max-w-[160px]',
-                    )}
+                    className="h-full w-full object-contain p-0.5"
                   />
                 ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-[#1e2022] text-[13px] font-medium text-white">
-                    {brandLabel.charAt(0).toUpperCase()}
-                  </div>
+                  <img
+                    src="/clyro-logo.png"
+                    alt="Clyro"
+                    className="h-full w-full rounded-[8px] object-cover"
+                  />
                 )}
               </div>
+              {!collapsed && !tenant?.logoUrl ? (
+                <span className="truncate text-[14px] font-semibold tracking-tight text-[var(--shell-text-strong)]">
+                  Clyro
+                </span>
+              ) : null}
             </div>
           </FlyoutAnchor>
 

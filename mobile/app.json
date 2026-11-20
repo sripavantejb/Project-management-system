@@ -16,7 +16,7 @@
       "versionCode": 9,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "backgroundColor": "#004838",
+        "backgroundColor": "#000000",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -25,7 +25,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "backgroundColor": "#004838"
+      "backgroundColor": "#000000"
     },
     "plugins": [
       "expo-secure-store",
@@ -47,10 +47,10 @@
           "image": "./assets/splash-icon.png",
           "resizeMode": "contain",
           "imageWidth": 200,
-          "backgroundColor": "#004838",
+          "backgroundColor": "#000000",
           "dark": {
             "image": "./assets/splash-icon.png",
-            "backgroundColor": "#004838"
+            "backgroundColor": "#000000"
           }
         }
       ],

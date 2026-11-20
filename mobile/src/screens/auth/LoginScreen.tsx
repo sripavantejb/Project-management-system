@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
+import { ClyroMark } from '../../components/ClyroMark'
 import { KeyboardAwareView } from '../../components/KeyboardAwareView'
 import { isKeyboardOpen, useKeyboardInset } from '../../hooks/useKeyboardInset'
 import { spacing, typography, type AppColors } from '../../constants/theme'
@@ -85,10 +86,7 @@ export function LoginScreen({ navigation }: Props) {
           ]}
         >
           <View style={styles.brand}>
-            <View style={styles.mark}>
-              <Text style={styles.markLetter}>C</Text>
-              <View style={styles.markDot} />
-            </View>
+            <ClyroMark size={72} />
             <Text style={styles.wordmark}>Clyro</Text>
             <Text style={styles.tagline}>Studio operations</Text>
           </View>
@@ -168,31 +166,6 @@ function createStyles(c: AppColors, compact: boolean) {
     },
     bodyKeyboard: { paddingTop: 8 },
     brand: { alignItems: 'center', gap: 8 },
-    mark: {
-      width: 64,
-      height: 64,
-      borderRadius: 16,
-      backgroundColor: '#ffffff',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: '#e4e2dd',
-    },
-    markLetter: {
-      fontSize: 28,
-      fontWeight: '500',
-      color: INK,
-      letterSpacing: -0.5,
-    },
-    markDot: {
-      position: 'absolute',
-      right: 10,
-      bottom: 12,
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: GOLD,
-    },
     wordmark: {
       ...typography.h1,
       fontSize: compact ? 32 : 36,

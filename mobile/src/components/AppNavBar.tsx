@@ -28,6 +28,7 @@ import type { RootDrawerParamList } from '../navigation/types'
 import type { Task } from '../types/models'
 import { ActiveTimerChip } from './ActiveTimerChip'
 import { Avatar } from './Avatar'
+import { ClyroMark } from './ClyroMark'
 import { isDarkColor } from '../utils/color'
 import { glyphs, type Glyph } from '../icons'
 import { Icon } from './Icon'
@@ -439,9 +440,7 @@ export function AppNavBar({
               accessibilityLabel="Open studio menu"
               style={({ pressed }) => [styles.brandRow, pressed && { opacity: 0.85 }]}
             >
-              <View style={styles.mark}>
-                <Text style={styles.markLetter}>C</Text>
-              </View>
+              <ClyroMark size={36} />
               <View style={styles.brandCopy}>
                 <Text style={styles.studioKicker}>STUDIO</Text>
                 <Text style={styles.studioName} numberOfLines={1}>
@@ -663,19 +662,6 @@ function createStyles(c: AppColors, shadows: ReturnType<typeof useShadows>, onHe
       minWidth: 0,
     },
     brandCopy: { flex: 1, minWidth: 0 },
-    mark: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: '#1e2022',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    markLetter: {
-      color: '#ffffff',
-      fontSize: 16,
-      fontWeight: '600',
-    },
     studioKicker: {
       ...typography.micro,
       color: c.textMuted,

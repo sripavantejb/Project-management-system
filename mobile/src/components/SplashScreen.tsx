@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Animated, Easing, Platform, StyleSheet, View } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
-import { ArchitecturalLogo } from './ArchitecturalLogo'
+import { ClyroMark } from './ClyroMark'
 
-/** Ivory canvas from the Stitch atelier system. */
-export const SPLASH_BG = '#faf9f7'
+export const SPLASH_BG = '#000000'
 const nativeDriver = Platform.OS !== 'web'
 
 type SplashScreenProps = {
@@ -16,10 +15,9 @@ type SplashScreenProps = {
 }
 
 /**
- * Splash is the CAD monogram: the C draws in, milestone bars pulse,
- * and the gold scan runs once before the app continues.
+ * Brand splash — Clyro mark on black, then fade into the app.
  */
-export function SplashScreen({ onFinished, minDurationMs = 3200, hold = false }: SplashScreenProps) {
+export function SplashScreen({ onFinished, minDurationMs = 2200, hold = false }: SplashScreenProps) {
   const styles = useMemo(() => createStyles(), [])
   const exit = useRef(new Animated.Value(0)).current
   const finishedRef = useRef(false)
@@ -57,9 +55,9 @@ export function SplashScreen({ onFinished, minDurationMs = 3200, hold = false }:
       accessibilityLabel="Clyro"
       accessibilityRole="image"
     >
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <View style={styles.mark}>
-        <ArchitecturalLogo size={280} />
+        <ClyroMark size={168} />
       </View>
     </Animated.View>
   )
@@ -68,15 +66,15 @@ export function SplashScreen({ onFinished, minDurationMs = 3200, hold = false }:
 function createStyles() {
   return StyleSheet.create({
     root: {
-      ...StyleSheet.absoluteFill,
+      ...StyleSheet.absoluteFillObject,
       backgroundColor: SPLASH_BG,
       zIndex: 100,
       alignItems: 'center',
       justifyContent: 'center',
     },
     mark: {
-      width: 280,
-      height: 280,
+      width: 168,
+      height: 168,
     },
   })
 }

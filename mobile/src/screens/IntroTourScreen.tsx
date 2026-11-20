@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Circle, Line, Path, Polygon, Text as SvgText } from 'react-native-svg'
-import { ArchitecturalLogo } from '../components/ArchitecturalLogo'
+import { ClyroMark } from '../components/ClyroMark'
 import { useIntroStore } from '../store/introStore'
 
 const INK = '#191b1d'
@@ -59,7 +59,7 @@ export function IntroTourScreen({ onDone }: { onDone?: () => void }) {
       </View>
 
       <View style={styles.hero}>
-        {index === 0 ? <ArchitecturalLogo size={248} /> : null}
+        {index === 0 ? <ClyroMark size={168} /> : null}
         {index === 1 ? <QuarryCard /> : null}
         {index === 2 ? <HandoverCard /> : null}
       </View>

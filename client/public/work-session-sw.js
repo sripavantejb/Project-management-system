@@ -53,8 +53,8 @@ async function showWorkNotification(data) {
     renotify: false,
     requireInteraction: true,
     silent: true,
-    icon: '/favicon.svg',
-    badge: '/favicon.svg',
+    icon: '/favicon.png',
+    badge: '/favicon.png',
     data: { url },
   })
 }
